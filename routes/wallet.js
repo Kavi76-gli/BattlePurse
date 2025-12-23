@@ -1197,7 +1197,7 @@ router.get("/tournaments/:id", auth, async (req, res) => {
       prizePool: tournament.prizePool,
       maxPlayers: tournament.maxPlayers,
       poster: tournament.poster 
-        ? `https://battlepurse-16.onrender.com/uploads/${tournament.poster}` // ✅ return full image URL
+        ? `https://battlepurse-17.onrender.com/uploads/${tournament.poster}` // ✅ return full image URL
         : null,
       roomId: joinedUser ? tournament.roomId : null,
       roomPassword: joinedUser ? tournament.roomPassword : null,
@@ -1805,7 +1805,7 @@ router.get("/results/:tournamentId", authAdmin, async (req, res) => {
       results: (tournament.results || []).map(r => ({
         id: r._id,
         screenshot: r.screenshot
-          ? `https://battlepurse-16.onrender.com/uploads/${r.screenshot}` // ✅ Correct: serve actual file
+          ? `https://battlepurse-17.onrender.com/uploads/${r.screenshot}` // ✅ Correct: serve actual file
           : null,
         uploadedAt: r.uploadedAt,
         user: r.userId
