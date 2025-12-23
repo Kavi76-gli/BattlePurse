@@ -29,5 +29,8 @@
     "socket.io": "^4.8.1",
     "uuid": "^13.0.0"
   },
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5"
+  }
 }

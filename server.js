@@ -8,48 +8,62 @@ dotenv.config();
 
 const app = express();
 
-// ✅ Middleware
+/* ======================
+   MIDDLEWARE
+====================== */
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-// ✅ Serve static frontend (IMPORTANT)
+/* ======================
+   STATIC FILES
+====================== */
 app.use(express.static(path.join(__dirname, "public")));
-
-// ✅ Serve uploaded files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// ✅ MongoDB connection
+/* ======================
+   MONGODB CONNECTION
+====================== */
 mongoose.set("bufferCommands", false);
 
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB connected successfully"))
+  .then(() => console.log("✅ MongoDB Atlas connected"))
   .catch((err) => {
     console.error("❌ MongoDB connection error:", err);
     process.exit(1);
   });
 
-// ✅ API routes
+/* ======================
+   ROUTES
+====================== */
 app.use("/api/wallet", require("./routes/wallet"));
 
-// ❌ REMOVE ROOT ROUTE TEXT
-// app.get("/", (req, res) => {
-//   res.send("🎮 GameZone API is running successfully!");
-// });
-
-// ✅ Optional: force index.html (extra safe)
+/* ======================
+   FRONTEND ENTRY
+====================== */
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// ✅ 404 fallback (APIs only)
+/* ======================
+   404 HANDLER (API)
+====================== */
 app.use((req, res) => {
   res.status(404).json({ msg: "Route not found" });
 });
 
-// ✅ Start server
+/* ======================
+   START SERVER
+====================== */
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>
   console.log(`🚀 Server running on port ${PORT}`)
 );
+
+
+
+
+
+
+

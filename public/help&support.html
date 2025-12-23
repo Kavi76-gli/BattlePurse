@@ -158,7 +158,7 @@
       return alert("All fields are required.");
     }
 
-    fetch("http://localhost:5000/api/wallet/support/contact", {
+    fetch("https://battlepurse-16.onrender.com/api/wallet/support/contact", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, Username: username, mobile, message })

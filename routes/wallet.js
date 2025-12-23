@@ -148,21 +148,23 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ msg: "Wrong password" });
     }
 
-    // ✅ isAdmin comes directly from DB (default false)
-    const token = jwt.sign(
-      {
-        id: user._id,
-        isAdmin: user.isAdmin === true   // 👈 explicit boolean
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+   const token = jwt.sign(
+  {
+    id: user._id,
+    isAdmin: user.isAdmin === true
+  },
+  process.env.JWT_SECRET,
+  {
+    expiresIn: 12614400000   // ✅ 400 years
+  }
+);
 
-    res.json({
-      success: true,
-      token,
-      isAdmin: user.isAdmin === true   // optional for frontend
-    });
+res.json({
+  success: true,
+  token,
+  isAdmin: user.isAdmin === true
+});
+
 
   } catch (err) {
     console.error("Login error:", err);
@@ -1195,7 +1197,7 @@ router.get("/tournaments/:id", auth, async (req, res) => {
       prizePool: tournament.prizePool,
       maxPlayers: tournament.maxPlayers,
       poster: tournament.poster 
-        ? `http://localhost:5000/uploads/${tournament.poster}` // ✅ return full image URL
+        ? `https://battlepurse-16.onrender.com/uploads/${tournament.poster}` // ✅ return full image URL
         : null,
       roomId: joinedUser ? tournament.roomId : null,
       roomPassword: joinedUser ? tournament.roomPassword : null,
@@ -1803,7 +1805,7 @@ router.get("/results/:tournamentId", authAdmin, async (req, res) => {
       results: (tournament.results || []).map(r => ({
         id: r._id,
         screenshot: r.screenshot
-          ? `http://localhost:5000/uploads/${r.screenshot}` // ✅ Correct: serve actual file
+          ? `https://battlepurse-16.onrender.com/uploads/${r.screenshot}` // ✅ Correct: serve actual file
           : null,
         uploadedAt: r.uploadedAt,
         user: r.userId
@@ -5801,6 +5803,64 @@ const matches = await QuickMatch.find({ status: "completed" })
   }
 });
 
+router.post("/admin/refresh-token", async (req, res) => {
+  try {
+    const oldToken = req.header("auth-token-admin");
+
+    if (!oldToken) {
+      return res.status(401).json({
+        success: false,
+        msg: "Admin token missing"
+      });
+    }
+
+    // 🔓 Decode even if expired
+    const payload = jwt.verify(oldToken, process.env.JWT_SECRET_ADMIN, {
+      ignoreExpiration: true
+    });
+
+    // ✅ EXTRA SAFETY: check role
+    if (payload.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        msg: "Not an admin"
+      });
+    }
+
+    // ✅ OPTIONAL BUT RECOMMENDED: verify admin still exists
+    const admin = await User.findById(payload.id);
+    if (!admin || admin.isAdmin !== true) {
+      return res.status(401).json({
+        success: false,
+        msg: "Admin no longer valid"
+      });
+    }
+
+    // 🔁 Issue new token
+    const newToken = jwt.sign(
+      {
+        id: admin._id,
+        role: "admin"
+      },
+      process.env.JWT_SECRET_ADMIN,
+      {
+        expiresIn: "24h" // admin stays short-lived (secure)
+      }
+    );
+
+    res.json({
+      success: true,
+      token: newToken
+    });
+
+  } catch (err) {
+    console.error("Admin refresh error:", err);
+    res.status(401).json({
+      success: false,
+      msg: "refresh_failed"
+    });
+  }
+});
 
 
 router.get("/admin/refresh-token", (req, res) => {

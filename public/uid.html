@@ -50,8 +50,8 @@
     const params = new URLSearchParams(window.location.search);
     const tournamentId = params.get('id');
 
-    const TOURNAMENT_URL = `http://localhost:5000/api/wallet/tournaments/${tournamentId}`;
-    const JOIN_URL = `http://localhost:5000/api/wallet/join/${tournamentId}`;
+    const TOURNAMENT_URL = `https://battlepurse-16.onrender.com/api/wallet/tournaments/${tournamentId}`;
+    const JOIN_URL = `https://battlepurse-16.onrender.com/api/wallet/join/${tournamentId}`;
 
     let mode = 'solo';
     let requiredUids = 1;

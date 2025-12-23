@@ -81,7 +81,7 @@
 
   async function loadUsers() {
     try {
-      const res = await fetch("http://localhost:5000/api/wallet/admin/users", {
+      const res = await fetch("https://battlepurse-16.onrender.com/api/wallet/admin/users", {
         headers: { Authorization: "Bearer " + token }
       });
       const data = await res.json();
@@ -123,7 +123,7 @@
   async function toggleBan(userId, isBanned) {
     const endpoint = isBanned ? 'unban' : 'ban';
     try {
-      const res = await fetch(`http://localhost:5000/api/wallet/admin/${endpoint}/${userId}`, {
+      const res = await fetch(`https://battlepurse-16.onrender.com/api/wallet/admin/${endpoint}/${userId}`, {
         method: "PUT",
         headers: { Authorization: "Bearer " + token }
       });
@@ -145,7 +145,7 @@
     if (!newPass || newPass.length < 4) return alert("❌ Password too short");
 
     try {
-      const res = await fetch(`http://localhost:5000/api/wallet/admin/reset-password/${userId}`, {
+      const res = await fetch(`https://battlepurse-16.onrender.com/api/wallet/admin/reset-password/${userId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
