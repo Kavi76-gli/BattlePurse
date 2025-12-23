@@ -268,6 +268,13 @@ router.post("/resend-otp", async (req, res) => {
 });
 
 
+function getColor(status) {
+  if (!status) return "gray";
+  if (status === "win") return "green";
+  if (status === "lose") return "red";
+  if (status === "pending") return "orange";
+  return "blue";
+}
 
 // 🔹 GET USER BALANCE + ALL TRANSACTIONS
 router.get('/balance', auth, async (req, res) => {
@@ -281,7 +288,8 @@ router.get('/balance', auth, async (req, res) => {
     }
 
     const transactions = await Transaction.find({ userId })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .limit(900);
 
     // Add color field
     const updatedTransactions = transactions.map(t => ({
@@ -399,7 +407,8 @@ router.get('/transactions', auth, async (req, res) => {
     }
 
     const transactions = await Transaction.find(filter)
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .limit(900);
 
     let wallet = await Wallet.findOne({ userId });
     if (!wallet) {
@@ -721,7 +730,8 @@ router.post("/submit-utr", auth, async (req, res) => {
       amount,
       type: "deposit",
       status: "pending"
-    }).sort({ date: -1 });
+    }).sort({ date: -1 })
+    .limit(900);
 
     if (!txn) {
       return res.status(404).json({ msg: "No matching pending transaction found" });
@@ -1052,7 +1062,8 @@ const Tournament = require('../models/Tournament');
 // ✅ GET all tournaments
 router.get("/tournaments", async (req, res) => {
   try {
-    const tournaments = await Tournament.find().sort({ createdAt: -1 });
+    const tournaments = await Tournament.find().sort({ createdAt: -1 })
+    .limit(900);
     res.json(tournaments);
   } catch (err) {
     res.status(500).json({ msg: "Server error" });
@@ -1661,7 +1672,8 @@ router.post("/promos", upload.array("images", 10), async (req, res) => {
 // GET all promos
 router.get("/promos", async (req, res) => {
   try {
-    const promos = await Promo.find().sort({ createdAt: -1 });
+    const promos = await Promo.find().sort({ createdAt: -1 })
+    .limit(900);
     res.json(promos);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch promos" });
@@ -2736,7 +2748,9 @@ const QuickMatch = require('../models/QuickMatch');
 
 // 🧠 Utility to generate next match number
 async function generateMatchNumber() {
-  const lastMatch = await QuickMatch.findOne().sort({ createdAt: -1 });
+  const lastMatch = await QuickMatch.findOne().sort({ createdAt: -1 })
+  .limit(900);
+  
   if (!lastMatch || !lastMatch.matchNumber) return "MATCH-0001";
 
   const lastNum = parseInt(lastMatch.matchNumber.split("-")[1]);
@@ -2754,7 +2768,8 @@ router.get("/joined", authAdmin, async (req, res) => {
   try {
     const matches = await QuickMatch.find()
       .populate("players.userId", "name phone wallet avatarUrl")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .limit(900);
 
     let allJoined = [];
 
@@ -2837,7 +2852,8 @@ router.get("/joined/unpaired", authAdmin, async (req, res) => {
   try {
     const matches = await QuickMatch.find({ status: "waiting" })
       .populate("players.userId", "name phone wallet avatarUrl")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .limit(900);
 
     let result = [];
 
@@ -2911,7 +2927,8 @@ router.get("/joined/paired", authAdmin, async (req, res) => {
       status: { $in: ["paired", "filled", "ongoing", "completed"] }
     })
       .populate("players.userId", "name phone wallet avatarUrl")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .limit(900);
 
     let result = [];
 
@@ -3166,7 +3183,8 @@ router.get("/joined", authAdmin, async (req, res) => {
   try {
     const matches = await QuickMatch.find()
       .populate("players.userId", "name phone wallet avatarUrl")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .limit(900);
 
     let allJoined = [];
 
@@ -3219,7 +3237,8 @@ router.get("/joined/unpaired", authAdmin, async (req, res) => {
   try {
     const matches = await QuickMatch.find({ status: "waiting" })
       .populate("players.userId", "name phone wallet avatarUrl")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .limit(900);
 
     let result = [];
 
@@ -3285,7 +3304,8 @@ router.get("/joined/paired", authAdmin, async (req, res) => {
       status: { $in: ["filled", "ongoing", "completed"] }
     })
       .populate("players.userId", "name phone wallet avatarUrl")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .limit(900);
 
     let result = [];
 
@@ -3527,7 +3547,8 @@ router.get("/quickmatch/all", async (req, res) => {
   try {
     const matches = await QuickMatch.find()
       .populate("players.userId", "name phone wallet")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .limit(900);
 
     res.json(matches);
   } catch (err) {
@@ -3543,7 +3564,8 @@ router.get("/quickmatch/user/:userId", async (req, res) => {
 
     const matches = await QuickMatch.find({
       "players.userId": userId,
-    }).sort({ createdAt: -1 });
+    }).sort({ createdAt: -1 })
+    .limit(900);
 
     res.json(matches);
   } catch (err) {
@@ -3602,7 +3624,8 @@ router.get("/all", async (req, res) => {
   try {
     const matches = await QuickMatch.find()
       .populate("players.userId", "name phone wallet avatarUrl")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .limit(900);
     res.json({ success: true, data: matches });
   } catch (err) {
     console.error("Error fetching matches:", err);
@@ -3638,7 +3661,8 @@ router.get("/:matchId/status", async (req, res) => {
 
 router.get("/joined", async (req, res) => {
   try {
-    const matches = await QuickMatch.find().sort({ createdAt: -1 });
+    const matches = await QuickMatch.find().sort({ createdAt: -1 })
+    .limit(900);
     const members = [];
 
     matches.forEach((m) => {
@@ -3692,7 +3716,8 @@ router.get("/joined/unpaired", async (req, res) => {
       status: { $in: ["waiting", "filled"] }
     })
       .populate("players.userId", "name phone wallet avatarUrl")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .limit(900);
 
     const unpairedMembers = [];
 
@@ -3764,7 +3789,8 @@ router.get("/joined/paired", async (req, res) => {
       $or: [{ status: "paired" }, { status: "filled" }],
     })
       .populate("players.userId", "name phone wallet avatarUrl")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .limit(900);
 
     const pairedMembers = pairedMatches.map((match) => {
       const playersData = match.players.map((p) => ({
@@ -3808,7 +3834,8 @@ router.get("/joined/paired", async (req, res) => {
 
 // Helper: generate match number
 async function generateMatchNumber() {
-  const last = await QuickMatch.findOne().sort({ createdAt: -1 }).lean();
+  const last = await QuickMatch.findOne().sort({ createdAt: -1 })
+  .limit(900).lean();
   if (!last || !last.matchNumber) return `QM-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-0001`;
   const parts = (last.matchNumber || '').split('-');
   const lastSeq = parts[2] ? parseInt(parts[2]) : NaN;
@@ -4093,6 +4120,7 @@ router.get("/my-active", auth, async (req, res) => {
     })
       .select("type game mode entryFee status players createdAt matchNumber prizeSystem")
       .sort({ createdAt: -1 })
+      .limit(900)
       .lean();
 
     const filtered = activeMatches.map(m => {
@@ -4596,6 +4624,7 @@ router.get("/history", auth, async (req, res) => {
       status: "completed"
     })
       .sort({ createdAt: -1 })
+      .limit(900)
       .lean();
 
     const history = [];
@@ -4703,6 +4732,7 @@ router.get("/history", auth, async (req, res) => {
       ]
     })
       .sort({ createdAt: -1 })
+      .limit(900)
       .lean();
 
     for (const t of tournaments) {
@@ -4903,6 +4933,7 @@ router.get("/admin/match/results", authAdmin, async (req, res) => {
   try {
     const matches = await QuickMatch.find({ "userResults.0": { $exists: true } })
       .sort({ createdAt: -1 })
+      .limit(900)
       .populate("players.userId", "name phone uid")
       .lean();
 
@@ -5106,6 +5137,7 @@ router.get("/admin/match/winners", authAdmin, async (req, res) => {
   try {
     const matches = await Match.find({ status: "completed" })
       .sort({ updatedAt: -1 })
+      .limit(900)
       .limit(10)
       .populate("results.userId", "name avatar");
 
@@ -5157,7 +5189,8 @@ router.get("/my-completed", auth, async (req, res) => {
       status: "completed"
     })
       .select("-__v")
-      .sort({ updatedAt: -1 });
+      .sort({ updatedAt: -1 })
+      .limit(900);
 
     res.json({
       success: true,
@@ -5180,7 +5213,8 @@ router.get("/my-wins", auth, async (req, res) => {
       winnerId: userId
     })
       .select("-__v")
-      .sort({ updatedAt: -1 });
+      .sort({ updatedAt: -1 })
+      .limit(900);
 
     res.json({
       success: true,
@@ -5667,6 +5701,7 @@ router.get("/admin/matches", async (req, res) => {
   try {
     const matches = await QuickMatch.find()
       .sort({ createdAt: -1 })
+      .limit(900)
       .lean();
 
     return res.json({
@@ -5698,6 +5733,7 @@ router.get("/matches/winners", async (req, res) => {
   try {
 const matches = await QuickMatch.find({ status: "completed" })
       .sort({ createdAt: -1 })
+      .limit(900)
       .limit(3)  // ⭐ only last 3 matches
       .populate("players.userId", "name phone uid wallet avatarUrl");
 
@@ -6027,6 +6063,7 @@ router.get("/active-matches", auth, async (req, res) => {
       .populate("slots.userId", "name phone avatarUrl wallet")
       .select("type game mode entryFee status players slots createdAt matchNumber prizeSystem")
       .sort({ createdAt: -1 })
+      .limit(900)
       .lean();
 
     if (!match) {
@@ -6121,6 +6158,7 @@ router.get("/my-actives", auth, async (req, res) => {
     const activeMatches = await QuickMatch.find(query)
       .select("type game mode entryFee status players slots createdAt matchNumber prizeSystem")
       .sort({ createdAt: -1 })
+      .limit(900)
       .lean();
 
     const formatted = activeMatches.map(m => {
@@ -6180,6 +6218,7 @@ router.get("/my-active", auth, async (req, res) => {
     })
       .select("type game mode entryFee status players createdAt matchNumber prizeSystem")
       .sort({ createdAt: -1 })
+      .limit(900)
       .lean();
 
     const formatted = activeMatches.map(m => {
@@ -6288,7 +6327,8 @@ router.get("/match/unpaired", authAdmin, async (req, res) => {
   try {
     const matches = await QuickMatch.find({ status: "waiting" })
       .populate("slots.userId", "name phone wallet avatarUrl")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .limit(900);
 
     const result = matches.flatMap(match => {
       const totalSlots = match.slots.length;
@@ -6324,7 +6364,8 @@ router.get("/match/unpaired", authAdmin, async (req, res) => {
 // ----------------------------
 router.get("/match/paired", authAdmin, async (req, res) => {
   try {
-    const matches = await QuickMatch.find().sort({ createdAt: -1 });
+    const matches = await QuickMatch.find().sort({ createdAt: -1 })
+      .limit(900);
 
     const userIds = matches.flatMap(match =>
       match.slots.map(s => s.userId).filter(Boolean)
@@ -6372,7 +6413,8 @@ router.get("/match/paired", authAdmin, async (req, res) => {
 
 router.get("/match/paired", authAdmin, async (req, res) => {
   try {
-    const matches = await QuickMatch.find({ status: "filled" }).sort({ createdAt: -1 });
+    const matches = await QuickMatch.find({ status: "filled" }).sort({ createdAt: -1 })
+      .limit(900);
 
     const userIds = matches.flatMap(m =>
       m.players.map(p => p.userId).filter(Boolean)
@@ -6421,7 +6463,8 @@ router.get("/match/paired", authAdmin, async (req, res) => {
   try {
     const matches = await QuickMatch.find({ status: { $in: ["filled", "ongoing", "completed"] } })
       .populate("slots.userId", "name phone wallet avatarUrl")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .limit(900);
 
     const result = matches.flatMap(match => {
       const totalSlots = match.slots.length;
