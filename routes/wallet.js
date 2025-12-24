@@ -42,50 +42,63 @@ const genOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 /* ================================
    REGISTER → SEND EMAIL OTP
 ================================ */
+/* ================================
+   REGISTER → SEND EMAIL OTP
+================================ */
 router.post("/register-email", async (req, res) => {
   try {
     const { name, phone, email, password } = req.body;
 
-    if (!name || !phone || !email || !password)
+    // ✅ Validate
+    if (!name || !phone || !email || !password) {
       return res.status(400).json({ msg: "All fields required" });
+    }
 
-    const exists = await User.findOne({ $or: [{ phone }, { email }] });
-    if (exists)
-      return res.status(400).json({ msg: "User already exists" });
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    // 🔥 IMPORTANT: delete old OTPs
-    await Otp.deleteMany({ email, purpose: "register" });
-
-    // ✅ STORE PASSWORD TEMPORARILY
-    await Otp.create({
-      email,
-      otp,
-      purpose: "register",
-      name,
-      phone,
-      password, // 👈 THIS WAS MISSING BEFORE
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000)
+    // ✅ Check existing user
+    const exists = await User.findOne({
+      $or: [{ phone }, { email }]
     });
 
+    if (exists) {
+      return res.status(400).json({ msg: "User already exists" });
+    }
+
+    // ✅ Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // ✅ Remove old OTPs
+    await Otp.deleteMany({ email, purpose: "register" });
+
+    // ✅ Save OTP + temp registration data
+    await Otp.create({
+      email,
+      phone,
+      name,
+      password,          // stored temporarily
+      otp,
+      purpose: "register",
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000) // 5 min
+    });
+
+    // ✅ Send email
     await mailer.sendMail({
       to: email,
       subject: "Registration OTP",
       html: `<h2>Your OTP is <b>${otp}</b></h2>`
     });
 
-    res.json({ msg: "OTP sent to email" });
+    res.json({ success: true, msg: "OTP sent to email" });
 
   } catch (err) {
-    console.error("Register email error:", err);
+    console.error("Register-email error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 });
 
 
-
-
+/* ================================
+   VERIFY EMAIL OTP & CREATE USER
+================================ */
 /* ================================
    VERIFY EMAIL OTP & CREATE USER
 ================================ */
@@ -93,30 +106,56 @@ router.post("/verify-email-otp", async (req, res) => {
   try {
     const { email, otp } = req.body;
 
-    const record = await Otp.findOne({ email, otp, purpose: "register" });
+    if (!email || !otp) {
+      return res.status(400).json({ msg: "Email and OTP required" });
+    }
 
-    if (!record || record.expiresAt < Date.now())
+    // ✅ Find OTP record
+    const record = await Otp.findOne({
+      email,
+      otp,
+      purpose: "register"
+    });
+
+    if (!record || record.expiresAt < Date.now()) {
       return res.status(400).json({ msg: "Invalid or expired OTP" });
+    }
 
-    // 🛑 SAFETY CHECK (VERY IMPORTANT)
-    if (!record.password)
-      return res.status(400).json({ msg: "Registration data missing. Please resend OTP." });
+    // ✅ Safety check
+    if (!record.password || !record.phone || !record.name) {
+      return res.status(400).json({
+        msg: "Registration data missing. Please resend OTP."
+      });
+    }
 
-    const hashed = await bcrypt.hash(record.password, 10);
+    // ✅ Check again if user already exists
+    const exists = await User.findOne({
+      $or: [{ phone: record.phone }, { email: record.email }]
+    });
 
+    if (exists) {
+      await Otp.deleteMany({ email });
+      return res.status(400).json({ msg: "User already registered" });
+    }
+
+    // ✅ Hash password
+    const hashedPassword = await bcrypt.hash(record.password, 10);
+
+    // ✅ Create user
     await User.create({
       name: record.name,
       phone: record.phone,
       email: record.email,
-      password: hashed
+      password: hashedPassword
     });
 
+    // ✅ Remove OTP
     await Otp.deleteMany({ email });
 
-    res.json({ msg: "Registration successful" });
+    res.json({ success: true, msg: "Registration successful" });
 
   } catch (err) {
-    console.error("Verify OTP error:", err);
+    console.error("Verify-email-otp error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 });
@@ -2766,44 +2805,27 @@ async function generateMatchNumber() {
 // ---------------------------
 router.get("/joined", authAdmin, async (req, res) => {
   try {
-    const matches = await QuickMatch.find()
-      .populate("players.userId", "name phone wallet avatarUrl")
+    const matches = await QuickMatch.find({})
       .sort({ createdAt: -1 })
-      .limit(900);
+      .limit(300)
+      .populate("players.userId", "name phone wallet avatarUrl")
+      .lean();
 
     let allJoined = [];
 
-    matches.forEach(match => {
+    for (const match of matches) {
+      if (!Array.isArray(match.players)) continue;
+
       const typeMap = { "1v1": 1, "2v2": 2, "3v3": 3, "4v4": 4 };
       const half = typeMap[match.type] || 1;
 
       match.players.forEach((p, index) => {
         const ff = p.freeFireSettings || {};
 
-        // Always ensure structured defaults
-        const finalGameSettings = {
-          headshot: ff.gameSettings?.headshot ?? false,
-          characterSkill: ff.gameSettings?.characterSkill ?? false,
-          gunAttributes: ff.gameSettings?.gunAttributes ?? false,
-          throwableLimit: ff.gameSettings?.throwableLimit ?? 0
-        };
-
-        const finalSelectedGuns = {
-          AR: ff.selectedGuns?.AR || [],
-          SMG: ff.selectedGuns?.SMG || [],
-          SNIPER: ff.selectedGuns?.SNIPER || [],
-          SHOTGUN: ff.selectedGuns?.SHOTGUN || [],
-          PISTOLS: ff.selectedGuns?.PISTOLS || [],
-          LAUNCHERS: ff.selectedGuns?.LAUNCHERS || [],
-          SPECIAL: ff.selectedGuns?.SPECIAL || []
-        };
-
         allJoined.push({
-          // Match Info
           matchId: match._id,
           matchNumber: match.matchNumber || "N/A",
 
-          // User Info
           userId: p.userId?._id || null,
           uid: p.uid || "",
           name: p.userId?.name || p.name || "Unknown",
@@ -2812,7 +2834,6 @@ router.get("/joined", authAdmin, async (req, res) => {
           avatarUrl: p.userId?.avatarUrl || "",
           whatsappNumber: p.whatsappNumber || "",
 
-          // Match Type
           game: match.game,
           mode: match.mode,
           type: match.type,
@@ -2821,43 +2842,51 @@ router.get("/joined", authAdmin, async (req, res) => {
           joinedAt: p.joinedAt || match.createdAt,
           status: match.status,
 
-          // Team Assignment
           team: p.team || (index < half ? "LION" : "TIGER"),
 
-          // ⭐ FREE FIRE SETTINGS — CLEAN & COMPLETE ⭐
           map: ff.map || "Not Selected",
           roomType: ff.roomType || "regular",
 
-          gameSettings: finalGameSettings,
+          gameSettings: {
+            headshot: !!ff.gameSettings?.headshot,
+            characterSkill: !!ff.gameSettings?.characterSkill,
+            gunAttributes: !!ff.gameSettings?.gunAttributes,
+            throwableLimit: ff.gameSettings?.throwableLimit || 0
+          },
 
-          selectedGuns: finalSelectedGuns
+          selectedGuns: {
+            AR: ff.selectedGuns?.AR || [],
+            SMG: ff.selectedGuns?.SMG || [],
+            SNIPER: ff.selectedGuns?.SNIPER || [],
+            SHOTGUN: ff.selectedGuns?.SHOTGUN || [],
+            PISTOLS: ff.selectedGuns?.PISTOLS || [],
+            LAUNCHERS: ff.selectedGuns?.LAUNCHERS || [],
+            SPECIAL: ff.selectedGuns?.SPECIAL || []
+          }
         });
       });
-    });
+    }
 
-    res.json({
-      success: true,
-      count: allJoined.length,
-      data: allJoined
-    });
-
+    res.json({ success: true, count: allJoined.length, data: allJoined });
   } catch (err) {
     console.error("Joined fetch error:", err);
     res.status(500).json({ success: false, msg: "Server error" });
   }
 });
 
-
 router.get("/joined/unpaired", authAdmin, async (req, res) => {
   try {
     const matches = await QuickMatch.find({ status: "waiting" })
-      .populate("players.userId", "name phone wallet avatarUrl")
       .sort({ createdAt: -1 })
-      .limit(900);
+      .limit(300)
+      .populate("players.userId", "name phone wallet avatarUrl")
+      .lean();
 
     let result = [];
 
-    matches.forEach(match => {
+    for (const match of matches) {
+      if (!Array.isArray(match.players)) continue;
+
       const typeMap = { "1v1": 1, "2v2": 2, "3v3": 3, "4v4": 4 };
       const half = typeMap[match.type] || 1;
 
@@ -2890,49 +2919,39 @@ router.get("/joined/unpaired", authAdmin, async (req, res) => {
           roomType: ff.roomType || "regular",
 
           gameSettings: {
-            headshot: ff.gameSettings?.headshot || false,
-            characterSkill: ff.gameSettings?.characterSkill || false,
-            gunAttributes: ff.gameSettings?.gunAttributes || false,
+            headshot: !!ff.gameSettings?.headshot,
+            characterSkill: !!ff.gameSettings?.characterSkill,
+            gunAttributes: !!ff.gameSettings?.gunAttributes,
             throwableLimit: ff.gameSettings?.throwableLimit || 0
           },
 
-          selectedGuns: {
-            AR: ff.selectedGuns?.AR || [],
-            SMG: ff.selectedGuns?.SMG || [],
-            SNIPER: ff.selectedGuns?.SNIPER || [],
-            SHOTGUN: ff.selectedGuns?.SHOTGUN || [],
-            PISTOLS: ff.selectedGuns?.PISTOLS || [],
-            LAUNCHERS: ff.selectedGuns?.LAUNCHERS || [],
-            SPECIAL: ff.selectedGuns?.SPECIAL || []
-          }
+          selectedGuns: ff.selectedGuns || {}
         });
       });
-    });
+    }
 
     res.json({ success: true, count: result.length, data: result });
-
   } catch (err) {
     console.error("Unpaired fetch error:", err);
     res.status(500).json({ success: false, msg: "Server error" });
   }
 });
 
-
-
-
-
 router.get("/joined/paired", authAdmin, async (req, res) => {
   try {
     const matches = await QuickMatch.find({
       status: { $in: ["paired", "filled", "ongoing", "completed"] }
     })
-      .populate("players.userId", "name phone wallet avatarUrl")
       .sort({ createdAt: -1 })
-      .limit(900);
+      .limit(300)
+      .populate("players.userId", "name phone wallet avatarUrl")
+      .lean();
 
     let result = [];
 
-    matches.forEach(match => {
+    for (const match of matches) {
+      if (!Array.isArray(match.players)) continue;
+
       const typeMap = { "1v1": 1, "2v2": 2, "3v3": 3, "4v4": 4 };
       const half = typeMap[match.type] || 1;
 
@@ -2944,7 +2963,7 @@ router.get("/joined/paired", authAdmin, async (req, res) => {
           matchNumber: match.matchNumber,
 
           userId: p.userId?._id || null,
-          uid: p.uid,
+          uid: p.uid || "",
           name: p.userId?.name || p.name || "Unknown",
           phone: p.userId?.phone || "",
           whatsappNumber: p.whatsappNumber || "",
@@ -2964,33 +2983,20 @@ router.get("/joined/paired", authAdmin, async (req, res) => {
           map: ff.map || "Not Selected",
           roomType: ff.roomType || "regular",
 
-          gameSettings: {
-            headshot: ff.gameSettings?.headshot || false,
-            characterSkill: ff.gameSettings?.characterSkill || false,
-            gunAttributes: ff.gameSettings?.gunAttributes || false,
-            throwableLimit: ff.gameSettings?.throwableLimit || 0
-          },
-
-          selectedGuns: {
-            AR: ff.selectedGuns?.AR || [],
-            SMG: ff.selectedGuns?.SMG || [],
-            SNIPER: ff.selectedGuns?.SNIPER || [],
-            SHOTGUN: ff.selectedGuns?.SHOTGUN || [],
-            PISTOLS: ff.selectedGuns?.PISTOLS || [],
-            LAUNCHERS: ff.selectedGuns?.LAUNCHERS || [],
-            SPECIAL: ff.selectedGuns?.SPECIAL || []
-          }
+          gameSettings: ff.gameSettings || {},
+          selectedGuns: ff.selectedGuns || {}
         });
       });
-    });
+    }
 
     res.json({ success: true, count: result.length, data: result });
-
   } catch (err) {
     console.error("Paired fetch error:", err);
     res.status(500).json({ success: false, msg: "Server error" });
   }
 });
+
+
 
 router.get("/pairss/:matchId", authAdmin, async (req, res) => {
   try {
@@ -4612,98 +4618,128 @@ router.post("/admin/match/complete", authAdmin, async (req, res) => {
 });
 
 
+
+
 router.get("/history", auth, async (req, res) => {
   try {
-    const userId = String(req.user.id);
+    const userId = new mongoose.Types.ObjectId(req.user.id);
 
+    /* =========================
+       MATCH HISTORY
+    ========================= */
     const matches = await QuickMatch.find({
+      status: "completed",
       $or: [
         { "slots.userId": userId },
         { "players.userId": userId }
-      ],
-      status: "completed"
+      ]
     })
       .sort({ createdAt: -1 })
-      .limit(900)
+      .limit(500)
       .lean();
 
     const history = [];
 
     for (const m of matches) {
       const entryFee = Number(m.entryFee || 0);
-      const totalPlayers = (m.players || []).length || 1;
-      const totalCollected = entryFee * totalPlayers;
-      const prizePool = Math.max(0, totalCollected - Math.round(totalCollected * 0.08));
+
+      const playersCount =
+        (m.players?.length || 0) +
+        (m.slots?.length || 0) || 1;
+
+      const totalCollected = entryFee * playersCount;
+      const prizePool = Math.max(
+        0,
+        totalCollected - Math.round(totalCollected * 0.08)
+      );
 
       const winnerIds = (m.winnerIds || []).map(id => String(id));
       const userResults = Array.isArray(m.userResults) ? m.userResults : [];
-      const myResult = userResults.find(r => String(r.userId) === userId);
+
+      const myResult = userResults.find(
+        r => String(r.userId) === String(userId)
+      );
 
       let isWinner = false;
       let prizeWon = 0;
 
-      // ADMIN-selected winners priority
+      /* ===== ADMIN SELECTED WINNERS ===== */
       if (winnerIds.length > 0) {
-        if (winnerIds.includes(userId)) {
+        if (winnerIds.includes(String(userId))) {
           isWinner = true;
 
-          // Compute prize for this user using prizeSystem and userResults if necessary
           if (m.prizeSystem === "team_equal") {
-            // Count number of winners (from userResults or winnerIds)
-            const winnerPlayers = userResults.filter(r => winnerIds.includes(String(r.userId)));
-            prizeWon = Math.round((m.prizeGiven || prizePool) / (winnerPlayers.length || 1));
-          } else if (m.prizeSystem === "kill_based") {
-            const winnerPlayers = userResults.filter(r => winnerIds.includes(String(r.userId)));
-            const totalTeamKills = winnerPlayers.reduce((s, x) => s + (Number(x.kills || 0)), 0);
-            if (totalTeamKills > 0) {
-              const ur = winnerPlayers.find(r => String(r.userId) === userId);
-              prizeWon = Math.round(((ur?.kills || 0) / totalTeamKills) * (m.prizeGiven || prizePool));
+            const winners = userResults.filter(r =>
+              winnerIds.includes(String(r.userId))
+            );
+            prizeWon = Math.round(
+              (m.prizeGiven || prizePool) / (winners.length || 1)
+            );
+          } 
+          else if (m.prizeSystem === "kill_based") {
+            const winners = userResults.filter(r =>
+              winnerIds.includes(String(r.userId))
+            );
+            const totalKills = winners.reduce(
+              (s, x) => s + Number(x.kills || 0), 0
+            );
+
+            if (totalKills > 0) {
+              const ur = winners.find(r => String(r.userId) === String(userId));
+              prizeWon = Math.round(
+                ((ur?.kills || 0) / totalKills) * (m.prizeGiven || prizePool)
+              );
             } else {
-              const winnerPlayersCount = winnerPlayers.length || 1;
-              prizeWon = Math.round((m.prizeGiven || prizePool) / winnerPlayersCount);
+              prizeWon = Math.round(
+                (m.prizeGiven || prizePool) / (winners.length || 1)
+              );
             }
-          } else {
-            // default: give full prize if solo (shouldn't happen for team)
+          } 
+          else {
             prizeWon = m.prizeGiven || prizePool;
           }
-        } else {
-          isWinner = false;
-          prizeWon = 0;
         }
       }
 
-      // If no admin-selected winners, fall back to old logic
+      /* ===== AUTO RESULT (NO ADMIN) ===== */
       else {
         if (m.type === "1v1") {
-          const sorted = [...userResults].sort((a, b) => (b.kills || 0) - (a.kills || 0));
-          const top = sorted[0];
-          if (top && String(top.userId) === userId) {
+          const top = [...userResults].sort(
+            (a, b) => (b.kills || 0) - (a.kills || 0)
+          )[0];
+
+          if (top && String(top.userId) === String(userId)) {
             isWinner = true;
             prizeWon = top.prize || m.prizeGiven || prizePool;
           }
-        } else {
-          // team auto-detect
+        } 
+        else {
           const teamKills = {};
           userResults.forEach(r => {
-            teamKills[r.team] = (teamKills[r.team] || 0) + (Number(r.kills || 0));
+            teamKills[r.team] = (teamKills[r.team] || 0) + Number(r.kills || 0);
           });
 
-          const winnerTeam = Object.keys(teamKills).sort((a, b) => (teamKills[b] || 0) - (teamKills[a] || 0))[0];
-          const ur = userResults.find(r => String(r.userId) === userId);
+          const winnerTeam = Object.keys(teamKills).sort(
+            (a, b) => teamKills[b] - teamKills[a]
+          )[0];
+
+          const ur = userResults.find(
+            r => String(r.userId) === String(userId)
+          );
 
           if (ur && ur.team === winnerTeam) {
             isWinner = true;
-            if (m.prizeSystem === "team_equal") {
-              const winnerPlayers = userResults.filter(r => r.team === winnerTeam);
-              prizeWon = Math.round((m.prizeGiven || prizePool) / (winnerPlayers.length || 1));
-            } else if (m.prizeSystem === "kill_based") {
-              const totalTeamKills = teamKills[winnerTeam] || 0;
-              if (totalTeamKills > 0) {
-                prizeWon = Math.round(((ur.kills || 0) / totalTeamKills) * (m.prizeGiven || prizePool));
-              } else {
-                const winnerPlayers = userResults.filter(r => r.team === winnerTeam);
-                prizeWon = Math.round((m.prizeGiven || prizePool) / (winnerPlayers.length || 1));
-              }
+
+            if (m.prizeSystem === "kill_based") {
+              prizeWon = Math.round(
+                ((ur.kills || 0) / teamKills[winnerTeam]) *
+                (m.prizeGiven || prizePool)
+              );
+            } else {
+              const winners = userResults.filter(r => r.team === winnerTeam);
+              prizeWon = Math.round(
+                (m.prizeGiven || prizePool) / (winners.length || 1)
+              );
             }
           }
         }
@@ -4715,7 +4751,7 @@ router.get("/history", auth, async (req, res) => {
         matchNumber: m.matchNumber,
         game: m.game,
         mode: m.mode,
-        entryFee: m.entryFee,
+        entryFee,
         createdAt: m.createdAt,
         kills: myResult?.kills || 0,
         result: isWinner ? "win" : "loss",
@@ -4723,7 +4759,9 @@ router.get("/history", auth, async (req, res) => {
       });
     }
 
-    // Tournaments logic untouched
+    /* =========================
+       TOURNAMENT HISTORY
+    ========================= */
     const tournaments = await Tournament.find({
       $or: [
         { "winners.userId": userId },
@@ -4732,48 +4770,35 @@ router.get("/history", auth, async (req, res) => {
       ]
     })
       .sort({ createdAt: -1 })
-      .limit(900)
+      .limit(500)
       .lean();
 
     for (const t of tournaments) {
-      const winEntry = (t.winners || []).find(w => String(w.userId) === userId);
-      const joinEntry = (t.joinedUsers || []).find(j => String(j.userId) === userId) || (t.players || []).find(j => String(j.userId) === userId);
+      const win = t.winners?.find(w => String(w.userId) === String(userId));
+      const join =
+        t.joinedUsers?.find(j => String(j.userId) === String(userId)) ||
+        t.players?.find(p => String(p.userId) === String(userId));
 
-      if (winEntry) {
-        history.push({
-          type: "tournament",
-          tournamentId: t._id,
-          tournamentName: t.name,
-          game: t.game,
-          date: t.date,
-          entryFee: t.entryFee,
-          position: winEntry.position,
-          prize: winEntry.prize,
-          result: "win",
-          declaredAt: winEntry.declaredAt
-        });
-      } else if (joinEntry) {
-        history.push({
-          type: "tournament",
-          tournamentId: t._id,
-          tournamentName: t.name,
-          game: t.game,
-          date: t.date,
-          entryFee: t.entryFee,
-          position: null,
-          prize: 0,
-          result: "loss",
-          declaredAt: joinEntry.joinedAt
-        });
-      }
+      history.push({
+        type: "tournament",
+        tournamentId: t._id,
+        tournamentName: t.name,
+        game: t.game,
+        entryFee: t.entryFee,
+        result: win ? "win" : "loss",
+        prize: win?.prize || 0,
+        position: win?.position || null,
+        createdAt: win?.declaredAt || join?.joinedAt || t.createdAt
+      });
     }
 
-    history.sort((a, b) => new Date(b.createdAt || b.declaredAt) - new Date(a.createdAt || a.declaredAt));
+    history.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     res.json({ success: true, count: history.length, history });
+
   } catch (err) {
     console.error("History Error:", err);
-    res.status(500).json({ success: false, msg: "Server error", error: err.message });
+    res.status(500).json({ success: false, msg: "Server error" });
   }
 });
 
@@ -4931,35 +4956,33 @@ router.get("/leaderboard", auth, async (req, res) => {
 // GET /admin/match/results
 router.get("/admin/match/results", authAdmin, async (req, res) => {
   try {
-    const matches = await QuickMatch.find({ "userResults.0": { $exists: true } })
+    const matches = await QuickMatch.find({
+      "userResults.0": { $exists: true }
+    })
       .sort({ createdAt: -1 })
       .limit(900)
-      .populate("players.userId", "name phone uid")
+      .populate("players.userId", "name phone") // ✅ removed uid
       .lean();
 
     if (!matches.length) {
       return res.json({ success: false, msg: "No match results found" });
     }
 
-    // Games that must ALWAYS return kills = null
     const NON_KILL_GAMES = ["ludo", "carrom", "8 ball pool", "8ball", "cricket"];
-
-    // Games that use kill sorting logic
     const KILL_GAMES = ["bgmi", "pubg", "free fire", "freefire"];
 
     const formatted = matches.map(match => {
       const matchGame = String(match.game || "").toLowerCase();
-
       const isNonKill = NON_KILL_GAMES.some(g => matchGame.includes(g));
       const isKill = KILL_GAMES.some(g => matchGame.includes(g));
 
       const playersArr = Array.isArray(match.players) ? match.players : [];
+      const slotsArr = Array.isArray(match.slots) ? match.slots : [];
 
       const getId = (obj) => {
         if (!obj) return "";
         if (obj.userId) {
-          if (typeof obj.userId === "object")
-            return String(obj.userId._id);
+          if (typeof obj.userId === "object") return String(obj.userId._id);
           return String(obj.userId);
         }
         if (obj._id) return String(obj._id);
@@ -4972,59 +4995,26 @@ router.get("/admin/match/results", authAdmin, async (req, res) => {
         if (id) originalById[id] = p;
       });
 
-      const rawResults =
-        Array.isArray(match.userResults) && match.userResults.length
-          ? match.userResults
-          : (Array.isArray(match.results) && match.results.length ? match.results : playersArr);
+      const rawResults = Array.isArray(match.userResults)
+        ? match.userResults
+        : [];
 
-      const results = rawResults.map((r, idx) => {
-        const userId = getId(r) || getId(rawResults[idx]) || "";
-
+      const results = rawResults.map(r => {
+        const userId = getId(r);
         const original = originalById[userId] || {};
 
         const name =
-          r.name ||
           original?.userId?.name ||
-          original?.userId?.phone ||
           original?.name ||
+          original?.phone ||
           "Unknown";
 
-        const uid =
-          r.uid ||
-          original?.userId?.uid ||
-          original?.uid ||
-          "-";
+        const uid = original?.uid || "-";
+        const phone = original?.userId?.phone || original?.phone || "-";
 
-        const phone =
-          r.phone ||
-          original?.userId?.phone ||
-          original?.phone ||
-          "-";
-
-        // ⭐ KILL HANDLING LOGIC
-        let killsValue = Number(r.kills ?? original.kills ?? 0);
-
-        // ⭐ For NON-KILL games → kills ALWAYS null
+        let killsValue = Number(r.kills);
+        if (!Number.isFinite(killsValue)) killsValue = 0;
         if (isNonKill) killsValue = null;
-
-        // ⭐ For kill games → keep value
-        if (isKill) killsValue = Number(killsValue) || 0;
-
-        const prize = Number(r.prize ?? original.prize ?? 0);
-
-        const screenshotUrl =
-          r.screenshotUrl ||
-          r.screenshot ||
-          original.screenshotUrl ||
-          original.screenshot ||
-          "";
-
-        const uploadedAt =
-          r.uploadedAt ||
-          r.uploaded ||
-          original.uploadedAt ||
-          original.createdAt ||
-          null;
 
         return {
           userId,
@@ -5032,31 +5022,24 @@ router.get("/admin/match/results", authAdmin, async (req, res) => {
           uid,
           phone,
           team: r.team || original.team || "",
-          kills: killsValue,    // ⭐ FINAL KILLS VALUE
-          prize,
+          kills: killsValue,
+          prize: Number(r.prize || 0),
           result: r.result || "",
-          screenshotUrl,
-          uploadedAt,
-          prizeSystem: r.prizeSystem || match.prizeSystem || "team_equal"
+          screenshotUrl: r.screenshotUrl || "",
+          uploadedAt: r.uploadedAt || null,
+          prizeSystem: match.prizeSystem || "team_equal"
         };
       });
 
-      // Sorting
-      let sortedResults;
-      if (isKill) {
-        sortedResults = results.sort((a, b) => {
-          if (b.kills !== a.kills) return b.kills - a.kills;
-          const ta = new Date(a.uploadedAt || 0).getTime();
-          const tb = new Date(b.uploadedAt || 0).getTime();
-          return ta - tb;
-        });
-      } else {
-        sortedResults = results.sort((a, b) => {
-          const ta = new Date(a.uploadedAt || 0).getTime();
-          const tb = new Date(b.uploadedAt || 0).getTime();
-          return ta - tb;
-        });
-      }
+      const sortedResults = isKill
+        ? results.sort((a, b) => {
+            if (b.kills !== a.kills) return b.kills - a.kills;
+            return new Date(a.uploadedAt || 0) - new Date(b.uploadedAt || 0);
+          })
+        : results.sort(
+            (a, b) =>
+              new Date(a.uploadedAt || 0) - new Date(b.uploadedAt || 0)
+          );
 
       return {
         _id: match._id,
@@ -5066,18 +5049,19 @@ router.get("/admin/match/results", authAdmin, async (req, res) => {
         mode: match.mode,
         entryFee: match.entryFee,
         prizeSystem: match.prizeSystem || "team_equal",
-        totalPlayers: playersArr.length,
+        totalPlayers: slotsArr.filter(s => s.userId).length, // ✅ correct
         results: sortedResults
       };
     });
 
-    return res.json({ success: true, list: formatted });
+    res.json({ success: true, list: formatted });
 
   } catch (err) {
-    console.error("❌ fetch result error:", err);
-    return res.status(500).json({ success: false, msg: "Server error" });
+    console.error("❌ admin result error:", err);
+    res.status(500).json({ success: false, msg: "Server error" });
   }
 });
+
 
 
 

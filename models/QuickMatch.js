@@ -1,88 +1,80 @@
-
-
-
 const mongoose = require("mongoose");
 
-//
-// SLOT SCHEMA
-//
-const SlotSchema = new mongoose.Schema({
-  uid: { type: String, default: null },
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
-  phone: { type: String, default: null },
-  whatsappNumber: { type: String, default: null },
-  joinedAt: { type: Date, default: Date.now },
+/* =========================
+   SLOT SCHEMA
+========================= */
+const SlotSchema = new mongoose.Schema(
+  {
+    uid: { type: String, default: null },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    phone: { type: String, default: null },
+    whatsappNumber: { type: String, default: null },
+    joinedAt: { type: Date, default: Date.now },
 
-  result: { type: String, enum: ["win", "loss", "pending"], default: "pending" },
-  winningPrice: { type: Number, default: 0 }
-});
+    result: {
+      type: String,
+      enum: ["win", "loss", "pending"],
+      default: "pending"
+    },
+    winningPrice: { type: Number, default: 0 }
+  },
+  { _id: false }
+);
 
-//
-// FREE FIRE SUB-SCHEMAS
-//
-const FFRoomSettingsSchema = new mongoose.Schema({
-  roomType: String,
-  gameMode: String,
-  map: String,
-  teamMode: String
-}, { _id: false });
+/* =========================
+   PLAYER SCHEMA
+========================= */
+const PlayerSchema = new mongoose.Schema(
+  {
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    name: { type: String, default: null },
+    uid: { type: String, default: null },
+    phone: { type: String, default: null },
+    whatsappNumber: { type: String, default: null },
 
-const FFGameSettingsSchema = new mongoose.Schema({
-  headshot: { type: Boolean, default: null },
-  characterSkill: { type: Boolean, default: null },
-  gunAttributes: { type: Boolean, default: null },
-  throwableLimit: { type: Number, default: null }
-}, { _id: false });
+    team: {
+      type: String,
+      enum: ["LION", "TIGER"],
+      default: null
+    },
 
-const FFGunsSchema = new mongoose.Schema({
-  AR: [String],
-  SMG: [String],
-  SNIPER: [String],
-  SHOTGUN: [String],
-  PISTOLS: [String],
-  LAUNCHERS: [String],
-  SPECIAL: [String]
-}, { _id: false });
+    joinedAt: { type: Date, default: Date.now },
 
-const FFThrowablesSchema = new mongoose.Schema({
-  grenades: String,
-  smoke: String,
-  flashFreeze: String,
-  decoy: String
-}, { _id: false });
+    /* ⭐ FREE FIRE SETTINGS (ROUTES SAFE) ⭐ */
+    freeFireSettings: {
+      map: { type: String, default: null },
+      roomType: { type: String, default: "regular" },
 
-const FFStoreItemsSchema = new mongoose.Schema({
-  items: { type: Object, default: {} }
-}, { _id: false });
+      gameSettings: {
+        headshot: { type: Boolean, default: false },
+        characterSkill: { type: Boolean, default: false },
+        gunAttributes: { type: Boolean, default: false },
+        throwableLimit: { type: Number, default: 0 }
+      },
 
-//
-// PLAYER SCHEMA
-//
-const PlayerSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  name: String,
-  uid: String,
-  phone: String,
-  whatsappNumber: { type: String, default: null },
-  team: { type: String, enum: ["LION", "TIGER"], default: null },
-  joinedAt: { type: Date, default: Date.now },
+      selectedGuns: {
+        AR: { type: [String], default: [] },
+        SMG: { type: [String], default: [] },
+        SNIPER: { type: [String], default: [] },
+        SHOTGUN: { type: [String], default: [] },
+        PISTOLS: { type: [String], default: [] },
+        LAUNCHERS: { type: [String], default: [] },
+        SPECIAL: { type: [String], default: [] }
+      }
+    }
+  },
+  { _id: false }
+);
 
-  // ⭐ Full Free Fire Support
-  freeFireSettings: {
-    roomSettings: FFRoomSettingsSchema,
-    gameSettings: FFGameSettingsSchema,
-    guns: FFGunsSchema,
-    throwables: FFThrowablesSchema,
-    storeItems: FFStoreItemsSchema
-  }
-});
-
-//
-// MAIN MATCH SCHEMA
-//
+/* =========================
+   MAIN QUICK MATCH SCHEMA
+========================= */
 const QuickMatchSchema = new mongoose.Schema(
   {
-    matchNumber: { type: String, unique: true, default: null },
+    matchNumber: {
+      type: String,
+      unique: true
+    },
 
     prizeSystem: {
       type: String,
@@ -90,21 +82,23 @@ const QuickMatchSchema = new mongoose.Schema(
       default: null
     },
 
-    // Match Type
+    /* Match Type */
     type: {
       type: String,
       enum: [
-        "1v1", "1v2", "1v3", "2v2", "3v3", "4v4", "5v5", "6v6", "TDM",
-        "Gun Game", "classic", "freestyle", "Custom Room", "quick", "popular",
-        // FREE FIRE
+        "1v1", "1v2", "1v3",
+        "2v2", "3v3", "4v4",
+        "5v5", "6v6",
+        "TDM", "Gun Game",
+        "classic", "freestyle",
+        "Custom Room", "quick", "popular",
         "Clash Squad", "Lone Wolf",
-        // Cricket
         "1 over"
       ],
       required: true
     },
 
-    // Game
+    /* Game */
     game: {
       type: String,
       enum: [
@@ -120,30 +114,26 @@ const QuickMatchSchema = new mongoose.Schema(
       required: true
     },
 
-    // Mode (Combined for All Games)
+    /* Mode */
     mode: {
       type: String,
-      enum: [
-        "TDM",
-        "Gun Game",
-        "classic",
-        "freestyle",
-        "Custom Room",
-        "quick",
-        "popular",
-        // FREE FIRE
-        "Clash Squad",
-        "Lone Wolf",
-        // Cricket
-        "1 over"
-      ],
       required: true
     },
 
-    entryFee: { type: Number, required: true },
+    entryFee: {
+      type: Number,
+      required: true
+    },
 
-    slots: { type: [SlotSchema], default: [] },
-    players: { type: [PlayerSchema], default: [] },
+    slots: {
+      type: [SlotSchema],
+      default: []
+    },
+
+    players: {
+      type: [PlayerSchema],
+      default: []
+    },
 
     roomDetails: {
       roomId: { type: String, default: null },
@@ -153,6 +143,7 @@ const QuickMatchSchema = new mongoose.Schema(
       publishedAt: { type: Date, default: null }
     },
 
+    /* Results uploaded by players */
     userResults: [
       {
         userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -163,39 +154,6 @@ const QuickMatchSchema = new mongoose.Schema(
         team: { type: String, enum: ["LION", "TIGER"], default: null }
       }
     ],
-
-players: [
-  {
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    uid: String,
-    phone: String,
-    whatsappNumber: String,
-    team: String,
-    joinedAt: Date,
-    freeFireSettings: {
-      map: String,
-      roomType: String,
-      gameSettings: {
-        headshot: Boolean,
-        characterSkill: Boolean,
-        gunAttributes: Boolean,
-        throwableLimit: Number
-      },
-      selectedGuns: {
-        AR: [String],
-        SMG: [String],
-        SNIPER: [String],
-        SHOTGUN: [String],
-        PISTOLS: [String],
-        LAUNCHERS: [String],
-        SPECIAL: [String]
-      }
-    }
-  }
-]
-
-,
-
 
     status: {
       type: String,
@@ -209,67 +167,54 @@ players: [
         "full"
       ],
       default: "waiting"
-    },
-
-    createdAt: { type: Date, default: Date.now }
+    }
   },
   { timestamps: true }
 );
 
-
-
-
-
-//
-// AUTO MATCH NUMBER + SLOT CREATION (run before validation so unique checks pass)
-//
-QuickMatchSchema.pre("validate", async function (next) {
-  try {
-    // generate matchNumber early so unique index validation won't see null
-    if (!this.matchNumber) {
-      const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
-      this.matchNumber = `QM-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${randomPart}`;
-    }
-
-    // ensure slots exist (based on type), only if slots are empty
-    const typeToPlayers = {
-      "1v1": 2,
-      "1v2": 3,
-      "1v3": 4,
-      "2v2": 4,
-      "3v3": 6,
-      "4v4": 8,
-      "5v5": 10,
-      "6v6": 12
-    };
-
-    if (!Array.isArray(this.slots) || this.slots.length === 0) {
-      const totalSlots = typeToPlayers[this.type] || 2;
-      this.slots = [];
-      for (let i = 0; i < totalSlots; i++) {
-        this.slots.push({});
-      }
-    }
-    next();
-  } catch (err) {
-    next(err);
+/* =========================
+   AUTO MATCH NUMBER + SLOTS
+========================= */
+QuickMatchSchema.pre("validate", function (next) {
+  if (!this.matchNumber) {
+    const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
+    this.matchNumber = `QM-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${rand}`;
   }
+
+  const typeToPlayers = {
+    "1v1": 2,
+    "1v2": 3,
+    "1v3": 4,
+    "2v2": 4,
+    "3v3": 6,
+    "4v4": 8,
+    "5v5": 10,
+    "6v6": 12
+  };
+
+  if (!this.slots || this.slots.length === 0) {
+    const totalSlots = typeToPlayers[this.type] || 2;
+    this.slots = Array.from({ length: totalSlots }, () => ({}));
+  }
+
+  next();
 });
 
-// Virtual that counts *filled* slots (only truthy uid or userId)
+/* =========================
+   VIRTUALS
+========================= */
 QuickMatchSchema.virtual("joinedCount").get(function () {
   if (!Array.isArray(this.slots)) return 0;
-  return this.slots.filter(s => {
-    // count if uid string present OR userId object present
-    if (!s) return false;
-    if (s.userId) return true;
-    if (typeof s.uid === "string" && s.uid.trim().length > 0) return true;
-    return false;
-  }).length;
+  return this.slots.filter(s => s?.userId || s?.uid).length;
 });
 
-// Optional: expose joinedCount when converting to JSON
 QuickMatchSchema.set("toJSON", { virtuals: true });
 QuickMatchSchema.set("toObject", { virtuals: true });
+
+/* =========================
+   INDEXES (VERY IMPORTANT)
+========================= */
+QuickMatchSchema.index({ createdAt: -1 });
+QuickMatchSchema.index({ status: 1, createdAt: -1 });
 
 module.exports = mongoose.model("QuickMatch", QuickMatchSchema);

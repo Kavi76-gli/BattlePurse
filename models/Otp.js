@@ -16,9 +16,11 @@ const otpSchema = new mongoose.Schema({
   },
 
   // 🔐 temp registration data
-  name: String,
-  phone: String,
-  password: String,
+    // ✅ ADD THESE
+
+  name: { type: String },
+  phone: { type: String },
+  password: { type: String },
 
   expiresAt: {
     type: Date,
@@ -31,5 +33,9 @@ const otpSchema = new mongoose.Schema({
 }
 
 }, { timestamps: true });
+
+otpSchema.index({ email: 1, otp: 1, purpose: 1 });
+otpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+
 
 module.exports = mongoose.model("Otp", otpSchema);
