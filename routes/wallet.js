@@ -49,6 +49,177 @@ router.post("/register-email", async (req, res) => {
   try {
     const { name, phone, email, password } = req.body;
 
+    if (!name || !phone || !email || !password) {
+      return res.status(400).json({ msg: "All fields required" });
+    }
+
+    const exists = await User.findOne({
+      $or: [{ phone }, { email }]
+    }).lean();
+
+    if (exists) {
+      return res.status(400).json({ msg: "User already exists" });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    await Otp.deleteMany({ email, purpose: "register" });
+
+    await Otp.create({
+      email,
+      phone,
+      name,
+      password, // temp only
+      otp,
+      purpose: "register",
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000)
+    });
+
+    // 🚀 SEND EMAIL IN BACKGROUND (NO BLOCKING)
+    mailer.sendMail({
+      to: email,
+      subject: "Registration OTP",
+      html: `<h2>Your OTP is <b>${otp}</b></h2>`
+    }).catch(err => {
+      console.error("OTP email failed:", err.message);
+    });
+
+    res.json({ success: true, msg: "OTP sent to email" });
+
+  } catch (err) {
+    console.error("Register-email error:", err.message);
+    res.status(500).json({
+      msg: "Service temporarily slow. Please try again."
+    });
+  }
+});
+router.post("/verify-email-otp", async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ msg: "Email and OTP required" });
+    }
+
+    const record = await Otp.findOne({
+      email,
+      otp,
+      purpose: "register",
+      expiresAt: { $gt: new Date() }
+    });
+
+    if (!record) {
+      return res.status(400).json({ msg: "Invalid or expired OTP" });
+    }
+
+    const exists = await User.findOne({
+      $or: [{ phone: record.phone }, { email: record.email }]
+    }).lean();
+
+    if (exists) {
+      await Otp.deleteMany({ email });
+      return res.status(400).json({ msg: "User already registered" });
+    }
+
+    const hashedPassword = await bcrypt.hash(record.password, 10);
+
+    await User.create({
+      name: record.name,
+      phone: record.phone,
+      email: record.email,
+      password: hashedPassword
+    });
+
+    await Otp.deleteMany({ email });
+
+    res.json({ success: true, msg: "Registration successful" });
+
+  } catch (err) {
+    console.error("Verify-email-otp error:", err.message);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+
+router.post("/forgot/send-otp", async (req, res) => {
+  try {
+    const { phone, email } = req.body;
+
+    const user = await User.findOne({ phone, email }).lean();
+    if (!user) return res.status(400).json({ msg: "User not found" });
+
+    const otp = genOtp();
+
+    await Otp.deleteMany({ email, purpose: "forgot" });
+
+    await Otp.create({
+      email,
+      phone,
+      otp,
+      purpose: "forgot",
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000)
+    });
+
+    mailer.sendMail({
+      to: email,
+      subject: "Password Reset OTP",
+      html: `<h2>Your OTP is <b>${otp}</b></h2>`
+    }).catch(err => {
+      console.error("Forgot OTP email failed:", err.message);
+    });
+
+    res.json({ msg: "OTP sent" });
+
+  } catch (err) {
+    console.error("Forgot-send-otp error:", err.message);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+
+router.post("/resend-otp", async (req, res) => {
+  try {
+    const { email, purpose } = req.body;
+
+    if (!email || !purpose) {
+      return res.status(400).json({ msg: "Missing data" });
+    }
+
+    const prev = await Otp.findOne({ email, purpose });
+    if (!prev) return res.status(400).json({ msg: "No OTP request found" });
+
+    const otp = genOtp();
+
+    await Otp.deleteMany({ email, purpose });
+
+    await Otp.create({
+      email,
+      phone: prev.phone,
+      name: prev.name,
+      password: prev.password,
+      otp,
+      purpose,
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000)
+    });
+
+    mailer.sendMail({
+      to: email,
+      subject: "Your OTP (Resent)",
+      html: `<h2>Your new OTP is <b>${otp}</b></h2>`
+    }).catch(err => {
+      console.error("Resend OTP email failed:", err.message);
+    });
+
+    res.json({ msg: "OTP resent successfully" });
+
+  } catch (err) {
+    console.error("Resend-otp error:", err.message);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+
+router.post("/register-email", async (req, res) => {
+  try {
+    const { name, phone, email, password } = req.body;
+
     // ✅ Validate
     if (!name || !phone || !email || !password) {
       return res.status(400).json({ msg: "All fields required" });
