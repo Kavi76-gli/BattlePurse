@@ -47,118 +47,75 @@ const sendOTP = require("../utils/sendOTP");
 /* 🔢 OTP generator */
 const genOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 
-/* ================================
+
+
+
+/* ======================================
    REGISTER → SEND EMAIL OTP
-================================ */
-/* ================================
-   REGISTER → SEND EMAIL OTP
-================================ */
-
-
-/* ================================
-   REGISTER → SEND OTP
-================================ */
-
-
-
+====================================== */
 router.post("/register-email", async (req, res) => {
   try {
     const { name, phone, email, password } = req.body;
 
-    // ✅ Validate
-    if (!name || !phone || !email || !password) {
+    if (!name || !phone || !email || !password)
       return res.status(400).json({ msg: "All fields required" });
-    }
 
-    // ✅ Check existing user
     const exists = await User.findOne({
       $or: [{ phone }, { email }]
     });
 
-    if (exists) {
+    if (exists)
       return res.status(400).json({ msg: "User already exists" });
-    }
 
-    // ✅ Generate OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = genOtp();
 
-    // ✅ Remove old OTPs
     await Otp.deleteMany({ email, purpose: "register" });
 
-    // ✅ Save OTP + temp registration data
     await Otp.create({
-      email,
-      phone,
       name,
-      password,          // stored temporarily
+      phone,
+      email,
+      password, // temp
       otp,
       purpose: "register",
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000) // 5 min
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000)
     });
 
-    // ✅ Send email
-    await sendEmail({
-  to: email,
-  subject: "Registration OTP",
-  html: `<h2>Your OTP is <b>${otp}</b></h2>`
-});
+    sendEmail({
+      to: email,
+      subject: "Registration OTP",
+      html: `<h2>Your OTP is <b>${otp}</b></h2>`
+    }).catch(err => console.error("Email error:", err.message));
 
-    
-    res.json({ success: true, msg: "OTP sent to email" });
+    res.json({ success: true, msg: "OTP sent" });
 
   } catch (err) {
-    console.error("Register-email error:", err);
+    console.error("Register error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 });
 
-
-/* ================================
+/* ======================================
    VERIFY EMAIL OTP & CREATE USER
-================================ */
-/* ================================
-   VERIFY EMAIL OTP & CREATE USER
-================================ */
+====================================== */
 router.post("/verify-email-otp", async (req, res) => {
   try {
     const { email, otp } = req.body;
 
-    if (!email || !otp) {
+    if (!email || !otp)
       return res.status(400).json({ msg: "Email and OTP required" });
-    }
 
-    // ✅ Find OTP record
     const record = await Otp.findOne({
       email,
       otp,
       purpose: "register"
     });
 
-    if (!record || record.expiresAt < Date.now()) {
+    if (!record || record.expiresAt < Date.now())
       return res.status(400).json({ msg: "Invalid or expired OTP" });
-    }
 
-    // ✅ Safety check
-    if (!record.password || !record.phone || !record.name) {
-      return res.status(400).json({
-        msg: "Registration data missing. Please resend OTP."
-      });
-    }
-
-    // ✅ Check again if user already exists
-    const exists = await User.findOne({
-      $or: [{ phone: record.phone }, { email: record.email }]
-    });
-
-    if (exists) {
-      await Otp.deleteMany({ email });
-      return res.status(400).json({ msg: "User already registered" });
-    }
-
-    // ✅ Hash password
     const hashedPassword = await bcrypt.hash(record.password, 10);
 
-    // ✅ Create user
     await User.create({
       name: record.name,
       phone: record.phone,
@@ -166,61 +123,45 @@ router.post("/verify-email-otp", async (req, res) => {
       password: hashedPassword
     });
 
-    // ✅ Remove OTP
     await Otp.deleteMany({ email });
 
     res.json({ success: true, msg: "Registration successful" });
 
   } catch (err) {
-    console.error("Verify-email-otp error:", err);
+    console.error("Verify OTP error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 });
 
-
-
-
-/* ================================
+/* ======================================
    LOGIN
-================================ */
-/* ================================
-   LOGIN
-================================ */
+====================================== */
 router.post("/login", async (req, res) => {
   try {
     const { phone, password } = req.body;
 
-    if (!phone || !password) {
+    if (!phone || !password)
       return res.status(400).json({ msg: "Phone and password required" });
-    }
 
     const user = await User.findOne({ phone });
-    if (!user) {
+    if (!user)
       return res.status(400).json({ msg: "User not found" });
-    }
 
     const match = await bcrypt.compare(password, user.password);
-    if (!match) {
+    if (!match)
       return res.status(400).json({ msg: "Wrong password" });
-    }
 
-   const token = jwt.sign(
-  {
-    id: user._id,
-    isAdmin: user.isAdmin === true
-  },
-  process.env.JWT_SECRET,
-  {
-    expiresIn: 12614400000   // ✅ 400 years
-  }
-);
+    const token = jwt.sign(
+      { id: user._id, isAdmin: user.isAdmin === true },
+      process.env.JWT_SECRET,
+      { expiresIn: "400y" }
+    );
 
-res.json({
-  success: true,
-  token,
-  isAdmin: user.isAdmin === true
-});
-
+    res.json({
+      success: true,
+      token,
+      isAdmin: user.isAdmin === true
+    });
 
   } catch (err) {
     console.error("Login error:", err);
@@ -228,9 +169,9 @@ res.json({
   }
 });
 
-/* ================================
-   FORGOT → SEND OTP
-================================ */
+/* ======================================
+   FORGOT PASSWORD → SEND OTP
+====================================== */
 router.post("/forgot/send-otp", async (req, res) => {
   try {
     const { phone, email } = req.body;
@@ -251,99 +192,57 @@ router.post("/forgot/send-otp", async (req, res) => {
       expiresAt: new Date(Date.now() + 5 * 60 * 1000)
     });
 
-    await sendEmail({
+    sendEmail({
       to: email,
       subject: "Password Reset OTP",
       html: `<h2>Your OTP is <b>${otp}</b></h2>`
-    });
+    }).catch(err => console.error("Email error:", err.message));
 
-    res.json({ msg: "OTP sent" });
+    res.json({ success: true, msg: "OTP sent" });
 
   } catch (err) {
-    console.error("Forgot send OTP error:", err);
+    console.error("Forgot send error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 });
-/* ================================
-router.post("/forgot/send-otp", async (req, res) => {
+
+/* ======================================
+   FORGOT PASSWORD → RESET
+====================================== */
+router.post("/forgot/reset", async (req, res) => {
   try {
-    const { phone, email } = req.body;
+    const { phone, email, otp, newPassword } = req.body;
 
-    const user = await User.findOne({ phone, email });
-    if (!user) return res.status(400).json({ msg: "User not found" });
-
-    const otp = genOtp();
-
-    await Otp.deleteMany({ email, purpose: "forgot" });
-
-    await Otp.create({
+    const record = await Otp.findOne({
       email,
       phone,
       otp,
-      purpose: "forgot",
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000)
+      purpose: "forgot"
     });
 
-    await mailer.sendMail({
-      to: email,
-      subject: "Password Reset OTP",
-      html: `<h2>Your OTP is <b>${otp}</b></h2>`
-    });
-
-    res.json({ msg: "OTP sent" });
-
-  } catch {
-    res.status(500).json({ msg: "Server error" });
-  }
-});
-
-/* ================================
-   FORGOT → RESET PASSWORD
-================================ */
-router.post("/forgot/reset", async (req, res) => {
-  try {
-    const { phone, email, otp, newPassword } = req.body;
-
-    const record = await Otp.findOne({ email, phone, otp, purpose: "forgot" });
     if (!record || record.expiresAt < Date.now())
       return res.status(400).json({ msg: "Invalid or expired OTP" });
 
     const hashed = await bcrypt.hash(newPassword, 10);
 
-    await User.updateOne({ phone, email }, { password: hashed });
+    await User.updateOne(
+      { phone, email },
+      { password: hashed }
+    );
+
     await Otp.deleteMany({ email });
 
-    res.json({ msg: "Password updated" });
+    res.json({ success: true, msg: "Password updated" });
 
   } catch (err) {
-    console.error("Forgot reset error:", err);
+    console.error("Reset error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 });
 
-router.post("/forgot/reset", async (req, res) => {
-  try {
-    const { phone, email, otp, newPassword } = req.body;
-
-    const record = await Otp.findOne({ email, phone, otp, purpose: "forgot" });
-    if (!record || record.expiresAt < Date.now())
-      return res.status(400).json({ msg: "Invalid or expired OTP" });
-
-    const hashed = await bcrypt.hash(newPassword, 10);
-
-    await User.updateOne({ phone, email }, { password: hashed });
-    await Otp.deleteMany({ email });
-
-    res.json({ msg: "Password updated" });
-
-  } catch {
-    res.status(500).json({ msg: "Server error" });
-  }
-});
-
-/* ================================
+/* ======================================
    RESEND OTP (REGISTER / FORGOT)
-================================ */
+====================================== */
 router.post("/resend-otp", async (req, res) => {
   try {
     const { email, purpose } = req.body;
@@ -362,13 +261,13 @@ router.post("/resend-otp", async (req, res) => {
       expiresAt: new Date(Date.now() + 5 * 60 * 1000)
     });
 
-    await sendEmail({
+    sendEmail({
       to: email,
       subject: "Your OTP (Resent)",
       html: `<h2>Your new OTP is <b>${otp}</b></h2>`
-    });
+    }).catch(err => console.error("Resend error:", err.message));
 
-    res.json({ msg: "OTP resent successfully" });
+    res.json({ success: true, msg: "OTP resent successfully" });
 
   } catch (err) {
     console.error("Resend OTP error:", err);
@@ -376,39 +275,9 @@ router.post("/resend-otp", async (req, res) => {
   }
 });
 
-router.post("/resend-otp", async (req, res) => {
-  try {
-    const { email, purpose } = req.body; 
-    // purpose = "register" or "forgot"
 
-    if (!email || !purpose)
-      return res.status(400).json({ msg: "Missing data" });
 
-    const otp = genOtp();
-
-    // Delete old OTP
-    await Otp.deleteMany({ email, purpose });
-
-    // Save new OTP
-    await Otp.create({
-      email,
-      otp,
-      purpose,
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000)
-    });
-
-    await mailer.sendMail({
-      to: email,
-      subject: "Your OTP (Resent)",
-      html: `<h2>Your new OTP is <b>${otp}</b></h2>`
-    });
-
-    res.json({ msg: "OTP resent successfully" });
-
-  } catch (err) {
-    res.status(500).json({ msg: "Server error" });
-  }
-});
+    
 
 
 function getColor(status) {
