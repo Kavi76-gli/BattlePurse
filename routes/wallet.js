@@ -34,7 +34,11 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 
 const Otp = require("../models/Otp");
-const sendEmail = require("../utils/mailer");
+
+const sendEmail = require("../utils/sendEmail");
+
+
+
 
 
 const sendOTP = require("../utils/sendOTP");

@@ -4,13 +4,16 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const path = require("path");
 
-
 dotenv.config();
-
-console.log("RESEND KEY LOADED:", !!process.env.RESEND_API_KEY);
 
 const app = express();
 process.setMaxListeners(20);
+
+/* ======================
+   DEBUG ENV
+====================== */
+console.log("RESEND KEY LOADED:", !!process.env.RESEND_API_KEY);
+console.log("EMAIL USER LOADED:", !!process.env.EMAIL_USER);
 
 /* ======================
    MIDDLEWARE
@@ -26,19 +29,16 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 /* ======================
-   MONGODB CONNECTION
+   MONGODB CONNECTION (ONLY ONCE)
 ====================== */
-mongoose.set("bufferCommands", false);
-mongoose.connect(process.env.MONGO_URI, {
-  maxPoolSize: 10,
-  serverSelectionTimeoutMS: 5000
-});
-
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(process.env.MONGO_URI, {
+    maxPoolSize: 10,
+    serverSelectionTimeoutMS: 5000
+  })
   .then(() => console.log("✅ MongoDB Atlas connected"))
   .catch((err) => {
-    console.error("❌ MongoDB connection error:", err);
+    console.error("❌ MongoDB connection error:", err.message);
     process.exit(1);
   });
 
@@ -55,7 +55,7 @@ app.get("/", (req, res) => {
 });
 
 /* ======================
-   404 HANDLER (API)
+   404 HANDLER
 ====================== */
 app.use((req, res) => {
   res.status(404).json({ msg: "Route not found" });
@@ -65,13 +65,6 @@ app.use((req, res) => {
    START SERVER
 ====================== */
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () =>
-  console.log(`🚀 Server running on port ${PORT}`)
-);
-
-
-
-
-
-
-
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
