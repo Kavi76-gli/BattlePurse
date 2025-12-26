@@ -29,13 +29,15 @@ const JWT_SECRET = process.env.JWT_SECRET;
 // ====================== REGISTER ======================
 
 
-const sendOTP = require("../utils/sendOTP");
+
 
 
 
 const Otp = require("../models/Otp");
-const mailer = require("../utils/sendEmail");
-const sendEmail = require("../utils/sendEmail");
+const sendEmail = require("../utils/mailer");
+
+
+const sendOTP = require("../utils/sendOTP");
 
 
 /* 🔢 OTP generator */
@@ -52,226 +54,6 @@ const genOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 /* ================================
    REGISTER → SEND OTP
 ================================ */
-router.post("/register-email", async (req, res) => {
-  try {
-    const { name, phone, email, password } = req.body;
-
-    if (!name || !phone || !email || !password) {
-      return res.status(400).json({ msg: "All fields required" });
-    }
-
-    const exists = await User.findOne({
-      $or: [{ phone }, { email }]
-    }).lean();
-
-    if (exists) {
-      return res.status(400).json({ msg: "User already exists" });
-    }
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    await Otp.deleteMany({ email, purpose: "register" });
-
-    await Otp.create({
-      email,
-      phone,
-      name,
-      password,
-      otp,
-      purpose: "register",
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000)
-    });
-
-    // ✅ SEND EMAIL
-    sendEmail({
-      to: email,
-      subject: "BattlePurse Registration OTP",
-      html: `<h2>Your OTP is <b>${otp}</b></h2>`
-    }).catch(err => {
-      console.error("OTP email failed:", err.message);
-    });
-
-    res.json({ success: true, msg: "OTP sent to email" });
-
-  } catch (err) {
-    console.error("Register-email error:", err);
-    res.status(500).json({ msg: "Server error" });
-  }
-});
-
-/* ================================
-   VERIFY OTP → CREATE USER
-================================ */
-router.post("/verify-email-otp", async (req, res) => {
-  try {
-    const { email, otp } = req.body;
-
-    if (!email || !otp) {
-      return res.status(400).json({ msg: "Email and OTP required" });
-    }
-
-    const record = await Otp.findOne({
-      email,
-      otp,
-      purpose: "register",
-      expiresAt: { $gt: new Date() }
-    });
-
-    if (!record) {
-      return res.status(400).json({ msg: "Invalid or expired OTP" });
-    }
-
-    const exists = await User.findOne({
-      $or: [{ phone: record.phone }, { email: record.email }]
-    }).lean();
-
-    if (exists) {
-      await Otp.deleteMany({ email });
-      return res.status(400).json({ msg: "User already registered" });
-    }
-
-    const hashedPassword = await bcrypt.hash(record.password, 10);
-
-    await User.create({
-      name: record.name,
-      phone: record.phone,
-      email: record.email,
-      password: hashedPassword
-    });
-
-    await Otp.deleteMany({ email });
-
-    res.json({ success: true, msg: "Registration successful" });
-
-  } catch (err) {
-    console.error("Verify-email-otp error:", err.message);
-    res.status(500).json({ msg: "Server error" });
-  }
-});
-
-/* ================================
-   LOGIN
-================================ */
-router.post("/login", async (req, res) => {
-  try {
-    const { phone, password } = req.body;
-
-    if (!phone || !password) {
-      return res.status(400).json({ msg: "Phone and password required" });
-    }
-
-    const user = await User.findOne({ phone });
-    if (!user) {
-      return res.status(400).json({ msg: "User not found" });
-    }
-
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-      return res.status(400).json({ msg: "Wrong password" });
-    }
-
-    const token = jwt.sign(
-      {
-        id: user._id,
-        isAdmin: user.isAdmin === true
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "365d" }
-    );
-
-    res.json({
-      success: true,
-      token,
-      isAdmin: user.isAdmin === true
-    });
-
-  } catch (err) {
-    console.error("Login error:", err.message);
-    res.status(500).json({ msg: "Server error" });
-  }
-});
-
-/* ================================
-   FORGOT → SEND OTP
-================================ */
-router.post("/forgot/send-otp", async (req, res) => {
-  try {
-    const { phone, email } = req.body;
-
-    const user = await User.findOne({ phone, email }).lean();
-    if (!user) return res.status(400).json({ msg: "User not found" });
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    await Otp.deleteMany({ email, purpose: "forgot" });
-
-    await Otp.create({
-      email,
-      phone,
-      otp,
-      purpose: "forgot",
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000)
-    });
-
-    sendEmail({
-      to: email,
-      subject: "Password Reset OTP",
-      html: `<h2>Your OTP is <b>${otp}</b></h2>`
-    }).catch(err => {
-      console.error("Forgot OTP email failed:", err.message);
-    });
-
-    res.json({ msg: "OTP sent" });
-
-  } catch (err) {
-    console.error("Forgot-send-otp error:", err.message);
-    res.status(500).json({ msg: "Server error" });
-  }
-});
-
-/* ================================
-   RESEND OTP
-================================ */
-router.post("/resend-otp", async (req, res) => {
-  try {
-    const { email, purpose } = req.body;
-
-    if (!email || !purpose) {
-      return res.status(400).json({ msg: "Missing data" });
-    }
-
-    const prev = await Otp.findOne({ email, purpose });
-    if (!prev) return res.status(400).json({ msg: "No OTP request found" });
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    await Otp.deleteMany({ email, purpose });
-
-    await Otp.create({
-      email,
-      phone: prev.phone,
-      name: prev.name,
-      password: prev.password,
-      otp,
-      purpose,
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000)
-    });
-
-    sendEmail({
-      to: email,
-      subject: "Your OTP (Resent)",
-      html: `<h2>Your new OTP is <b>${otp}</b></h2>`
-    }).catch(err => {
-      console.error("Resend OTP email failed:", err.message);
-    });
-
-    res.json({ msg: "OTP resent successfully" });
-
-  } catch (err) {
-    console.error("Resend-otp error:", err.message);
-    res.status(500).json({ msg: "Server error" });
-  }
-});
 
 
 
@@ -311,12 +93,13 @@ router.post("/register-email", async (req, res) => {
     });
 
     // ✅ Send email
-    await mailer.sendMail({
-      to: email,
-      subject: "Registration OTP",
-      html: `<h2>Your OTP is <b>${otp}</b></h2>`
-    });
+    await sendEmail({
+  to: email,
+  subject: "Registration OTP",
+  html: `<h2>Your OTP is <b>${otp}</b></h2>`
+});
 
+    
     res.json({ success: true, msg: "OTP sent to email" });
 
   } catch (err) {
@@ -449,6 +232,40 @@ router.post("/forgot/send-otp", async (req, res) => {
     const { phone, email } = req.body;
 
     const user = await User.findOne({ phone, email });
+    if (!user)
+      return res.status(400).json({ msg: "User not found" });
+
+    const otp = genOtp();
+
+    await Otp.deleteMany({ email, purpose: "forgot" });
+
+    await Otp.create({
+      email,
+      phone,
+      otp,
+      purpose: "forgot",
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000)
+    });
+
+    await sendEmail({
+      to: email,
+      subject: "Password Reset OTP",
+      html: `<h2>Your OTP is <b>${otp}</b></h2>`
+    });
+
+    res.json({ msg: "OTP sent" });
+
+  } catch (err) {
+    console.error("Forgot send OTP error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+/* ================================
+router.post("/forgot/send-otp", async (req, res) => {
+  try {
+    const { phone, email } = req.body;
+
+    const user = await User.findOne({ phone, email });
     if (!user) return res.status(400).json({ msg: "User not found" });
 
     const otp = genOtp();
@@ -494,6 +311,27 @@ router.post("/forgot/reset", async (req, res) => {
 
     res.json({ msg: "Password updated" });
 
+  } catch (err) {
+    console.error("Forgot reset error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+
+router.post("/forgot/reset", async (req, res) => {
+  try {
+    const { phone, email, otp, newPassword } = req.body;
+
+    const record = await Otp.findOne({ email, phone, otp, purpose: "forgot" });
+    if (!record || record.expiresAt < Date.now())
+      return res.status(400).json({ msg: "Invalid or expired OTP" });
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+
+    await User.updateOne({ phone, email }, { password: hashed });
+    await Otp.deleteMany({ email });
+
+    res.json({ msg: "Password updated" });
+
   } catch {
     res.status(500).json({ msg: "Server error" });
   }
@@ -502,6 +340,38 @@ router.post("/forgot/reset", async (req, res) => {
 /* ================================
    RESEND OTP (REGISTER / FORGOT)
 ================================ */
+router.post("/resend-otp", async (req, res) => {
+  try {
+    const { email, purpose } = req.body;
+
+    if (!email || !purpose)
+      return res.status(400).json({ msg: "Missing data" });
+
+    const otp = genOtp();
+
+    await Otp.deleteMany({ email, purpose });
+
+    await Otp.create({
+      email,
+      otp,
+      purpose,
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000)
+    });
+
+    await sendEmail({
+      to: email,
+      subject: "Your OTP (Resent)",
+      html: `<h2>Your new OTP is <b>${otp}</b></h2>`
+    });
+
+    res.json({ msg: "OTP resent successfully" });
+
+  } catch (err) {
+    console.error("Resend OTP error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+
 router.post("/resend-otp", async (req, res) => {
   try {
     const { email, purpose } = req.body; 

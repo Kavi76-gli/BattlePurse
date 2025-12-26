@@ -4,7 +4,10 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const path = require("path");
 
+
 dotenv.config();
+
+console.log("RESEND KEY LOADED:", !!process.env.RESEND_API_KEY);
 
 const app = express();
 process.setMaxListeners(20);
