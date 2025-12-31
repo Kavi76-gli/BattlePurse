@@ -53,55 +53,11 @@ const genOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 /* ======================================
    REGISTER → SEND EMAIL OTP
 ====================================== */
-router.post("/register-email", async (req, res) => {
-  try {
-    const { name, phone, email, password } = req.body;
 
-    if (!name || !phone || !email || !password) {
-      return res.status(400).json({ msg: "All fields required" });
-    }
 
-    const exists = await User.findOne({
-      $or: [{ phone }, { email }]
-    });
-
-    if (exists) {
-      return res.status(400).json({ msg: "User already exists" });
-    }
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    await Otp.deleteMany({ email, purpose: "register" });
-
-    await Otp.create({
-      name,
-      phone,
-      email,
-      password,
-      otp,
-      purpose: "register",
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000)
-    });
-
-    // ✅ SEND EMAIL (DO NOT FAIL API IF EMAIL FAILS)
-    sendEmail({
-  to: email,
-  subject: "BattlePurse OTP",
-  html: `<h2>Your OTP is <b>${otp}</b></h2>`
-})
-.then(() => console.log("✅ OTP email sent"))
-.catch(err => console.error("❌ Email failed:", err.message));
-
-res.json({ success: true, msg: "OTP sent" });
-
-   
-
-  } catch (err) {
-    console.error("Register-email error:", err);
-    res.status(500).json({ msg: "Server error" });
-  }
-});
-
+/* ======================================
+   REGISTER → SEND EMAIL OTP
+====================================== */
 router.post("/register-email", async (req, res) => {
   try {
     const { name, phone, email, password } = req.body;
@@ -112,7 +68,6 @@ router.post("/register-email", async (req, res) => {
     const exists = await User.findOne({
       $or: [{ phone }, { email }]
     });
-
     if (exists)
       return res.status(400).json({ msg: "User already exists" });
 
@@ -124,23 +79,24 @@ router.post("/register-email", async (req, res) => {
       name,
       phone,
       email,
-      password, // temp
+      password, // temp, will hash after OTP verify
       otp,
       purpose: "register",
       expiresAt: new Date(Date.now() + 5 * 60 * 1000)
     });
 
-    sendEmail({
+    // 🔐 Must succeed
+    await sendEmail({
       to: email,
-      subject: "Registration OTP",
+      subject: "BattlePurse Registration OTP",
       html: `<h2>Your OTP is <b>${otp}</b></h2>`
-    }).catch(err => console.error("Email error:", err.message));
+    });
 
-    res.json({ success: true, msg: "OTP sent" });
+    res.json({ success: true, msg: "OTP sent to email" });
 
   } catch (err) {
-    console.error("Register error:", err);
-    res.status(500).json({ msg: "Server error" });
+    console.error("Register-email error:", err);
+    res.status(500).json({ msg: "Failed to send OTP" });
   }
 });
 
@@ -172,13 +128,13 @@ router.post("/verify-email-otp", async (req, res) => {
       password: hashedPassword
     });
 
-    await Otp.deleteMany({ email });
+    await Otp.deleteMany({ email, purpose: "register" });
 
     res.json({ success: true, msg: "Registration successful" });
 
   } catch (err) {
     console.error("Verify OTP error:", err);
-    res.status(500).json({ msg: "Server error" });
+    res.status(500).json({ msg: "OTP verification failed" });
   }
 });
 
@@ -214,7 +170,7 @@ router.post("/login", async (req, res) => {
 
   } catch (err) {
     console.error("Login error:", err);
-    res.status(500).json({ msg: "Server error" });
+    res.status(500).json({ msg: "Login failed" });
   }
 });
 
@@ -241,17 +197,17 @@ router.post("/forgot/send-otp", async (req, res) => {
       expiresAt: new Date(Date.now() + 5 * 60 * 1000)
     });
 
-    sendEmail({
+    await sendEmail({
       to: email,
-      subject: "Password Reset OTP",
+      subject: "BattlePurse Password Reset OTP",
       html: `<h2>Your OTP is <b>${otp}</b></h2>`
-    }).catch(err => console.error("Email error:", err.message));
+    });
 
-    res.json({ success: true, msg: "OTP sent" });
+    res.json({ success: true, msg: "OTP sent to email" });
 
   } catch (err) {
-    console.error("Forgot send error:", err);
-    res.status(500).json({ msg: "Server error" });
+    console.error("Forgot send OTP error:", err);
+    res.status(500).json({ msg: "Failed to send OTP" });
   }
 });
 
@@ -261,6 +217,9 @@ router.post("/forgot/send-otp", async (req, res) => {
 router.post("/forgot/reset", async (req, res) => {
   try {
     const { phone, email, otp, newPassword } = req.body;
+
+    if (!phone || !email || !otp || !newPassword)
+      return res.status(400).json({ msg: "All fields required" });
 
     const record = await Otp.findOne({
       email,
@@ -279,13 +238,13 @@ router.post("/forgot/reset", async (req, res) => {
       { password: hashed }
     );
 
-    await Otp.deleteMany({ email });
+    await Otp.deleteMany({ email, purpose: "forgot" });
 
-    res.json({ success: true, msg: "Password updated" });
+    res.json({ success: true, msg: "Password updated successfully" });
 
   } catch (err) {
     console.error("Reset error:", err);
-    res.status(500).json({ msg: "Server error" });
+    res.status(500).json({ msg: "Password reset failed" });
   }
 });
 
@@ -310,19 +269,21 @@ router.post("/resend-otp", async (req, res) => {
       expiresAt: new Date(Date.now() + 5 * 60 * 1000)
     });
 
-    sendEmail({
+    await sendEmail({
       to: email,
-      subject: "Your OTP (Resent)",
+      subject: "BattlePurse OTP (Resent)",
       html: `<h2>Your new OTP is <b>${otp}</b></h2>`
-    }).catch(err => console.error("Resend error:", err.message));
+    });
 
     res.json({ success: true, msg: "OTP resent successfully" });
 
   } catch (err) {
     console.error("Resend OTP error:", err);
-    res.status(500).json({ msg: "Server error" });
+    res.status(500).json({ msg: "Failed to resend OTP" });
   }
 });
+
+
 
 
 
