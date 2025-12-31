@@ -2853,6 +2853,11 @@ router.get("/joined", authAdmin, async (req, res) => {
       match.players.forEach((p, index) => {
         const ff = p.freeFireSettings || {};
 
+const rounds =
+          Number.isInteger(Number(p.rounds)) ? Number(p.rounds) :
+          Number.isInteger(Number(match.rounds)) ? Number(match.rounds) :
+          null;
+
         allJoined.push({
           matchId: match._id,
           matchNumber: match.matchNumber || "N/A",
@@ -2875,7 +2880,7 @@ router.get("/joined", authAdmin, async (req, res) => {
 
           team: p.team || (index < half ? "LION" : "TIGER"),
 
-          rounds: p.rounds || match.rounds || 7, // ✅ added rounds
+          rounds, // ✅ added rounds
 
           map: ff.map || "Not Selected",
           roomType: ff.roomType || "regular",
@@ -2927,6 +2932,11 @@ router.get("/joined/unpaired", authAdmin, async (req, res) => {
       match.players.forEach((p, idx) => {
         const ff = p.freeFireSettings || {};
 
+const rounds =
+          Number.isInteger(Number(p.rounds)) ? Number(p.rounds) :
+          Number.isInteger(Number(match.rounds)) ? Number(match.rounds) :
+          null;
+
         result.push({
           matchId: match._id,
           matchNumber: match.matchNumber || "",
@@ -2949,7 +2959,7 @@ router.get("/joined/unpaired", authAdmin, async (req, res) => {
 
           team: p.team || (idx < half ? "LION" : "TIGER"),
 
-          rounds: p.rounds || match.rounds || 7, // ✅ added rounds
+          rounds, // ✅ added rounds
 
           map: ff.map || "Not Selected",
           roomType: ff.roomType || "regular",
@@ -2995,6 +3005,11 @@ router.get("/joined/paired", authAdmin, async (req, res) => {
       match.players.forEach((p, idx) => {
         const ff = p.freeFireSettings || {};
 
+const rounds =
+          Number.isInteger(Number(p.rounds)) ? Number(p.rounds) :
+          Number.isInteger(Number(match.rounds)) ? Number(match.rounds) :
+          null;
+
         result.push({
           matchId: match._id,
           matchNumber: match.matchNumber,
@@ -3017,7 +3032,7 @@ router.get("/joined/paired", authAdmin, async (req, res) => {
 
           team: p.team || (idx < half ? "LION" : "TIGER"),
 
-          rounds: p.rounds || match.rounds || 7, // ✅ added rounds
+          rounds, // ✅ added rounds
 
           map: ff.map || "Not Selected",
           roomType: ff.roomType || "regular",
