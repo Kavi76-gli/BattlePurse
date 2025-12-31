@@ -19,6 +19,10 @@ console.log("EMAIL PASS LOADED:", !!process.env.EMAIL_PASS);
 /* ======================
    MIDDLEWARE
 ====================== */
+app.get("/ping", (req, res) => {
+  res.json({ ok: true, msg: "Server is responding" });
+});
+
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));

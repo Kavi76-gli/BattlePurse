@@ -1,34 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Match History</title>
 
 <style>
 :root{
-  --bg:#121212;
-  --card:#1e1e1e;
-  --line:#333;
+  --bg:#0f0f0f;
+  --card:#1c1c1c;
+  --line:#2f2f2f;
   --accent:#00faff;
   --win:#00ff88;
-  --loss:#ff5555;
+  --loss:#ff4d4d;
 }
 
 *{box-sizing:border-box}
 
 body{
   margin:0;
-  font-family:Poppins,system-ui,-apple-system,sans-serif;
+  font-family:Poppins,system-ui,sans-serif;
   background:var(--bg);
   color:#fff;
 }
 
-/* HEADER */
+/* ================= HEADER ================= */
 header{
   position:sticky;
   top:0;
-  z-index:10;
+  z-index:20;
   background:var(--card);
   padding:14px;
   text-align:center;
@@ -37,16 +37,16 @@ header{
   border-bottom:1px solid var(--line);
 }
 
-/* FILTERS */
+/* ================= FILTERS ================= */
 .filters{
   position:sticky;
   top:52px;
-  z-index:9;
+  z-index:15;
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
   gap:10px;
-  padding:12px;
-  background:#1a1a1a;
+  padding:10px;
+  background:#161616;
   border-bottom:1px solid var(--line);
 }
 
@@ -54,14 +54,14 @@ header{
 .filters input{
   width:100%;
   padding:10px;
-  border-radius:8px;
+  border-radius:10px;
   background:#000;
   color:#fff;
   border:1px solid var(--accent);
   font-size:13px;
 }
 
-/* TABLE */
+/* ================= TABLE ================= */
 .history-wrap{
   padding:10px;
   overflow-x:auto;
@@ -69,7 +69,7 @@ header{
 
 table{
   width:100%;
-  min-width:600px;
+  min-width:640px;
   border-collapse:collapse;
 }
 
@@ -81,7 +81,7 @@ th,td{
 }
 
 th{
-  background:rgba(0,250,255,.1);
+  background:rgba(0,250,255,.12);
   color:var(--accent);
   font-weight:600;
 }
@@ -89,25 +89,25 @@ th{
 .win{color:var(--win);font-weight:600}
 .loss{color:var(--loss);font-weight:600}
 
-/* PAGINATION */
+/* ================= PAGINATION ================= */
 .pagination{
   display:flex;
   justify-content:center;
-  gap:10px;
-  padding:14px 0 80px;
+  gap:12px;
+  padding:14px 0 90px;
 }
 
 .page-btn{
   background:var(--accent);
   border:none;
   color:#000;
-  padding:8px 18px;
-  border-radius:8px;
+  padding:10px 22px;
+  border-radius:10px;
   font-weight:600;
   cursor:pointer;
 }
 
-/* FOOTER NAV */
+/* ================= FOOTER NAV ================= */
 footer{
   position:fixed;
   bottom:0;
@@ -124,6 +124,7 @@ footer{
   text-align:center;
   font-size:12px;
   color:#aaa;
+  cursor:pointer;
 }
 
 .nav-btn i{
@@ -134,7 +135,7 @@ footer{
 
 .nav-btn.active{color:var(--accent)}
 
-/* DESKTOP */
+/* ================= DESKTOP ================= */
 @media(min-width:900px){
   header{font-size:20px}
   th,td{font-size:14px}
@@ -204,70 +205,95 @@ const resultFilter = document.getElementById("resultFilter");
 const fromDate = document.getElementById("fromDate");
 const toDate = document.getElementById("toDate");
 
-let allHistory=[], filteredHistory=[], currentPage=1;
-const pageSize=10;
+let allHistory = [];
+let filteredHistory = [];
+let currentPage = 1;
+const pageSize = 10;
 
 async function loadHistory(){
   try{
     const token = localStorage.getItem("token");
-    const res = await fetch("https://battlepurse-22.onrender.com/api/wallet/history",{
-      headers:{Authorization:"Bearer "+token}
-    });
+    const res = await fetch(
+      "https://battlepurse-50.onrender.com/api/wallet/history",
+      { headers:{ Authorization:"Bearer " + token } }
+    );
+
     const data = await res.json();
     allHistory = data.success ? data.history : [];
-    filteredHistory=[...allHistory];
+    filteredHistory = [...allHistory];
     renderPage(1);
-  }catch{
-    tableBody.innerHTML='<tr><td colspan="5">Failed to load history</td></tr>';
+  }catch(e){
+    tableBody.innerHTML =
+      '<tr><td colspan="5">Failed to load history</td></tr>';
   }
 }
 
-function renderPage(p){
-  currentPage=p;
-  const start=(p-1)*pageSize;
-  renderTable(filteredHistory.slice(start,start+pageSize));
+function renderPage(page){
+  currentPage = page;
+  const start = (page - 1) * pageSize;
+  renderTable(filteredHistory.slice(start, start + pageSize));
 }
 
-function renderTable(data){
-  tableBody.innerHTML="";
-  if(!data.length){
-    tableBody.innerHTML='<tr><td colspan="5">No records found</td></tr>';
+function renderTable(rows){
+  tableBody.innerHTML = "";
+  if(!rows.length){
+    tableBody.innerHTML =
+      '<tr><td colspan="5">No records found</td></tr>';
     return;
   }
-  data.forEach(i=>{
-    const date=new Date(i.createdAt||i.date||i.declaredAt).toLocaleDateString();
-    const cls=i.result==="win"?"win":"loss";
-    const res=i.result==="win"&&i.position?`#${i.position}`:i.result;
-    tableBody.innerHTML+=`
+
+  rows.forEach(i=>{
+    const date = new Date(
+      i.createdAt || i.date || i.declaredAt
+    ).toLocaleDateString();
+
+    const cls = i.result === "win" ? "win" : "loss";
+    const resultText =
+      i.result === "win" && i.position ? "#" + i.position : i.result;
+
+    tableBody.innerHTML += `
       <tr>
-        <td>${i.matchNumber||i.tournamentName}</td>
-        <td>${i.game}</td>
+        <td>${i.matchNumber || i.tournamentName || "-"}</td>
+        <td>${i.game || "-"}</td>
         <td>${date}</td>
-        <td class="${cls}">${res}</td>
-        <td>₹${i.prize||0}</td>
-      </tr>`;
+        <td class="${cls}">${resultText}</td>
+        <td>₹${i.prize || 0}</td>
+      </tr>
+    `;
   });
 }
 
 function applyFilters(){
-  const g=gameFilter.value;
-  const r=resultFilter.value;
-  const f=fromDate.value?new Date(fromDate.value):null;
-  const t=toDate.value?new Date(toDate.value):null;
+  const g = gameFilter.value;
+  const r = resultFilter.value;
+  const f = fromDate.value ? new Date(fromDate.value) : null;
+  const t = toDate.value ? new Date(toDate.value) : null;
 
-  filteredHistory=allHistory.filter(h=>{
-    const d=new Date(h.createdAt||h.date||h.declaredAt);
-    return(!g||h.game===g)&&(!r||h.result===r)&&(!f||d>=f)&&(!t||d<=t);
+  filteredHistory = allHistory.filter(h=>{
+    const d = new Date(h.createdAt || h.date || h.declaredAt);
+    return (!g || h.game === g) &&
+           (!r || h.result === r) &&
+           (!f || d >= f) &&
+           (!t || d <= t);
   });
+
   renderPage(1);
 }
 
-function prevPage(){ if(currentPage>1) renderPage(currentPage-1); }
-function nextPage(){ if(currentPage*pageSize<filteredHistory.length) renderPage(currentPage+1); }
+function prevPage(){
+  if(currentPage > 1) renderPage(currentPage - 1);
+}
 
-[gameFilter,resultFilter,fromDate,toDate].forEach(el=>el.addEventListener("change",applyFilters));
+function nextPage(){
+  if(currentPage * pageSize < filteredHistory.length)
+    renderPage(currentPage + 1);
+}
+
+[gameFilter, resultFilter, fromDate, toDate]
+  .forEach(el => el.addEventListener("change", applyFilters));
 
 loadHistory();
 </script>
+
 </body>
 </html>

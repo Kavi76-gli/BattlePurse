@@ -107,7 +107,7 @@
 </div>
 
 <script>
-const API = "https://battlepurse-17.onrender.com/api/wallet/payment-config";
+const API = "https://battlepurse-18.onrender.com/api/wallet/payment-config";
 
 // ------------------------------
 // LOAD PREVIOUS CONFIG
@@ -128,7 +128,7 @@ async function loadPrevious() {
       if (cfg.qrImage) {
         html += `
           <p>Current QR:</p>
-          <img src="https://battlepurse-17.onrender.com/uploads/${cfg.qrImage}" width="180" style="border-radius:12px;">
+          <img src="https://battlepurse-18.onrender.com/uploads/${cfg.qrImage}" width="180" style="border-radius:12px;">
         `;
       }
 
@@ -171,13 +171,21 @@ async function updateConfig() {
     return alert("Enter UPI or select a QR image!");
   }
 
+  const token = localStorage.getItem("token");
+  if (!token) {
+    return alert("Admin not logged in. Token missing.");
+  }
+
   const form = new FormData();
-  form.append("upiId", upiId);
+  if (upiId) form.append("upiId", upiId);
   if (qrFile) form.append("qrImage", qrFile);
 
   try {
     const res = await fetch(API, {
       method: "POST",
+      headers: {
+        "Authorization": "Bearer " + token   // ✅ THIS IS THE FIX
+      },
       body: form
     });
 
@@ -186,17 +194,18 @@ async function updateConfig() {
     if (data.success) {
       alert("✔ Payment Config Updated Successfully!");
       loadPrevious();
-      document.getElementById("qrImage").value = ""; // reset file input
+      document.getElementById("qrImage").value = "";
       document.getElementById("qrPreviewBox").style.display = "none";
     } else {
-      alert("❌ Error updating config: " + (data.msg || "Unknown error"));
+      alert("❌ Error updating config: " + data.msg);
     }
   } catch (err) {
     console.error(err);
     alert("❌ Server error!");
   }
 }
+
 </script>
 
 </body>
-</html>
+</html> 

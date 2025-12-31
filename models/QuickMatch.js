@@ -125,6 +125,8 @@ const QuickMatchSchema = new mongoose.Schema(
       required: true
     },
 
+rounds: { type: Number, enum: [7, 9, 11, 13, 15], required: true },
+
     slots: {
       type: [SlotSchema],
       default: []

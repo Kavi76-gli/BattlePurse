@@ -926,8 +926,8 @@ router.post('/request-withdrawal', auth, async (req, res) => {
       upiId
     } = req.body;
 
-    if (!amount || amount < 500) {
-      return res.status(400).json({ msg: "Minimum withdrawal is ₹500" });
+    if (!amount || amount < 1000) {
+      return res.status(400).json({ msg: "Minimum withdrawal is ₹1000" });
     }
 
     if (!method || (method !== 'bank' && method !== 'upi')) {
@@ -2833,6 +2833,208 @@ async function generateMatchNumber() {
 /* -------------------------------------------------------------------------- */
 /*                              ✅ WALLET DEDUCT                               */
 /* -------------------------------------------------------------------------- */
+// GET ALL JOINED PLAYERS
+router.get("/joined", authAdmin, async (req, res) => {
+  try {
+    const matches = await QuickMatch.find({})
+      .sort({ createdAt: -1 })
+      .limit(300)
+      .populate("players.userId", "name phone wallet avatarUrl")
+      .lean();
+
+    let allJoined = [];
+
+    for (const match of matches) {
+      if (!Array.isArray(match.players)) continue;
+
+      const typeMap = { "1v1": 1, "2v2": 2, "3v3": 3, "4v4": 4 };
+      const half = typeMap[match.type] || 1;
+
+      match.players.forEach((p, index) => {
+        const ff = p.freeFireSettings || {};
+
+        allJoined.push({
+          matchId: match._id,
+          matchNumber: match.matchNumber || "N/A",
+
+          userId: p.userId?._id || null,
+          uid: p.uid || "",
+          name: p.userId?.name || p.name || "Unknown",
+          phone: p.userId?.phone || "",
+          wallet: p.userId?.wallet || 0,
+          avatarUrl: p.userId?.avatarUrl || "",
+          whatsappNumber: p.whatsappNumber || "",
+
+          game: match.game,
+          mode: match.mode,
+          type: match.type,
+          prizeSystem: match.prizeSystem,
+          entryFee: match.entryFee,
+          joinedAt: p.joinedAt || match.createdAt,
+          status: match.status,
+
+          team: p.team || (index < half ? "LION" : "TIGER"),
+
+          rounds: p.rounds || match.rounds || 7, // ✅ added rounds
+
+          map: ff.map || "Not Selected",
+          roomType: ff.roomType || "regular",
+
+          gameSettings: {
+            headshot: !!ff.gameSettings?.headshot,
+            characterSkill: !!ff.gameSettings?.characterSkill,
+            gunAttributes: !!ff.gameSettings?.gunAttributes,
+            throwableLimit: ff.gameSettings?.throwableLimit || 0
+          },
+
+          selectedGuns: {
+            AR: ff.selectedGuns?.AR || [],
+            SMG: ff.selectedGuns?.SMG || [],
+            SNIPER: ff.selectedGuns?.SNIPER || [],
+            SHOTGUN: ff.selectedGuns?.SHOTGUN || [],
+            PISTOLS: ff.selectedGuns?.PISTOLS || [],
+            LAUNCHERS: ff.selectedGuns?.LAUNCHERS || [],
+            SPECIAL: ff.selectedGuns?.SPECIAL || []
+          }
+        });
+      });
+    }
+
+    res.json({ success: true, count: allJoined.length, data: allJoined });
+  } catch (err) {
+    console.error("Joined fetch error:", err);
+    res.status(500).json({ success: false, msg: "Server error" });
+  }
+});
+
+// GET UNPAIRED PLAYERS
+router.get("/joined/unpaired", authAdmin, async (req, res) => {
+  try {
+    const matches = await QuickMatch.find({ status: "waiting" })
+      .sort({ createdAt: -1 })
+      .limit(300)
+      .populate("players.userId", "name phone wallet avatarUrl")
+      .lean();
+
+    let result = [];
+
+    for (const match of matches) {
+      if (!Array.isArray(match.players)) continue;
+
+      const typeMap = { "1v1": 1, "2v2": 2, "3v3": 3, "4v4": 4 };
+      const half = typeMap[match.type] || 1;
+
+      match.players.forEach((p, idx) => {
+        const ff = p.freeFireSettings || {};
+
+        result.push({
+          matchId: match._id,
+          matchNumber: match.matchNumber || "",
+
+          userId: p.userId?._id || null,
+          uid: p.uid || "",
+          name: p.userId?.name || p.name || "Unknown",
+          phone: p.userId?.phone || "",
+          whatsappNumber: p.whatsappNumber || "",
+          wallet: p.userId?.wallet || 0,
+          avatarUrl: p.userId?.avatarUrl || "",
+
+          game: match.game,
+          mode: match.mode,
+          type: match.type,
+          prizeSystem: match.prizeSystem,
+          entryFee: match.entryFee,
+          status: match.status,
+          joinedAt: p.joinedAt,
+
+          team: p.team || (idx < half ? "LION" : "TIGER"),
+
+          rounds: p.rounds || match.rounds || 7, // ✅ added rounds
+
+          map: ff.map || "Not Selected",
+          roomType: ff.roomType || "regular",
+
+          gameSettings: {
+            headshot: !!ff.gameSettings?.headshot,
+            characterSkill: !!ff.gameSettings?.characterSkill,
+            gunAttributes: !!ff.gameSettings?.gunAttributes,
+            throwableLimit: ff.gameSettings?.throwableLimit || 0
+          },
+
+          selectedGuns: ff.selectedGuns || {}
+        });
+      });
+    }
+
+    res.json({ success: true, count: result.length, data: result });
+  } catch (err) {
+    console.error("Unpaired fetch error:", err);
+    res.status(500).json({ success: false, msg: "Server error" });
+  }
+});
+
+// GET PAIRED PLAYERS
+router.get("/joined/paired", authAdmin, async (req, res) => {
+  try {
+    const matches = await QuickMatch.find({
+      status: { $in: ["paired", "filled", "ongoing", "completed"] }
+    })
+      .sort({ createdAt: -1 })
+      .limit(300)
+      .populate("players.userId", "name phone wallet avatarUrl")
+      .lean();
+
+    let result = [];
+
+    for (const match of matches) {
+      if (!Array.isArray(match.players)) continue;
+
+      const typeMap = { "1v1": 1, "2v2": 2, "3v3": 3, "4v4": 4 };
+      const half = typeMap[match.type] || 1;
+
+      match.players.forEach((p, idx) => {
+        const ff = p.freeFireSettings || {};
+
+        result.push({
+          matchId: match._id,
+          matchNumber: match.matchNumber,
+
+          userId: p.userId?._id || null,
+          uid: p.uid || "",
+          name: p.userId?.name || p.name || "Unknown",
+          phone: p.userId?.phone || "",
+          whatsappNumber: p.whatsappNumber || "",
+          wallet: p.userId?.wallet || 0,
+          avatarUrl: p.userId?.avatarUrl || "",
+
+          game: match.game,
+          mode: match.mode,
+          type: match.type,
+          prizeSystem: match.prizeSystem,
+          entryFee: match.entryFee,
+          status: match.status,
+          joinedAt: p.joinedAt,
+
+          team: p.team || (idx < half ? "LION" : "TIGER"),
+
+          rounds: p.rounds || match.rounds || 7, // ✅ added rounds
+
+          map: ff.map || "Not Selected",
+          roomType: ff.roomType || "regular",
+
+          gameSettings: ff.gameSettings || {},
+          selectedGuns: ff.selectedGuns || {}
+        });
+      });
+    }
+
+    res.json({ success: true, count: result.length, data: result });
+  } catch (err) {
+    console.error("Paired fetch error:", err);
+    res.status(500).json({ success: false, msg: "Server error" });
+  }
+});
+
 // ---------------------------
 // GET ALL JOINED PLAYERS
 // ---------------------------
@@ -3220,11 +3422,13 @@ router.post("/pair", authAdmin, async (req, res) => {
 
 router.get("/joined", authAdmin, async (req, res) => {
   try {
-    const matches = await QuickMatch.find()
-      .populate("players.userId", "name phone wallet avatarUrl")
+const matches = await QuickMatch.find({})
       .sort({ createdAt: -1 })
-      .limit(300);
+      .limit(300)
+      .populate("players.userId", "name phone wallet avatarUrl")
+      .lean();
 
+    
     let allJoined = [];
 
     matches.forEach(match => {
@@ -3584,10 +3788,12 @@ router.post("/deduct", auth, async (req, res) => {
 // ✅ Get all quick matches (for admin or display)
 router.get("/quickmatch/all", async (req, res) => {
   try {
-    const matches = await QuickMatch.find()
-      .populate("players.userId", "name phone wallet")
+    const matches = await QuickMatch.find({})
       .sort({ createdAt: -1 })
-      .limit(100);
+      .limit(300)
+      .populate("players.userId", "name phone wallet avatarUrl")
+      .lean();
+    
 
     res.json(matches);
   } catch (err) {
@@ -3661,10 +3867,13 @@ router.post("/:matchId/result", async (req, res) => {
 /* -------------------------------------------------------------------------- */
 router.get("/all", async (req, res) => {
   try {
-    const matches = await QuickMatch.find()
-      .populate("players.userId", "name phone wallet avatarUrl")
+const matches = await QuickMatch.find({})
       .sort({ createdAt: -1 })
-      .limit(100);
+      .limit(300)
+      .populate("players.userId", "name phone wallet avatarUrl")
+      .lean();
+
+    
     res.json({ success: true, data: matches });
   } catch (err) {
     console.error("Error fetching matches:", err);
@@ -4650,252 +4859,7 @@ router.post("/admin/match/complete", authAdmin, async (req, res) => {
   }
 });
 
-router.get("/history", auth, async (req, res) => {
-  try {
-    const userId = req.user._id; // no ObjectId conversion needed
-    const page = Number(req.query.page) || 1;
-    const limit = 20;
-    const skip = (page - 1) * limit;
 
-    const history = [];
-
-    /* ================= MATCH HISTORY ================= */
-    const matches = await QuickMatch.find({
-      status: "completed",
-      $or: [
-        { "players.userId": userId },
-        { "slots.userId": userId }
-      ]
-    })
-      .select(
-        "matchNumber game mode entryFee createdAt prizeSystem prizeGiven players userResults winnerIds"
-      )
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
-
-    for (const m of matches) {
-      const entryFee = Number(m.entryFee || 0);
-      const joinedPlayers = m.players?.length || 1;
-      const totalCollected = entryFee * joinedPlayers;
-      const prizePool = Math.max(
-        0,
-        totalCollected - Math.round(totalCollected * 0.08)
-      );
-
-      const myResult = m.userResults?.find(
-        r => String(r.userId) === String(userId)
-      );
-
-      const winnerIds = (m.winnerIds || []).map(String);
-      let prizeWon = 0;
-      let isWinner = winnerIds.includes(String(userId));
-
-      if (isWinner) {
-        if (m.prizeSystem === "kill_based") {
-          const winners = m.userResults.filter(r =>
-            winnerIds.includes(String(r.userId))
-          );
-          const totalKills = winners.reduce((s, x) => s + (x.kills || 0), 0);
-
-          if (totalKills > 0) {
-            prizeWon = Math.round(
-              ((myResult?.kills || 0) / totalKills) *
-              (m.prizeGiven || prizePool)
-            );
-          }
-        } else {
-          const winnersCount =
-            m.userResults.filter(r =>
-              winnerIds.includes(String(r.userId))
-            ).length || 1;
-
-          prizeWon = Math.round(
-            (m.prizeGiven || prizePool) / winnersCount
-          );
-        }
-      }
-
-      history.push({
-        type: "match",
-        matchId: m._id,
-        matchNumber: m.matchNumber,
-        game: m.game,
-        mode: m.mode,
-        entryFee,
-        createdAt: m.createdAt,
-        kills: myResult?.kills ?? null,
-        result: isWinner ? "win" : "loss",
-        prize: prizeWon
-      });
-    }
-
-    /* ================= TOURNAMENT HISTORY ================= */
-    const tournaments = await Tournament.find({
-      $or: [
-        { "winners.userId": userId },
-        { "players.userId": userId }
-      ]
-    })
-      .select("name game entryFee winners createdAt")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
-
-    for (const t of tournaments) {
-      const win = t.winners?.find(
-        w => String(w.userId) === String(userId)
-      );
-
-      history.push({
-        type: "tournament",
-        tournamentId: t._id,
-        tournamentName: t.name,
-        game: t.game,
-        entryFee: t.entryFee,
-        result: win ? "win" : "loss",
-        prize: win?.prize || 0,
-        createdAt: win?.declaredAt || t.createdAt
-      });
-    }
-
-    // 🔥 ONE FINAL SORT ONLY
-    history.sort((a, b) => b.createdAt - a.createdAt);
-
-    res.json({
-      success: true,
-      page,
-      count: history.length,
-      history
-    });
-
-  } catch (err) {
-    console.error("History Error:", err);
-    res.status(500).json({ success: false, msg: "Server error" });
-  }
-});
-
-
-router.get("/history", auth, async (req, res) => {
-  try {
-    const userId = new mongoose.Types.ObjectId(req.user._id);
-
-    /* ================= MATCH HISTORY ================= */
-    const matches = await QuickMatch.find({
-      status: "completed",
-      $or: [
-        { "players.userId": userId },
-        { "slots.userId": userId }
-      ]
-    })
-      .select(
-        "matchNumber game mode entryFee createdAt prizeSystem prizeGiven type players userResults winnerIds"
-      )
-      .sort({ createdAt: -1 })
-      .limit(100) // 🔥 reduced for speed
-      .lean();
-
-    const history = [];
-
-    for (const m of matches) {
-      const entryFee = Number(m.entryFee || 0);
-      const joinedPlayers = m.players?.length || 1;
-
-      const totalCollected = entryFee * joinedPlayers;
-      const prizePool = Math.max(
-        0,
-        totalCollected - Math.round(totalCollected * 0.08)
-      );
-
-      const myResult = (m.userResults || []).find(
-        r => String(r.userId) === String(userId)
-      );
-
-      let isWinner = false;
-      let prizeWon = 0;
-
-      const winnerIds = (m.winnerIds || []).map(String);
-
-      // ✅ ADMIN DECIDED
-      if (winnerIds.length && winnerIds.includes(String(userId))) {
-        isWinner = true;
-
-        if (m.prizeSystem === "kill_based") {
-          const winners = m.userResults.filter(r =>
-            winnerIds.includes(String(r.userId))
-          );
-          const totalKills = winners.reduce((s, x) => s + (x.kills || 0), 0);
-
-          if (totalKills > 0) {
-            prizeWon = Math.round(
-              ((myResult?.kills || 0) / totalKills) *
-              (m.prizeGiven || prizePool)
-            );
-          }
-        } else {
-          const winnersCount =
-            m.userResults.filter(r =>
-              winnerIds.includes(String(r.userId))
-            ).length || 1;
-
-          prizeWon = Math.round(
-            (m.prizeGiven || prizePool) / winnersCount
-          );
-        }
-      }
-
-      history.push({
-        type: "match",
-        matchId: m._id,
-        matchNumber: m.matchNumber,
-        game: m.game,
-        mode: m.mode,
-        entryFee,
-        createdAt: m.createdAt,
-        kills: myResult?.kills ?? null,
-        result: isWinner ? "win" : "loss",
-        prize: prizeWon
-      });
-    }
-
-    /* ================= TOURNAMENT HISTORY ================= */
-    const tournaments = await Tournament.find({
-      $or: [
-        { "winners.userId": userId },
-        { "players.userId": userId }
-      ]
-    })
-      .select("name game entryFee winners players createdAt")
-      .sort({ createdAt: -1 })
-      .limit(100)
-      .lean();
-
-    for (const t of tournaments) {
-      const win = t.winners?.find(w => String(w.userId) === String(userId));
-
-      history.push({
-        type: "tournament",
-        tournamentId: t._id,
-        tournamentName: t.name,
-        game: t.game,
-        entryFee: t.entryFee,
-        result: win ? "win" : "loss",
-        prize: win?.prize || 0,
-        createdAt: win?.declaredAt || t.createdAt
-      });
-    }
-
-    history.sort((a, b) => b.createdAt - a.createdAt);
-
-    res.json({ success: true, count: history.length, history });
-
-  } catch (err) {
-    console.error("History Error:", err);
-    res.status(500).json({ success: false, msg: "Server error" });
-  }
-});
 
 
 router.get("/history", auth, async (req, res) => {
@@ -4905,17 +4869,26 @@ router.get("/history", auth, async (req, res) => {
     /* =========================
        MATCH HISTORY
     ========================= */
-    const matches = await QuickMatch.find({
-      status: "completed",
-      $or: [
-        { "slots.userId": userId },
-        { "players.userId": userId }
-      ]
-    })
-      .sort({ createdAt: -1 })
-      .limit(500)
-      .lean();
+const matches = await QuickMatch.find(
+  {
+    status: "completed",
+    createdAt: { $gte: start, $lte: end },
+    ...(game ? { game } : {})
+  },
+  {
+    players: 1,
+    userResults: 1,
+    entryFee: 1,
+    prizeGiven: 1,
+    prizeSystem: 1,
+    winnerIds: 1
+  }
+)
+.limit(200)   // VERY IMPORTANT
+.lean();
 
+
+    
     const history = [];
 
     for (const m of matches) {
@@ -5080,159 +5053,8 @@ router.get("/history", auth, async (req, res) => {
   }
 });
 
-router.get("/leaderboard", auth, async (req, res) => {
-  try {
-    const { date, game } = req.query;
-    const limit = 100; // 🔥 HARD LIMIT (important)
 
-    let start = date ? new Date(date) : new Date("2000-01-01");
-    let end = date ? new Date(date) : new Date();
-    if (date) {
-      start.setHours(0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
-    }
 
-    const userMap = new Map();
-
-    const matches = await QuickMatch.find({
-      status: "completed",
-      createdAt: { $gte: start, $lte: end },
-      ...(game ? { game } : {})
-    })
-      .select(
-        "entryFee players prizeSystem prizeGiven winnerIds userResults type"
-      )
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .lean();
-
-    for (const m of matches) {
-      const entryFee = Number(m.entryFee || 0);
-      const totalPlayers = m.players?.length || 1;
-      const prizePool = Math.max(
-        0,
-        entryFee * totalPlayers - Math.round(entryFee * totalPlayers * 0.08)
-      );
-
-      const winnerIds = (m.winnerIds || []).map(String);
-      const results = Array.isArray(m.userResults) ? m.userResults : [];
-
-      // 💰 Spend
-      for (const p of m.players || []) {
-        const uid = String(p.userId);
-        if (!userMap.has(uid)) {
-          userMap.set(uid, {
-            userId: uid,
-            name: "Unknown",
-            totalWinnings: 0,
-            totalSpent: 0
-          });
-        }
-        userMap.get(uid).totalSpent += entryFee;
-      }
-
-      // 🏆 Admin-decided winners
-      if (winnerIds.length) {
-        const winners = results.filter(r =>
-          winnerIds.includes(String(r.userId))
-        );
-
-        if (m.prizeSystem === "kill_based") {
-          const totalKills = winners.reduce(
-            (s, r) => s + (Number(r.kills) || 0),
-            0
-          );
-
-          for (const r of winners) {
-            const uid = String(r.userId);
-            const share =
-              totalKills > 0
-                ? Math.round(
-                    ((Number(r.kills) || 0) / totalKills) *
-                      (m.prizeGiven || prizePool)
-                  )
-                : Math.round(
-                    (m.prizeGiven || prizePool) / winners.length
-                  );
-
-            if (!userMap.has(uid))
-              userMap.set(uid, {
-                userId: uid,
-                name: "Unknown",
-                totalWinnings: 0,
-                totalSpent: 0
-              });
-
-            userMap.get(uid).totalWinnings += share;
-          }
-        } else {
-          const share = Math.round(
-            (m.prizeGiven || prizePool) / winners.length
-          );
-          winners.forEach(r => {
-            const uid = String(r.userId);
-            if (!userMap.has(uid))
-              userMap.set(uid, {
-                userId: uid,
-                name: "Unknown",
-                totalWinnings: 0,
-                totalSpent: 0
-              });
-            userMap.get(uid).totalWinnings += share;
-          });
-        }
-        continue;
-      }
-
-      // ⚔ Auto logic (fallback)
-      if (m.type === "1v1") {
-        const top = [...results].sort(
-          (a, b) => (b.kills || 0) - (a.kills || 0)
-        )[0];
-
-        if (top) {
-          const uid = String(top.userId);
-          if (!userMap.has(uid))
-            userMap.set(uid, {
-              userId: uid,
-              name: "Unknown",
-              totalWinnings: 0,
-              totalSpent: 0
-            });
-          userMap.get(uid).totalWinnings +=
-            top.prize || m.prizeGiven || prizePool;
-        }
-      }
-    }
-
-    /* ================= USERS ================= */
-    const userIds = [...userMap.keys()];
-    const users = await User.find(
-      { _id: { $in: userIds } },
-      { name: 1 }
-    ).lean();
-
-    const nameMap = new Map(
-      users.map(u => [String(u._id), u.name || "Unknown"])
-    );
-
-    const leaderboard = [...userMap.values()]
-      .map(u => ({
-        ...u,
-        name: nameMap.get(u.userId) || "Unknown",
-        netWin: (u.totalWinnings || 0) - (u.totalSpent || 0)
-      }))
-      .sort((a, b) => b.netWin - a.netWin)
-      .slice(0, 50) // 🔥 TOP 50 ONLY
-      .map((u, i) => ({ ...u, rank: i + 1 }));
-
-    res.json({ success: true, leaderboard });
-
-  } catch (err) {
-    console.error("Leaderboard Error:", err);
-    res.status(500).json({ success: false, msg: "Server error" });
-  }
-});
 
 
 router.get("/leaderboard", auth, async (req, res) => {
@@ -5244,12 +5066,14 @@ router.get("/leaderboard", auth, async (req, res) => {
     if (date) { start.setHours(0,0,0,0); end.setHours(23,59,59,999); }
 
     const userMap = new Map();
+const matches = await QuickMatch.find({
+  status: "completed",
+  createdAt: { $gte: start, $lte: end },
+  ...(game ? { game } : {})
+}).limit(200)   // VERY IMPORTANT
+.lean();
 
-    const matches = await QuickMatch.find({
-      status: "completed",
-      createdAt: { $gte: start, $lte: end },
-      ...(game ? { game } : {})
-    }).lean();
+    
 
     for (const m of matches) {
       const entryFee = Number(m.entryFee || 0);
@@ -5870,6 +5694,211 @@ router.delete("/joined/paired/:matchId", async (req, res) => {
 
 
 
+router.post("/joins", auth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    let {
+      type,
+      game,
+      mode,
+      fee,
+      uid,
+      prizeSystem,
+      countryCode,
+      whatsappNumber,
+      map,
+      roomType,
+      headshot,
+      characterSkill,
+      gunAttributes,
+      throwableLimit,
+      selectedGuns,
+      rounds // <-- NEW: number of rounds
+    } = req.body;
+
+    // ----------------------------
+    // 1️⃣ BASIC VALIDATION
+    // ----------------------------
+    if (!type || !game || !uid || !prizeSystem || !fee || !rounds)
+      return res.status(400).json({ success: false, msg: "Missing match data" });
+
+    if (!["kill_based", "team_equal"].includes(prizeSystem))
+      return res.status(400).json({ success: false, msg: "Invalid prize system" });
+
+    const user = await User.findById(userId);
+    if (!user)
+      return res.status(400).json({ success: false, msg: "User not found" });
+
+    // ----------------------------
+    // 1️⃣a VALIDATE ROUNDS
+    // ----------------------------
+    const allowedRounds = [7, 9, 11, 13, 15];
+    rounds = parseInt(rounds);
+    if (!allowedRounds.includes(rounds))
+      return res.status(400).json({ success: false, msg: "Invalid rounds selection" });
+
+    // ----------------------------
+    // 2️⃣ WHATSAPP VALIDATION
+    // ----------------------------
+    if (!countryCode || !countryCode.startsWith("+"))
+      return res.status(400).json({ success: false, msg: "Invalid country code" });
+
+    if (!whatsappNumber)
+      return res.status(400).json({ success: false, msg: "WhatsApp number required" });
+
+    const cleanNumber = whatsappNumber.replace(/[\s-]/g, "");
+    if (!/^\d{10,15}$/.test(cleanNumber))
+      return res.status(400).json({ success: false, msg: "Invalid WhatsApp number" });
+
+    const finalWhatsApp = countryCode + cleanNumber;
+
+    // ----------------------------
+    // 3️⃣ PREVENT MULTI-JOIN
+    // ----------------------------
+    const pendingMatch = await QuickMatch.findOne({
+      "players.userId": userId,
+      status: { $in: ["waiting", "filled", "ongoing"] }
+    });
+
+    if (pendingMatch)
+      return res.status(400).json({ success: false, msg: "⚠️ Complete your previous match first." });
+
+    // ----------------------------
+    // 4️⃣ PLAYER COUNT
+    // ----------------------------
+    const totalPlayersMap = { "1v1": 2, "2v2": 4, "3v3": 6, "4v4": 8 };
+    const totalSlots = totalPlayersMap[type];
+    if (!totalSlots)
+      return res.status(400).json({ success: false, msg: "Invalid match type" });
+
+    // ----------------------------
+    // 5️⃣ FREE FIRE MAP + MODE HANDLING
+    // ----------------------------
+    if (game === "Free Fire") {
+      const FF_MODES = ["Clash Squad", "Lone Wolf"];
+      if (!FF_MODES.includes(mode))
+        return res.status(400).json({ success: false, msg: "Invalid Free Fire mode" });
+
+      const CS_MAPS = ["Bermuda", "Alpine", "Kalahari", "Purgatory", "Nexterra"];
+      if (mode === "Clash Squad") {
+        if (!map) map = CS_MAPS[0];
+        if (!CS_MAPS.includes(map))
+          return res.status(400).json({ success: false, msg: "Invalid map" });
+      }
+
+      if (mode === "Lone Wolf") {
+        map = "Iron Cage"; // forced
+      }
+    }
+
+    // ----------------------------
+    // 6️⃣ FIND OR CREATE MATCH
+    // ----------------------------
+    let match = await QuickMatch.findOne({
+      game,
+      mode,
+      type,
+      prizeSystem,
+      status: "waiting"
+    });
+
+    if (!match) {
+      match = new QuickMatch({
+        type,
+        game,
+        mode,
+        entryFee: fee,
+        prizeSystem,
+        status: "waiting",
+        players: [],
+        rounds // <-- SAVE rounds at match creation
+      });
+    }
+
+    if (match.players.length >= totalSlots)
+      return res.status(400).json({ success: false, msg: "Match full" });
+
+    // ----------------------------
+    // 7️⃣ AUTO TEAM ASSIGN
+    // ----------------------------
+    const teamSize = totalSlots / 2;
+    const lionCount = match.players.filter(p => p.team === "LION").length;
+    const tigerCount = match.players.filter(p => p.team === "TIGER").length;
+
+    let assignedTeam =
+      lionCount < teamSize ? "LION" :
+      tigerCount < teamSize ? "TIGER" : null;
+
+    if (!assignedTeam)
+      return res.status(400).json({ success: false, msg: "Teams full" });
+
+    // ----------------------------
+    // 8️⃣ CATEGORIZE GUNS
+    // ----------------------------
+    const gunCategories = {
+      AR: ["AK", "M4A1", "SCAR", "GROZA", "FAMAS", "AN94", "XM8", "M14", "PARAFAL", "KINGFISHER", "AUG", "AC80"],
+      SMG: ["MP40", "MP5", "UMP", "VSS", "THOMPSON", "VECTOR", "BIZON", "UZI", "MAC10"],
+      SNIPER: ["AWM", "KAR98K", "M82B", "M24", "SVD", "SKS", "WOODPECKER"],
+      SHOTGUN: ["M1014", "M1887", "MAG7", "SPAS12", "Trogon"],
+      PISTOLS: ["USP", "G18", "M500", "Desert Eagle", "Treatment Pistol", "Hand Cannon"],
+      LAUNCHERS: ["M79", "RGS50", "MGL140"],
+      SPECIAL: ["Plasma Gun", "Laser Gun (CS)", "CG15", "Crossbow", "Flame Bow"]
+    };
+
+    const categorizedGuns = { AR: [], SMG: [], SNIPER: [], SHOTGUN: [], PISTOLS: [], LAUNCHERS: [], SPECIAL: [] };
+
+    (selectedGuns || []).forEach(gun => {
+      for (const cat in gunCategories) {
+        if (gunCategories[cat].includes(gun)) {
+          categorizedGuns[cat].push(gun);
+        }
+      }
+    });
+
+    // ----------------------------
+    // 9️⃣ PREPARE PLAYER DATA
+    // ----------------------------
+    const playerData = {
+      userId,
+      uid,
+      name: user.name,
+      phone: user.phone,
+      whatsappNumber: finalWhatsApp,
+      team: assignedTeam,
+      joinedAt: new Date(),
+      rounds, // <-- SAVE selected rounds per player
+      freeFireSettings: {
+        map: map || "Not Selected",
+        roomType: roomType || (selectedGuns?.length ? "advance" : "regular"),
+        gameSettings: {
+          headshot: headshot ?? false,
+          characterSkill: characterSkill ?? false,
+          gunAttributes: gunAttributes ?? false,
+          throwableLimit: throwableLimit ?? 0
+        },
+        selectedGuns: categorizedGuns
+      }
+    };
+
+    // ----------------------------
+    // 🔟 SAVE MATCH
+    // ----------------------------
+    match.players.push(playerData);
+    await match.save();
+
+    res.json({
+      success: true,
+      msg: `Joined match — Team ${assignedTeam}`,
+      assignedTeam,
+      match
+    });
+
+  } catch (err) {
+    console.error("Join Error:", err);
+    res.status(500).json({ success: false, msg: "Internal server error" });
+  }
+});
 
 
 
@@ -6116,6 +6145,7 @@ router.get("/admin/match/:matchId", async (req, res) => {
 
 router.get("/admin/matches", async (req, res) => {
   try {
+
     const matches = await QuickMatch.find()
       .sort({ createdAt: -1 })
       .limit(100)
@@ -6667,6 +6697,9 @@ router.get("/my-active", auth, async (req, res) => {
     return res.status(500).json({ success: false, msg: "Internal server error" });
   }
 });
+
+// ✅ ALL MATCHES — SHOW MEMBER WHATSAPP NUMBER
+
 
 router.get("/match/all", authAdmin, async (req, res) => {
   try {

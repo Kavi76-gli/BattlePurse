@@ -6,121 +6,153 @@
 <title>Leaderboard</title>
 
 <style>
+/* =====================
+   GLOBAL
+===================== */
+body {
+  background: #111;
+  color: #fff;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  min-height: 100vh;
+}
 
-  body {
-    background: #111;
-    color: #fff;
-    font-family: Arial, sans-serif;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-  }
+/* =====================
+   APP LOGO
+===================== */
+.app-header {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 1000;
+}
 
-  h1 {
-    color: #00eaff;
-    text-align: center;
-    margin: 15px 0;
-    font-size: 1.8rem;
-  }
+.app-header img {
+  height: 42px;
+  filter: drop-shadow(0 0 6px #00eaff);
+}
 
-  .filters {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin: 10px 0;
-    padding: 0 10px;
-  }
+/* =====================
+   TITLE
+===================== */
+h1 {
+  color: #00eaff;
+  text-align: center;
+  margin: 18px 0 10px;
+  font-size: 1.8rem;
+}
 
-  select, input {
-    padding: 8px;
-    border-radius: 5px;
-    border: 1px solid #00eaff;
-    background: #1a1a1a;
-    color: #00eaff;
-    font-size: 0.9rem;
-    min-width: 120px;
-  }
+/* =====================
+   FILTERS
+===================== */
+.filters {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0 10px;
+}
 
-  .table-container {
-    flex: 1;
-    width: 100%;
-    max-width: 1000px;
-    margin: 0 auto 80px;
-    background: #1a1a1a;
-    padding: 15px;
-    border-radius: 10px;
-    overflow-x: auto;
-  }
+select, input {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #00eaff;
+  background: #1a1a1a;
+  color: #00eaff;
+  font-size: 0.9rem;
+}
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 600px;
-  }
+/* =====================
+   TABLE
+===================== */
+.table-container {
+  max-width: 1000px;
+  margin: 15px auto 80px;
+  background: #1a1a1a;
+  padding: 12px;
+  border-radius: 10px;
+  overflow-x: auto;
+}
 
-  table th, table td {
-    padding: 10px;
-    border-bottom: 1px solid #333;
-    text-align: center;
-    font-size: 0.9rem;
-  }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 650px;
+}
 
-  table th {
-    color: #00eaff;
-  }
+th, td {
+  padding: 10px;
+  border-bottom: 1px solid #333;
+  text-align: center;
+  font-size: 0.9rem;
+}
 
-  .rank { font-weight: bold; }
-  .gold { color: gold; }
-  .silver { color: silver; }
-  .bronze { color: #cd7f32; }
+th {
+  color: #00eaff;
+}
 
-  .earnings { color: #00ff88; }
-  .spent { color: #ff5555; }
-  .netWin { color: #ff8800; }
+.rank { font-weight: bold; }
+.gold { color: gold; }
+.silver { color: silver; }
+.bronze { color: #cd7f32; }
 
-  .message {
-    text-align: center;
-    margin-top: 15px;
-    font-size: 0.95rem;
-    color: #ff4444;
-  }
+.earnings { color: #00ff88; }
+.spent { color: #ff5555; }
+.netWin { color: #ff8800; }
 
-  /* Bottom nav */
-  .bottom-nav {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    height: 60px;
-    background: #1a1a1a;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    border-top: 1px solid #333;
-    z-index: 100;
-  }
+.message {
+  text-align: center;
+  margin-top: 10px;
+  color: #ff4444;
+}
 
-  .bottom-nav .nav-btn {
-    color: #aaa;
-    text-align: center;
-    cursor: pointer;
-    flex: 1;
-    font-size: 12px;
-  }
+/* =====================
+   BOTTOM NAV
+===================== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: #1a1a1a;
+  display: flex;
+  border-top: 1px solid #333;
+}
 
-  .bottom-nav .nav-btn i {
-    display: block;
-    font-size: 20px;
-    margin-bottom: 2px;
-  }
+.nav-btn {
+  flex: 1;
+  text-align: center;
+  color: #aaa;
+  font-size: 12px;
+  cursor: pointer;
+}
 
-  .bottom-nav .nav-btn.active {
-    color: #00eaff;
-  }
+.nav-btn i {
+  display: block;
+  font-size: 20px;
+}
 
+.nav-btn.active {
+  color: #00eaff;
+}
+
+/* =====================
+   MOBILE TWEAKS
+===================== */
+@media (max-width: 480px) {
+  h1 { font-size: 1.5rem; }
+  .app-header img { height: 34px; }
+}
 </style>
 </head>
+
 <body>
+
+<!-- APP LOGO -->
+<div class="app-header">
+  <img src="file_00000000c938722f8d26b428d0c8069c.png" >
+</div>
 
 <h1>🏆 Leaderboard</h1>
 
@@ -135,7 +167,7 @@
     <option value="Candy Crush">Candy Crush</option>
   </select>
 
-  <input type="date" id="dateFilter" />
+  <input type="date" id="dateFilter">
 </div>
 
 <div class="table-container">
@@ -145,9 +177,9 @@
         <th>Rank</th>
         <th>Player</th>
         <th>Game</th>
-        <th>Total Winnings</th>
-        <th>Total Spent</th>
-        <th>Net Win</th>
+        <th>Winnings</th>
+        <th>Spent</th>
+        <th>Net</th>
       </tr>
     </thead>
     <tbody id="leaderboardBody">
@@ -158,12 +190,13 @@
   <div id="message" class="message"></div>
 </div>
 
+<!-- BOTTOM NAV -->
 <div class="bottom-nav">
-  <div class="nav-btn" onclick="location.href='gamezone.html'"><i>🎮</i><span>Game</span></div>
-  <div class="nav-btn" onclick="location.href='history.html'"><i>📜</i><span>History</span></div>
-  <div class="nav-btn active" onclick="location.href='leaderboard.html'"><i>🏆</i><span>Leaderboard</span></div>
-  <div class="nav-btn" onclick="location.href='profile.html'"><i>👤</i><span>Profile</span></div>
-  <div class="nav-btn" onclick="location.href='more.html'"><i>⋯</i><span>More</span></div>
+  <div class="nav-btn" onclick="location.href='gamezone.html'"><i>🎮</i>Game</div>
+  <div class="nav-btn" onclick="location.href='history.html'"><i>📜</i>History</div>
+  <div class="nav-btn active"><i>🏆</i>Leaderboard</div>
+  <div class="nav-btn" onclick="location.href='profile.html'"><i>👤</i>Profile</div>
+  <div class="nav-btn" onclick="location.href='more.html'"><i>⋯</i>More</div>
 </div>
 
 <script>
@@ -173,59 +206,52 @@ const gameFilter = document.getElementById("gameFilter");
 const dateFilter = document.getElementById("dateFilter");
 
 if (!token) {
-  leaderboardBody.innerHTML = `<tr><td colspan="6">Please login first.</td></tr>`;
+  leaderboardBody.innerHTML = "<tr><td colspan='6'>Please login first.</td></tr>";
 } else {
   loadLeaderboard();
 }
 
-gameFilter.addEventListener("change", loadLeaderboard);
-dateFilter.addEventListener("change", loadLeaderboard);
+gameFilter.onchange = loadLeaderboard;
+dateFilter.onchange = loadLeaderboard;
 
 async function loadLeaderboard() {
   try {
-    const game = gameFilter.value;
-    const date = dateFilter.value;
-
     const params = new URLSearchParams();
-    if (game) params.append("game", game);
-    if (date) params.append("date", date);
+    if (gameFilter.value) params.append("game", gameFilter.value);
+    if (dateFilter.value) params.append("date", dateFilter.value);
 
-    const res = await fetch(`https://battlepurse-22.onrender.com/api/wallet/leaderboard?${params}`, {
-      headers: { "Authorization": `Bearer ${token}` }
-    });
+    const res = await fetch(
+      `https://battlepurse-18.onrender.com/api/wallet/leaderboard?${params}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
 
     const data = await res.json();
-
     leaderboardBody.innerHTML = "";
 
-    if (!data.success || !data.leaderboard || data.leaderboard.length === 0) {
-      leaderboardBody.innerHTML = `<tr><td colspan="6">No players found.</td></tr>`;
+    if (!data.success || !data.leaderboard?.length) {
+      leaderboardBody.innerHTML = "<tr><td colspan='6'>No data found.</td></tr>";
       return;
     }
 
-    const top = data.leaderboard.slice(0, 50);
-
-    top.forEach((player, idx) => {
-      const rankClass = idx === 0 ? "gold" : idx === 1 ? "silver" : idx === 2 ? "bronze" : "";
-      const icon = idx === 0 ? "🏆" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : "";
-
+    data.leaderboard.slice(0, 50).forEach((p, i) => {
+      const cls = i === 0 ? "gold" : i === 1 ? "silver" : i === 2 ? "bronze" : "";
+      const icon = i === 0 ? "🏆" : i === 1 ? "🥈" : i === 2 ? "🥉" : "";
       leaderboardBody.innerHTML += `
         <tr>
-          <td class="rank ${rankClass}">${icon} #${idx+1}</td>
-          <td>${player.name}</td>
-          <td>${player.game || "All Games"}</td>
-          <td class="earnings">₹${player.totalWinnings}</td>
-          <td class="spent">₹${player.totalSpent}</td>
-          <td class="netWin">₹${player.netWin}</td>
-        </tr>
-      `;
+          <td class="rank ${cls}">${icon} #${i+1}</td>
+          <td>${p.name}</td>
+          <td>${p.game || "All"}</td>
+          <td class="earnings">₹${p.totalWinnings}</td>
+          <td class="spent">₹${p.totalSpent}</td>
+          <td class="netWin">₹${p.netWin}</td>
+        </tr>`;
     });
 
-  } catch (err) {
-    leaderboardBody.innerHTML = `<tr><td colspan="6">Failed to load leaderboard.</td></tr>`;
+  } catch {
+    leaderboardBody.innerHTML = "<tr><td colspan='6'>Server error.</td></tr>";
   }
 }
 </script>
 
 </body>
-</html> 
+</html>

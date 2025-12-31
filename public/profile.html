@@ -1,135 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Profile Page</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Profile</title>
 
-  <style>
-    * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+<style>
+* {
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
 
-    body {
-      margin: 0;
-      background: #121212;
-      color: #fff;
-    }
+body {
+  margin: 0;
+  background: #121212;
+  color: #fff;
+}
 
-    .container {
-      max-width: 450px;
-      margin: 30px auto 80px;
-      padding: 20px;
-      background: #1c1c1c;
-      border-radius: 16px;
-      box-shadow: 0 0 15px #00faff88;
-    }
+.container {
+  max-width: 480px;
+  margin: 20px auto 90px;
+  padding: 20px;
+  background: #1c1c1c;
+  border-radius: 16px;
+  box-shadow: 0 0 15px #00faff55;
+}
 
-    .avatar {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      display: block;
-      margin: 0 auto;
-      border: 3px solid #00faff;
-      object-fit: cover;
-    }
+/* Avatar */
+.avatar {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  display: block;
+  margin: 10px auto;
+  border: 3px solid #00faff;
+  object-fit: cover;
+}
 
-    .upload-btn {
-      text-align: center;
-      margin: 10px 0;
-    }
+.upload-btn {
+  text-align: center;
+  margin-bottom: 15px;
+}
 
-    .user-info {
-      text-align: center;
-      margin-top: 10px;
-    }
+.upload-btn input {
+  font-size: 12px;
+}
 
-    .user-info div {
-      margin: 6px 0;
-      font-weight: 500;
-    }
+/* User Info */
+.user-info {
+  text-align: center;
+  margin-bottom: 15px;
+}
 
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: 600;
-    }
+.user-info div {
+  margin: 5px 0;
+  font-size: 14px;
+}
 
-    input {
-      width: 100%;
-      padding: 12px;
-      border-radius: 10px;
-      border: none;
-      background: #121212;
-      color: #fff;
-      box-shadow: inset 0 0 5px #00faff55;
-    }
+/* Inputs */
+label {
+  margin-top: 14px;
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+}
 
-    .wallet {
-      text-align: center;
-      font-size: 18px;
-      margin: 20px 0;
-      padding: 10px;
-      background: #1a1a1a;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #00faff88;
-    }
+input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: #121212;
+  color: #fff;
+  margin-top: 6px;
+  box-shadow: inset 0 0 5px #00faff44;
+}
 
-    .button {
-      width: 100%;
-      padding: 14px;
-      font-size: 16px;
-      font-weight: 700;
-      background: #00faff;
-      color: #000;
-      border: none;
-      border-radius: 30px;
-      margin-bottom: 15px;
-      cursor: pointer;
-    }
+/* Wallet */
+.wallet {
+  margin: 18px 0;
+  padding: 14px;
+  text-align: center;
+  background: #1a1a1a;
+  border-radius: 12px;
+  font-size: 18px;
+  box-shadow: 0 0 10px #00faff66;
+}
 
-    .button.secondary {
-      background: #444;
-      color: #fff;
-    }
+/* Buttons */
+.button {
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 12px;
+  border-radius: 30px;
+  border: none;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  background: #00faff;
+  color: #000;
+}
 
-    #adminSection {
-      display: none;
-      text-align: center;
-      margin-top: 20px;
-    }
+.button.secondary {
+  background: #444;
+  color: #fff;
+}
 
-    footer {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: #1e1e1e;
-      display: flex;
-      justify-content: space-around;
-      padding: 12px 0;
-      border-top: 1px solid #333;
-    }
+/* Admin */
+#adminSection {
+  display: none;
+  text-align: center;
+  margin-top: 20px;
+}
 
-    .nav-btn {
-      color: #aaa;
-      font-size: 14px;
-      text-align: center;
-    }
+/* Footer Nav */
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: #1e1e1e;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border-top: 1px solid #333;
+}
 
-    .nav-btn.active {
-      color: #00faff;
-    }
-  </style>
+.nav-btn {
+  color: #aaa;
+  font-size: 13px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.nav-btn.active {
+  color: #00faff;
+}
+</style>
 </head>
 
 <body>
 
 <div class="container">
 
-  <img id="avatar-img" src="https://img.icons8.com/color/96/user.png" class="avatar" />
+  <img id="avatar-img"
+       src="https://img.icons8.com/color/96/user.png"
+       class="avatar">
 
   <div class="upload-btn">
-    <input type="file" id="avatarInput" accept="image/*" onchange="uploadAvatar()" />
+    <input type="file" id="avatarInput" accept="image/*" onchange="uploadAvatar()">
   </div>
 
   <div class="user-info">
@@ -139,26 +159,25 @@
     <div><strong>User ID:</strong> <span id="userid">Loading...</span></div>
   </div>
 
-  <!-- GAME UIDs -->
   <label>Free Fire UID</label>
-  <input type="text" id="ffid" disabled />
+  <input type="text" id="ffid" disabled>
 
   <label>BGMI UID</label>
-  <input type="text" id="bgmiid" disabled />
+  <input type="text" id="bgmiid" disabled>
 
   <label>Carrom Pool UID</label>
-  <input type="text" id="carrom" disabled />
+  <input type="text" id="carrom" disabled>
 
   <label>Ludo King UID</label>
-  <input type="text" id="ludo" disabled />
+  <input type="text" id="ludo" disabled>
 
   <div class="wallet">
     Wallet Balance: ₹<span id="wallet">0</span>
   </div>
 
-  <button class="button" onclick="handleDeposit()">💰 Deposit</button>
-  <button class="button" onclick="handleWithdraw()">🏦 Withdraw</button>
-  <button class="button secondary" onclick="handleTransactions()">📜 Transaction History</button>
+  <button class="button" onclick="location.href='deposite.html'">💰 Deposit</button>
+  <button class="button" onclick="location.href='withdral.html'">🏦 Withdraw</button>
+  <button class="button secondary" onclick="location.href='transaction.html'">📜 Transaction History</button>
 
   <div id="adminSection">
     <h3>Admin Actions</h3>
@@ -168,78 +187,104 @@
 </div>
 
 <footer>
-  <div class="nav-btn" onclick="location.href='gamezone.html'">🎮 Game</div>
-  <div class="nav-btn" onclick="location.href='history.html'">📜 History</div>
-  <div class="nav-btn" onclick="location.href='leaderboard.html'">🏆 Leaderboard</div>
-  <div class="nav-btn active">👤 Profile</div>
-  <div class="nav-btn" onclick="location.href='more.html'">⋯ More</div>
+  <div class="nav-btn" onclick="location.href='gamezone.html'">🎮<br>Game</div>
+  <div class="nav-btn" onclick="location.href='history.html'">📜<br>History</div>
+  <div class="nav-btn" onclick="location.href='leaderboard.html'">🏆<br>Leaderboard</div>
+  <div class="nav-btn active">👤<br>Profile</div>
+  <div class="nav-btn" onclick="location.href='more.html'">⋯<br>More</div>
 </footer>
 
 <script>
-  const token = localStorage.getItem("token");
-  if (!token) {
-    alert("Please login first");
-    location.href = "login.html";
-  }
+/* ================= AUTH ================= */
+const token = localStorage.getItem("token");
+if (!token) {
+  alert("Please login first");
+  location.href = "login.html";
+}
 
-  function parseJwt(token) {
-    try { return JSON.parse(atob(token.split('.')[1])); }
-    catch { return null; }
-  }
+const avatarImg = document.getElementById("avatar-img");
+const avatarInput = document.getElementById("avatarInput");
 
-  const payload = parseJwt(token);
-  if (payload?.isAdmin) {
-    document.getElementById("adminSection").style.display = "block";
-  }
-
-  async function loadProfile() {
-    const res = await fetch("https://battlepurse-78.onrender.com/api/wallet/profile", {
+/* ================= LOAD PROFILE ================= */
+async function loadProfile() {
+  try {
+    const res = await fetch("https://battlepurse-18.onrender.com/api/wallet/profile", {
       headers: { Authorization: "Bearer " + token }
     });
     const data = await res.json();
 
-    document.getElementById("username").innerText = data.user.name;
-    document.getElementById("mobile").innerText = data.user.phone;
-    document.getElementById("email").innerText = data.user.email || "Not set";
-    document.getElementById("userid").innerText = data.user.id;
+    const u = data.user;
+    username.innerText = u.name;
+    mobile.innerText = u.phone;
+    email.innerText = u.email || "Not set";
+    userid.innerText = u.id;
 
-    if (data.user.avatarUrl)
-      document.getElementById("avatar-img").src = data.user.avatarUrl;
+    if (u.avatarUrl) avatarImg.src = u.avatarUrl;
 
-    const u = data.user.uids || {};
-    document.getElementById("ffid").value = u.freeFire || "";
-    document.getElementById("bgmiid").value = u.bgmi || "";
-    document.getElementById("carrom").value = u.carrom || "";
-    document.getElementById("ludo").value = u.ludo || "";
+    const ids = u.uids || {};
+    ffid.value = ids.freeFire || "";
+    bgmiid.value = ids.bgmi || "";
+    carrom.value = ids.carrom || "";
+    ludo.value = ids.ludo || "";
 
-    const w = await fetch("https://battlepurse-78.onrender.com/api/wallet/balance", {
+    if (u.isAdmin) {
+      adminSection.style.display = "block";
+    }
+
+    const wbRes = await fetch("https://battlepurse-18.onrender.com/api/wallet/balance", {
       headers: { Authorization: "Bearer " + token }
     });
-    const wb = await w.json();
-    document.getElementById("wallet").innerText = wb.balance || 0;
+    const wb = await wbRes.json();
+    wallet.innerText = wb.balance || 0;
+
+  } catch (err) {
+    console.error("Profile load error:", err);
+    alert("Failed to load profile");
+  }
+}
+
+/* ================= AVATAR UPLOAD ================= */
+async function uploadAvatar() {
+  const file = avatarInput.files[0];
+  if (!file) return;
+
+  if (!file.type.startsWith("image/")) {
+    alert("Please select an image");
+    return;
   }
 
-  async function uploadAvatar() {
-    const f = document.getElementById("avatarInput").files[0];
-    if (!f) return;
-    const fd = new FormData();
-    fd.append("avatar", f);
+  if (file.size > 2 * 1024 * 1024) {
+    alert("Image must be less than 2MB");
+    return;
+  }
 
-    const res = await fetch("https://battlepurse-78.onrender.com/api/wallet/upload-avatar", {
+  avatarImg.src = URL.createObjectURL(file);
+
+  const fd = new FormData();
+  fd.append("avatar", file);
+
+  try {
+    const res = await fetch("https://battlepurse-18.onrender.com/api/wallet/upload-avatar", {
       method: "POST",
       headers: { Authorization: "Bearer " + token },
       body: fd
     });
     const d = await res.json();
-    document.getElementById("avatar-img").src = d.url;
-    alert("Avatar updated");
+
+    if (!res.ok || !d.success) {
+      throw new Error(d.msg || "Upload failed");
+    }
+
+    avatarImg.src = d.url;
+    alert("Avatar updated successfully");
+
+  } catch (err) {
+    console.error("Avatar upload error:", err);
+    alert("Avatar upload failed");
   }
+}
 
-  function handleDeposit(){ location.href = "deposite.html"; }
-  function handleWithdraw(){ location.href = "withdral.html"; }
-  function handleTransactions(){ location.href = "transaction.html"; }
-
-  window.onload = loadProfile;
+window.onload = loadProfile;
 </script>
 
 </body>

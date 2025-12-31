@@ -89,7 +89,7 @@
   const amount = parseInt(urlParams.get("amount"));
   document.getElementById("amountDisplay").innerText = amount || "0";
 
-  const API_CONFIG = "https://battlepurse-17.onrender.com/api/wallet/payment-config";
+  const API_CONFIG = "https://battlepurse-18.onrender.com/api/wallet/payment-config";
 
   // Load live QR and UPI from server
   async function loadPaymentConfig() {
@@ -102,7 +102,7 @@
 
         document.getElementById("upiId").innerText = cfg.upiId || "yourupi@upi";
         if (cfg.qrImage) {
-          document.getElementById("qrImage").src = "https://battlepurse-17.onrender.com/uploads/" + cfg.qrImage;
+          document.getElementById("qrImage").src = "https://battlepurse-18.onrender.com/uploads/" + cfg.qrImage;
         } else {
           document.getElementById("qrImage").src = "placeholder.png";
         }
@@ -129,7 +129,7 @@
     if (!token) return alert("❗ You're not logged in. Please log in first.");
 
     try {
-      const res = await fetch("https://battlepurse-17.onrender.com/api/wallet/submit-utr", {
+      const res = await fetch("https://battlepurse-18.onrender.com/api/wallet/submit-utr", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

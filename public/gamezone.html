@@ -1192,6 +1192,19 @@ select{
           <select id="map"></select>
         </div>
 
+        <div class="field">
+  <label for="rounds">Rounds</label>
+  <select id="rounds">
+    <option value="">Select rounds</option>
+    <option value="7">7</option>
+    <option value="9">9</option>
+    <option value="11">11</option>
+    <option value="13">13</option>
+    <option value="15">15</option>
+  </select>
+</div>
+
+
         <div id="freeFireFields" class="ff-settings" aria-hidden="true">
           <label>Headshot</label>
           <select id="headshot">
@@ -1272,9 +1285,9 @@ select{
 
 
 <script>
-const API_BASE = "https://battlepurse-78.onrender.com/api/wallet";
+const API_BASE = "https://battlepurse-18.onrender.com/api/wallet";
 const token = localStorage.getItem('token');
-const UPLOADS_BASE = "https://battlepurse-78.onrender.com/uploads";
+const UPLOADS_BASE = "https://battlepurse-17.onrender.com/uploads";
 const BACKEND_URL = API_BASE;
 
 
@@ -1291,7 +1304,7 @@ const BACKEND_URL = API_BASE;
 
 (() => {
   /* ------------- Config ------------- */
-  const API_BASE = (typeof BACKEND_URL !== 'undefined' && BACKEND_URL) ? BACKEND_URL : "https://battlepurse-17.onrender.com/api/wallet";
+  const API_BASE = (typeof BACKEND_URL !== 'undefined' && BACKEND_URL) ? BACKEND_URL : "https://battlepurse-18.onrender.com/api/wallet";
   const TOKEN = localStorage.getItem('token') || "";
 
   /* ------------- Simple helpers ------------- */
@@ -1688,6 +1701,8 @@ async function joinMatch(){
   const game = gameEl.value;
   const mode = modeEl.value;
   const map = mapEl.value || undefined;
+  /* 🔥 ADD THIS */
+const rounds = parseInt(document.getElementById('rounds')?.value, 10);
   const uid = (uidEl.value || '').trim();
   const cc = (countryCodeEl.value || '').trim();
   const whatsappRaw = (whatsappEl.value || '').replace(/[\s-]/g,'').trim();
@@ -1727,6 +1742,7 @@ async function joinMatch(){
     type: selectedType,
     game,
     mode,
+    rounds,
     fee: feeVal,
     uid,
     prizeSystem: selectedPrizeSystem,
@@ -1759,6 +1775,12 @@ async function joinMatch(){
     }
 
 const game = gameEl.value;
+const allowedRounds = [7, 9, 11, 13, 15];
+
+if (!rounds || !allowedRounds.includes(rounds)) {
+  setMessage('Please select valid rounds (7, 9, 11, 13, 15)');
+  return;
+}
 
 if(game === 'BGMI'){
   setMessage('⚠️ BGMI matches feature are coming soon. You cannot join right now.');
