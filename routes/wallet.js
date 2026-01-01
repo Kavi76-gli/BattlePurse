@@ -3295,30 +3295,38 @@ router.post("/pair", authAdmin, async (req, res) => {
       type,
       entryFee,
       map,
-      roomType,
-      gameSettings
+      roomType
     } = req.body;
 
     if (!Array.isArray(selectedMembers) || selectedMembers.length === 0) {
       return res.status(400).json({ success: false, msg: "No members selected" });
     }
 
-    if (!game || !mode || !type) {
-      return res.status(400).json({ success: false, msg: "Missing match data" });
+    const ALLOWED_ROUNDS = [7, 9, 11, 13, 15];
+
+    // ✅ COLLECT ROUNDS FROM PLAYERS
+    const roundsSet = new Set();
+
+    for (const p of selectedMembers) {
+      const r = Number(p.gameSettings?.rounds);
+      if (!ALLOWED_ROUNDS.includes(r)) {
+        return res.status(400).json({
+          success: false,
+          msg: "Invalid rounds. Allowed: 7, 9, 11, 13, 15"
+        });
+      }
+      roundsSet.add(r);
     }
 
-    // ✅ REQUIRED ROUNDS
-    const rounds = Number(
-      gameSettings?.rounds ??
-      selectedMembers[0]?.gameSettings?.rounds
-    );
-
-    if (!rounds || rounds <= 0) {
+    // ✅ ALL PLAYERS MUST HAVE SAME ROUNDS
+    if (roundsSet.size !== 1) {
       return res.status(400).json({
         success: false,
-        msg: "Rounds is required and must be > 0"
+        msg: "All players must select the same rounds"
       });
     }
+
+    const rounds = [...roundsSet][0]; // 🎯 FINAL ROUND VALUE
 
     const n = parseInt(type.split("v")[0], 10);
     const teamSize = n * 2;
@@ -3362,7 +3370,7 @@ router.post("/pair", authAdmin, async (req, res) => {
           entryFee,
 
           gameSettings: {
-            rounds,
+            rounds, // 🔒 SAME FOR ALL
             headshot: !!p.gameSettings?.headshot,
             characterSkill: !!p.gameSettings?.characterSkill,
             gunAttributes: !!p.gameSettings?.gunAttributes,
@@ -3380,7 +3388,7 @@ router.post("/pair", authAdmin, async (req, res) => {
         map,
         roomType,
 
-        // 🔥 THIS FIXES YOUR ERROR
+        // ✅ REQUIRED BY SCHEMA
         rounds,
 
         players: playersArr,
