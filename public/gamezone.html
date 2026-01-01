@@ -933,6 +933,24 @@ select{
   margin-top: 10px;
 }
 
+/* Notice container */
+.notice {
+  position: relative;
+  background-color: #1e1e1e; /* dark background */
+  color: #00faff; /* bright accent color */
+  padding: 10px 15px;
+  border-left: 4px solid #00faff;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: right; /* aligns text to the right */
+  border-radius: 5px;
+  max-width: 350px;
+  margin: 10px auto;
+  box-shadow: 0 2px 6px rgba(0, 255, 255, 0.2);
+  font-family: 'Poppins', sans-serif;
+}
+
+
 </style>
 </head>
 <body>
@@ -968,6 +986,11 @@ select{
     Facing any issue? Game problem, payment delay, or match error — contact us on Help & Support page: help&support
   </span>
 </div>
+
+<div class="notice">
+  8% of the total winning prize will be deducted by BattlePurse as a service fee.
+</div>
+
 
 <div class="support-btn-wrapper">
   <a href="help&support.html" class="support-btn">Help & Support</a>
@@ -1160,7 +1183,7 @@ select{
         </div>
       </div>
 
-      <div class="small-note">More updates coming soon — optimized for mobile and desktop.</div>
+      <div class="small-note">More updates coming soon.</div>
     </div>
 
     <!-- Right: form -->

@@ -11,10 +11,11 @@ process.setMaxListeners(20);
 /* ======================
    DEBUG ENV
 ====================== */
-console.log("RESEND KEY LOADED:", !!process.env.RESEND_API_KEY);
+console.log("SMTP HOST =", process.env.EMAIL_HOST);
+console.log("SMTP PORT =", process.env.EMAIL_PORT);
+console.log("SMTP USER =", process.env.EMAIL_USER);
+console.log("SMTP PASS LENGTH =", process.env.EMAIL_PASS?.length);
 
-console.log("EMAIL USER LOADED:", !!process.env.EMAIL_USER);
-console.log("EMAIL PASS LOADED:", !!process.env.EMAIL_PASS);
 
 /* ======================
    MIDDLEWARE
