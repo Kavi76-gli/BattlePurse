@@ -3286,6 +3286,125 @@ router.get("/pairss/:matchId", authAdmin, async (req, res) => {
   }
 });
 
+router.post("/pair", authAdmin, async (req, res) => {
+  try {
+    const {
+      selectedMembers,
+      game,
+      mode,
+      type,
+      entryFee,
+      map,
+      roomType,
+      gameSettings
+    } = req.body;
+
+    if (!Array.isArray(selectedMembers) || selectedMembers.length === 0) {
+      return res.status(400).json({ success: false, msg: "No members selected" });
+    }
+
+    if (!game || !mode || !type) {
+      return res.status(400).json({ success: false, msg: "Missing match data" });
+    }
+
+    // ✅ REQUIRED ROUNDS
+    const rounds = Number(
+      gameSettings?.rounds ??
+      selectedMembers[0]?.gameSettings?.rounds
+    );
+
+    if (!rounds || rounds <= 0) {
+      return res.status(400).json({
+        success: false,
+        msg: "Rounds is required and must be > 0"
+      });
+    }
+
+    const n = parseInt(type.split("v")[0], 10);
+    const teamSize = n * 2;
+
+    if (selectedMembers.length % teamSize !== 0) {
+      return res.status(400).json({
+        success: false,
+        msg: `You must select ${teamSize} players per match (${type})`
+      });
+    }
+
+    const groups = [];
+    for (let i = 0; i < selectedMembers.length; i += teamSize) {
+      groups.push(selectedMembers.slice(i, i + teamSize));
+    }
+
+    const createdMatches = [];
+
+    for (const group of groups) {
+      const half = group.length / 2;
+
+      const prizeSystem =
+        type === "1v1"
+          ? "kill_based"
+          : group[0]?.prizeSystem || "kill_based";
+
+      const playersArr = group.map((p, idx) => {
+        if (!p.userId) throw new Error("Invalid userId");
+
+        return {
+          userId: new mongoose.Types.ObjectId(p.userId),
+          uid: p.uid,
+          name: p.name || "Unknown",
+          phone: p.phone || "Unknown",
+          team: idx < half ? "LION" : "TIGER",
+
+          game,
+          mode,
+          map,
+          roomType,
+          entryFee,
+
+          gameSettings: {
+            rounds,
+            headshot: !!p.gameSettings?.headshot,
+            characterSkill: !!p.gameSettings?.characterSkill,
+            gunAttributes: !!p.gameSettings?.gunAttributes,
+            throwableLimit: Number(p.gameSettings?.throwableLimit || 0)
+          }
+        };
+      });
+
+      const newMatch = new QuickMatch({
+        type,
+        game,
+        mode,
+        entryFee,
+        prizeSystem,
+        map,
+        roomType,
+
+        // 🔥 THIS FIXES YOUR ERROR
+        rounds,
+
+        players: playersArr,
+        status: "paired"
+      });
+
+      await newMatch.save();
+      createdMatches.push(newMatch);
+    }
+
+    res.json({
+      success: true,
+      msg: "Players paired successfully",
+      data: createdMatches
+    });
+
+  } catch (err) {
+    console.error("Pair Error:", err);
+    res.status(500).json({
+      success: false,
+      msg: err.message || "Server error"
+    });
+  }
+});
 
 
 router.post("/pair", authAdmin, async (req, res) => {
