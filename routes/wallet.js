@@ -3339,7 +3339,7 @@ router.post("/pair", authAdmin, async (req, res) => {
           map,
           roomType,
           entryFee,
-
+          rounds,
           gameSettings: {
             headshot: p.gameSettings?.headshot || false,
             characterSkill: p.gameSettings?.characterSkill || false,
