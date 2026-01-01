@@ -61,8 +61,8 @@ async function loadRoom(){
   teamTable.innerHTML = "";
 
   try{
-    const roomRes = await fetch(`https://battlepurse-17.onrender.com/api/wallet/quickmatch/room/${matchId}`).then(r=>r.json());
-    const pairsRes = await fetch(`https://battlepurse-17.onrender.com/api/wallet/pairs/${matchId}`).then(r=>r.json());
+    const roomRes = await fetch(`https://battlepurse-99.onrender.com/api/wallet/quickmatch/room/${matchId}`).then(r=>r.json());
+    const pairsRes = await fetch(`https://battlepurse-99.onrender.com/api/wallet/pairs/${matchId}`).then(r=>r.json());
 
     if(!roomRes.success){
       box.innerHTML = "<h3>Room Not Published Yet</h3><p class='note'>⏳ Please wait for admin.</p>";
@@ -239,7 +239,7 @@ async function uploadResult(){
       const token = localStorage.getItem("token");
       if(!token) return alert("Login required");
 
-      await fetch("https://battlepurse-17.onrender.com/api/wallet/upload-result",{
+      await fetch("https://battlepurse-99.onrender.com/api/wallet/upload-result",{
         method:"POST",
         headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+token },
         body: JSON.stringify({ matchId, kills, screenshotUrl: reader.result })

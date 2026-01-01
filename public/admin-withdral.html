@@ -106,7 +106,7 @@
 
     async function fetchWithdrawals() {
       try {
-        const res = await fetch("https://battlepurse-17.onrender.com/api/wallet/admin/pending-withdrawals", {
+        const res = await fetch("https://battlepurse-99.onrender.com/api/wallet/admin/pending-withdrawals", {
           headers: { Authorization: "Bearer " + token }
         });
         const data = await res.json();
@@ -121,7 +121,7 @@
     async function updateStatus(id, status) {
       const route = status === 'approved' ? 'approve-withdrawal' : 'reject-withdrawal';
       try {
-        const res = await fetch(`https://battlepurse-17.onrender.com/api/wallet/admin/${route}`, {
+        const res = await fetch(`https://battlepurse-99.onrender.com/api/wallet/admin/${route}`, {
           method: "POST",
           headers: {
             "Authorization": "Bearer " + token,

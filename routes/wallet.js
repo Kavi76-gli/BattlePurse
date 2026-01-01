@@ -8,6 +8,7 @@ const PaymentConfig = require("../models/PaymentConfig");
 const auth = require('../middleware/authmiddleware');
 const adminAuth = require("../middleware/adminAuth"); // Adjust path as needed
 const authAdmin = require("../middleware/adminAuth");  // adjust the path if needed
+const transporter = require("../config/mail");
 
 const axios = require("axios");
 
@@ -4835,6 +4836,182 @@ router.post("/admin/match/complete", authAdmin, async (req, res) => {
   }
 });
 
+router.get("/history", auth, async (req, res) => {
+  try {
+    const userId = new mongoose.Types.ObjectId(req.user.id);
+
+    /* =========================
+       QUERY PARAMS (SAFE)
+    ========================= */
+    const game = req.query.game || null;
+
+    const start = req.query.start
+      ? new Date(req.query.start)
+      : new Date("2000-01-01");
+
+    const end = req.query.end
+      ? new Date(req.query.end)
+      : new Date();
+
+    // ensure full day coverage
+    end.setHours(23, 59, 59, 999);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return res.status(400).json({ msg: "Invalid date format" });
+    }
+
+    /* =========================
+       MATCH HISTORY
+    ========================= */
+    const matchQuery = {
+      status: "completed",
+      createdAt: { $gte: start, $lte: end }
+    };
+
+    if (game) matchQuery.game = game;
+
+    const matches = await QuickMatch.find(
+      matchQuery,
+      {
+        players: 1,
+        userResults: 1,
+        entryFee: 1,
+        prizeGiven: 1,
+        prizeSystem: 1,
+        winnerIds: 1,
+        type: 1,
+        game: 1,
+        mode: 1,
+        createdAt: 1,
+        matchNumber: 1
+      }
+    )
+      .limit(200)
+      .lean();
+
+    const history = [];
+
+    for (const m of matches) {
+      const entryFee = Number(m.entryFee || 0);
+
+      const playersCount =
+        (m.players?.length || 0) +
+        (m.slots?.length || 0) || 1;
+
+      const totalCollected = entryFee * playersCount;
+      const prizePool = Math.max(
+        0,
+        totalCollected - Math.round(totalCollected * 0.08)
+      );
+
+      const winnerIds = (m.winnerIds || []).map(id => String(id));
+      const userResults = Array.isArray(m.userResults) ? m.userResults : [];
+
+      const myResult = userResults.find(
+        r => String(r.userId) === String(userId)
+      );
+
+      let isWinner = false;
+      let prizeWon = 0;
+
+      /* ===== ADMIN SELECTED WINNERS ===== */
+      if (winnerIds.length > 0 && winnerIds.includes(String(userId))) {
+        isWinner = true;
+
+        if (m.prizeSystem === "team_equal") {
+          const winners = userResults.filter(r =>
+            winnerIds.includes(String(r.userId))
+          );
+          prizeWon = Math.round(
+            (m.prizeGiven || prizePool) / (winners.length || 1)
+          );
+        } 
+        else if (m.prizeSystem === "kill_based") {
+          const winners = userResults.filter(r =>
+            winnerIds.includes(String(r.userId))
+          );
+          const totalKills = winners.reduce(
+            (s, x) => s + Number(x.kills || 0), 0
+          );
+
+          const ur = winners.find(r => String(r.userId) === String(userId));
+          prizeWon = totalKills > 0
+            ? Math.round(((ur?.kills || 0) / totalKills) * (m.prizeGiven || prizePool))
+            : Math.round((m.prizeGiven || prizePool) / (winners.length || 1));
+        } 
+        else {
+          prizeWon = m.prizeGiven || prizePool;
+        }
+      }
+
+      /* ===== AUTO RESULT ===== */
+      else if (m.type === "1v1") {
+        const top = [...userResults].sort(
+          (a, b) => (b.kills || 0) - (a.kills || 0)
+        )[0];
+
+        if (top && String(top.userId) === String(userId)) {
+          isWinner = true;
+          prizeWon = top.prize || m.prizeGiven || prizePool;
+        }
+      }
+
+      history.push({
+        type: "match",
+        matchId: m._id,
+        matchNumber: m.matchNumber,
+        game: m.game,
+        mode: m.mode,
+        entryFee,
+        createdAt: m.createdAt,
+        kills: myResult?.kills || 0,
+        result: isWinner ? "win" : "loss",
+        prize: prizeWon
+      });
+    }
+
+    /* =========================
+       TOURNAMENT HISTORY
+    ========================= */
+    const tournaments = await Tournament.find({
+      $or: [
+        { "winners.userId": userId },
+        { "joinedUsers.userId": userId },
+        { "players.userId": userId }
+      ]
+    })
+      .sort({ createdAt: -1 })
+      .limit(500)
+      .lean();
+
+    for (const t of tournaments) {
+      const win = t.winners?.find(w => String(w.userId) === String(userId));
+      const join =
+        t.joinedUsers?.find(j => String(j.userId) === String(userId)) ||
+        t.players?.find(p => String(p.userId) === String(userId));
+
+      history.push({
+        type: "tournament",
+        tournamentId: t._id,
+        tournamentName: t.name,
+        game: t.game,
+        entryFee: t.entryFee,
+        result: win ? "win" : "loss",
+        prize: win?.prize || 0,
+        position: win?.position || null,
+        createdAt: win?.declaredAt || join?.joinedAt || t.createdAt
+      });
+    }
+
+    history.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    res.json({ success: true, count: history.length, history });
+
+  } catch (err) {
+    console.error("History Error:", err);
+    res.status(500).json({ success: false, msg: "Server error" });
+  }
+});
 
 
 
@@ -4845,12 +5022,9 @@ router.get("/history", auth, async (req, res) => {
     /* =========================
        MATCH HISTORY
     ========================= */
-const matches = await QuickMatch.find(
-  {
-    status: "completed",
-    createdAt: { $gte: start, $lte: end },
-    ...(game ? { game } : {})
-  },
+    // ---- DATE RANGE (SAFE DEFAULTS) ----
+   const matches = await QuickMatch.find( { status: "completed", createdAt: { $gte: start, $lte: end }, ...(game ? { game } : {}) },
+
   {
     players: 1,
     userResults: 1,
