@@ -3,6 +3,9 @@
 
 require("dotenv").config();
 console.log("RUNNING SERVER FROM:", __filename);
+if (process.env.EMAIL_HOST === "127.0.0.1" || process.env.EMAIL_HOST === "localhost") {
+  throw new Error("❌ Local SMTP is forbidden in production");
+}
 
 const express = require("express");
 const mongoose = require("mongoose");
@@ -16,10 +19,7 @@ process.setMaxListeners(20);
    ENV DEBUG (SAFE LOGS)
 ====================== */
 console.log("APP PORT =", process.env.PORT);
-console.log("SMTP HOST =", process.env.EMAIL_HOST);
-console.log("SMTP PORT =", process.env.EMAIL_PORT);
-console.log("SMTP USER =", process.env.EMAIL_USER);
-console.log("SMTP PASS LENGTH =", process.env.EMAIL_PASS?.length);
+
 
 /* ======================
    REQUIRED ENV CHECK
@@ -41,12 +41,7 @@ app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
-/* ======================
-   HEALTH CHECK
-====================== */
-app.get("/ping", (req, res) => {
-  res.json({ ok: true, msg: "Server is responding" });
-});
+
 
 /* ======================
    STATIC FILES

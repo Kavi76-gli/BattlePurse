@@ -37,7 +37,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const Otp = require("../models/Otp");
 
 const sendEmail = require("../utils/sendEmail");
-const emailTransporter = require("../utils/emailTransporter");
+
 
 
 
@@ -55,6 +55,69 @@ const genOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
    REGISTER → SEND EMAIL OTP
 ====================================== */
 
+/* ======================================
+   REGISTER → SEND EMAIL OTP
+====================================== */
+router.post("/register-email", async (req, res) => {
+  try {
+    const { name, phone, email, password } = req.body;
+
+    // Basic validation
+    if (!name || !phone || !email || !password)
+      return res.status(400).json({ msg: "All fields are required" });
+
+    // Check if user already exists
+    const exists = await User.findOne({
+      $or: [{ phone }, { email }]
+    });
+    if (exists)
+      return res.status(400).json({ msg: "User already exists" });
+
+    // Generate OTP
+    const otp = genOtp();
+
+    // Remove old OTPs for this email
+    await Otp.deleteMany({ email, purpose: "register" });
+
+    // Store OTP temporarily with expiration
+    await Otp.create({
+      name,
+      phone,
+      email,
+      password, // will hash after OTP verification
+      otp,
+      purpose: "register",
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000) // 5 minutes
+    });
+
+    // 🔐 Send OTP via email safely
+    try {
+      await sendEmail({
+        to: email,
+        subject: "BattlePurse Registration OTP",
+        html: `
+          <div style="text-align:center;font-family:Arial,sans-serif;">
+            <h2>Welcome ${name}!</h2>
+            <p>Your OTP for BattlePurse registration is:</p>
+            <p style="font-size:24px;font-weight:bold;color:#007bff;">${otp}</p>
+            <p>This OTP will expire in 5 minutes.</p>
+          </div>
+        `
+      });
+    } catch (emailErr) {
+      console.error("❌ Email sending blocked:", emailErr.message);
+      return res.status(500).json({
+        msg: "Failed to send OTP. Check your SMTP configuration."
+      });
+    }
+
+    res.json({ success: true, msg: "OTP sent to your email" });
+
+  } catch (err) {
+    console.error("Register-email error:", err);
+    res.status(500).json({ msg: "Internal server error" });
+  }
+});
 
 /* ======================================
    REGISTER → SEND EMAIL OTP
@@ -62,6 +125,8 @@ const genOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 router.post("/register-email", async (req, res) => {
   try {
     const { name, phone, email, password } = req.body;
+console.log("SMTP HOST:", process.env.EMAIL_HOST);
+console.log("SMTP PORT:", process.env.EMAIL_PORT);
 
     if (!name || !phone || !email || !password)
       return res.status(400).json({ msg: "All fields required" });
@@ -7423,6 +7488,7 @@ router.post("/payment-config", authAdmin, upload.single("qrImage"), async (req, 
     res.status(500).json({ success: false, msg: "Server error", error: err.message });
   }
 });
+
 
 
 

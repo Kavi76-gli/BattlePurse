@@ -1,33 +1,26 @@
-const nodemailer = require("nodemailer");
-
-let transporter;
+const axios = require("axios");
 
 module.exports = async ({ to, subject, html }) => {
-  if (!transporter) {
-    transporter = nodemailer.createTransport(
-      {
-        host: process.env.EMAIL_HOST,
-        port: Number(process.env.EMAIL_PORT),
-        secure: false,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-        tls: {
-          rejectUnauthorized: false,
-        },
-      },
-      {
-        // 🔒 HARD BLOCK VERIFY / PROXY
-        skipVerification: true,
-      }
-    );
+  if (!process.env.BREVO_API_KEY) {
+    throw new Error("BREVO_API_KEY missing");
   }
 
-  return transporter.sendMail({
-    from: process.env.EMAIL_FROM,
-    to,
-    subject,
-    html,
-  });
+  await axios.post(
+    "https://api.brevo.com/v3/smtp/email",
+    {
+      sender: {
+        name: "BattlePurse",
+        email: "no-reply@battlepurse.online"
+      },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html
+    },
+    {
+      headers: {
+        "api-key": process.env.BREVO_API_KEY,
+        "Content-Type": "application/json"
+      }
+    }
+  );
 };
