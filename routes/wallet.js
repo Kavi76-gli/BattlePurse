@@ -119,52 +119,6 @@ router.post("/register-email", async (req, res) => {
   }
 });
 
-/* ======================================
-   REGISTER → SEND EMAIL OTP
-====================================== */
-router.post("/register-email", async (req, res) => {
-  try {
-    const { name, phone, email, password } = req.body;
-console.log("SMTP HOST:", process.env.EMAIL_HOST);
-console.log("SMTP PORT:", process.env.EMAIL_PORT);
-
-    if (!name || !phone || !email || !password)
-      return res.status(400).json({ msg: "All fields required" });
-
-    const exists = await User.findOne({
-      $or: [{ phone }, { email }]
-    });
-    if (exists)
-      return res.status(400).json({ msg: "User already exists" });
-
-    const otp = genOtp();
-
-    await Otp.deleteMany({ email, purpose: "register" });
-
-    await Otp.create({
-      name,
-      phone,
-      email,
-      password, // temp, will hash after OTP verify
-      otp,
-      purpose: "register",
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000)
-    });
-
-    // 🔐 Must succeed
-    await sendEmail({
-      to: email,
-      subject: "BattlePurse Registration OTP",
-      html: `<h2>Your OTP is <b>${otp}</b></h2>`
-    });
-
-    res.json({ success: true, msg: "OTP sent to email" });
-
-  } catch (err) {
-    console.error("Register-email error:", err);
-    res.status(500).json({ msg: "Failed to send OTP" });
-  }
-});
 
 /* ======================================
    VERIFY EMAIL OTP & CREATE USER
@@ -211,21 +165,31 @@ router.post("/login", async (req, res) => {
   try {
     const { phone, password } = req.body;
 
-    if (!phone || !password)
+    if (!phone || !password) {
       return res.status(400).json({ msg: "Phone and password required" });
+    }
 
-    const user = await User.findOne({ phone });
-    if (!user)
+    // 👇 Explicitly include password (IMPORTANT)
+    const user = await User.findOne({ phone }).select("+password");
+
+    if (!user) {
       return res.status(400).json({ msg: "User not found" });
+    }
 
     const match = await bcrypt.compare(password, user.password);
-    if (!match)
+    if (!match) {
       return res.status(400).json({ msg: "Wrong password" });
+    }
+
+    if (!process.env.JWT_SECRET) {
+      console.error("❌ JWT_SECRET missing on server");
+      return res.status(500).json({ msg: "Server configuration error" });
+    }
 
     const token = jwt.sign(
       { id: user._id, isAdmin: user.isAdmin === true },
       process.env.JWT_SECRET,
-      { expiresIn: "400y" }
+      { expiresIn: "365d" } // ✅ realistic expiry
     );
 
     res.json({
@@ -239,6 +203,8 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ msg: "Login failed" });
   }
 });
+
+
 
 /* ======================================
    FORGOT PASSWORD → SEND OTP
