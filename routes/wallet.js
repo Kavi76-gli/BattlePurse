@@ -3319,109 +3319,78 @@ router.get("/pairss/:matchId", authAdmin, async (req, res) => {
 
 router.post("/pair", authAdmin, async (req, res) => {
   try {
-    const {
-      selectedMembers,
-      game,
-      mode,
-      type,
-      entryFee,
-      map,
-      roomType
-    } = req.body;
+    const { selectedMembers, game, mode, type, entryFee, map, roomType, gameSettings } = req.body;
 
-    if (!Array.isArray(selectedMembers) || selectedMembers.length === 0) {
+    if (!Array.isArray(selectedMembers) || selectedMembers.length === 0)
       return res.status(400).json({ success: false, msg: "No members selected" });
-    }
-
-    const ALLOWED_ROUNDS = [7, 9, 11, 13, 15];
-
-    // ✅ COLLECT ROUNDS FROM PLAYERS
-    const roundsSet = new Set();
-
-    for (const p of selectedMembers) {
-      const r = Number(p.gameSettings?.rounds);
-      if (!ALLOWED_ROUNDS.includes(r)) {
-        return res.status(400).json({
-          success: false,
-          msg: "Invalid rounds. Allowed: 7, 9, 11, 13, 15"
-        });
-      }
-      roundsSet.add(r);
-    }
-
-    // ✅ ALL PLAYERS MUST HAVE SAME ROUNDS
-    if (roundsSet.size !== 1) {
-      return res.status(400).json({
-        success: false,
-        msg: "All players must select the same rounds"
-      });
-    }
-
-    const rounds = [...roundsSet][0]; // 🎯 FINAL ROUND VALUE
 
     const n = parseInt(type.split("v")[0], 10);
     const teamSize = n * 2;
 
-    if (selectedMembers.length % teamSize !== 0) {
+    if (selectedMembers.length % teamSize !== 0)
       return res.status(400).json({
         success: false,
         msg: `You must select ${teamSize} players per match (${type})`
       });
-    }
 
+    // GROUP PLAYERS
     const groups = [];
-    for (let i = 0; i < selectedMembers.length; i += teamSize) {
+    for (let i = 0; i < selectedMembers.length; i += teamSize)
       groups.push(selectedMembers.slice(i, i + teamSize));
-    }
 
     const createdMatches = [];
 
     for (const group of groups) {
+
+      // 🔒 1️⃣ SAME ROUNDS VALIDATION
+      const roundsSet = new Set(group.map(p => Number(p.rounds)));
+
+      if (roundsSet.size !== 1) {
+        return res.status(400).json({
+          success: false,
+          msg: "All selected players must have the same rounds"
+        });
+      }
+
+      const rounds = Number(group[0].rounds); // SAFE — same for all
+
       const half = group.length / 2;
 
       const prizeSystem =
-        type === "1v1"
-          ? "kill_based"
-          : group[0]?.prizeSystem || "kill_based";
+        type === "1v1" ? "kill_based" : (group[0].prizeSystem || "kill_based");
 
-      const playersArr = group.map((p, idx) => {
-        if (!p.userId) throw new Error("Invalid userId");
+      // BUILD PLAYERS ARRAY
+      const playersArr = group.map((p, idx) => ({
+        userId: p.userId ? new mongoose.Types.ObjectId(p.userId) : null,
+        uid: p.uid,
+        name: p.name || "Unknown",
+        phone: p.phone || "Unknown",
+        whatsappNumber: p.whatsappNumber || "",
+        team: idx < half ? "LION" : "TIGER",
+        joinedAt: p.joinedAt,
+        rounds, // 🔒 preserved from join
 
-        return {
-          userId: new mongoose.Types.ObjectId(p.userId),
-          uid: p.uid,
-          name: p.name || "Unknown",
-          phone: p.phone || "Unknown",
-          team: idx < half ? "LION" : "TIGER",
-
-          game,
-          mode,
-          map,
-          roomType,
-          entryFee,
-
+        freeFireSettings: {
+          map: p.map,
+          roomType: p.roomType,
           gameSettings: {
-            rounds, // 🔒 SAME FOR ALL
-            headshot: !!p.gameSettings?.headshot,
-            characterSkill: !!p.gameSettings?.characterSkill,
-            gunAttributes: !!p.gameSettings?.gunAttributes,
-            throwableLimit: Number(p.gameSettings?.throwableLimit || 0)
-          }
-        };
-      });
+            headshot: p.gameSettings?.headshot || false,
+            characterSkill: p.gameSettings?.characterSkill || false,
+            gunAttributes: p.gameSettings?.gunAttributes || false,
+            throwableLimit: p.gameSettings?.throwableLimit || 0
+          },
+          selectedGuns: p.selectedGuns || {}
+        }
+      }));
 
+      // SAVE MATCH
       const newMatch = new QuickMatch({
         type,
         game,
         mode,
         entryFee,
         prizeSystem,
-        map,
-        roomType,
-
-        // ✅ REQUIRED BY SCHEMA
-        rounds,
-
+        rounds, // 🔒 match-level rounds
         players: playersArr,
         status: "paired"
       });
@@ -3438,10 +3407,102 @@ router.post("/pair", authAdmin, async (req, res) => {
 
   } catch (err) {
     console.error("Pair Error:", err);
-    res.status(500).json({
-      success: false,
-      msg: err.message || "Server error"
+    res.status(500).json({ success: false, msg: "Server error" });
+  }
+});
+
+
+router.post("/pair", authAdmin, async (req, res) => {
+  try {
+    const { selectedMembers, game, mode, type, entryFee, map, roomType, gameSettings } = req.body;
+
+    if (!Array.isArray(selectedMembers) || selectedMembers.length === 0)
+      return res.status(400).json({ success: false, msg: "No members selected" });
+
+    const n = parseInt(type.split("v")[0], 10);
+    const teamSize = n * 2;
+
+    if (selectedMembers.length % teamSize !== 0)
+      return res.status(400).json({
+        success: false,
+        msg: `You must select ${teamSize} players per match (${type})`
+      });
+
+    // GROUP PLAYERS
+    const groups = [];
+    for (let i = 0; i < selectedMembers.length; i += teamSize)
+      groups.push(selectedMembers.slice(i, i + teamSize));
+
+    const createdMatches = [];
+
+    for (const group of groups) {
+
+      // 🔒 1️⃣ SAME ROUNDS VALIDATION
+      const roundsSet = new Set(group.map(p => Number(p.rounds)));
+
+      if (roundsSet.size !== 1) {
+        return res.status(400).json({
+          success: false,
+          msg: "All selected players must have the same rounds"
+        });
+      }
+
+      const rounds = Number(group[0].rounds); // SAFE — same for all
+
+      const half = group.length / 2;
+
+      const prizeSystem =
+        type === "1v1" ? "kill_based" : (group[0].prizeSystem || "kill_based");
+
+      // BUILD PLAYERS ARRAY
+      const playersArr = group.map((p, idx) => ({
+        userId: p.userId ? new mongoose.Types.ObjectId(p.userId) : null,
+        uid: p.uid,
+        name: p.name || "Unknown",
+        phone: p.phone || "Unknown",
+        whatsappNumber: p.whatsappNumber || "",
+        team: idx < half ? "LION" : "TIGER",
+        joinedAt: p.joinedAt,
+        rounds, // 🔒 preserved from join
+
+        freeFireSettings: {
+          map: p.map,
+          roomType: p.roomType,
+          gameSettings: {
+            headshot: p.gameSettings?.headshot || false,
+            characterSkill: p.gameSettings?.characterSkill || false,
+            gunAttributes: p.gameSettings?.gunAttributes || false,
+            throwableLimit: p.gameSettings?.throwableLimit || 0
+          },
+          selectedGuns: p.selectedGuns || {}
+        }
+      }));
+
+      // SAVE MATCH
+      const newMatch = new QuickMatch({
+        type,
+        game,
+        mode,
+        entryFee,
+        prizeSystem,
+        rounds, // 🔒 match-level rounds
+        players: playersArr,
+        status: "paired"
+      });
+
+      await newMatch.save();
+      createdMatches.push(newMatch);
+    }
+
+    res.json({
+      success: true,
+      msg: "Players paired successfully",
+      data: createdMatches
     });
+
+  } catch (err) {
+    console.error("Pair Error:", err);
+    res.status(500).json({ success: false, msg: "Server error" });
   }
 });
 

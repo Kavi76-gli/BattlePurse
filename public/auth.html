@@ -4,168 +4,82 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Neon Auth</title>
-
 <style>
-* {
-  box-sizing: border-box;
-  font-family: 'Poppins', sans-serif;
-}
-
-/* LOGO */
-.app-header {
-  position: fixed;
-  top: 15px;
-  left: 15px;
-  z-index: 1000;
-}
-.app-header img {
-  height: 45px;
-  filter: drop-shadow(0 0 8px #ae00ff);
-}
-@media (max-width: 480px) {
-  .app-header img { height: 36px; }
-}
-
-body {
-  margin: 0;
-  min-height: 100vh;
-  background: radial-gradient(circle at top, #1a002b, #000);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 15px;
-}
-
-.container {
-  width: 100%;
-  max-width: 420px;
-  background: rgba(0,0,0,0.75);
-  padding: 22px;
-  border-radius: 18px;
-  box-shadow: 0 0 30px #ae00ff99;
-}
-
-.toggle {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-.toggle button {
-  flex: 1;
-  padding: 12px;
-  border-radius: 10px;
-  border: 2px solid #ae00ff;
-  background: transparent;
-  color: #ae00ff;
-  cursor: pointer;
-}
-.toggle button.active {
-  background: #ae00ff;
-  color: #000;
-}
-
-form { display: none; }
-form.active { display: block; }
-
-h2 {
-  text-align: center;
-  color: #ae00ff;
-}
-
-input {
-  width: 100%;
-  padding: 13px;
-  margin: 8px 0;
-  border-radius: 10px;
-  border: none;
-  background: #111;
-  color: #ae00ff;
-}
-
-button.submit {
-  width: 100%;
-  padding: 13px;
-  margin-top: 12px;
-  background: linear-gradient(135deg, #ae00ff, #ff00cc);
-  border: none;
-  border-radius: 12px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.link-btn {
-  background: none;
-  border: none;
-  color: #ae00ff;
-  margin-top: 10px;
-  cursor: pointer;
-}
-
-.timer {
-  text-align: center;
-  color: #aaa;
-}
+* { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+.app-header { position: fixed; top: 15px; left: 15px; z-index: 1000; }
+.app-header img { height: 45px; filter: drop-shadow(0 0 8px #ae00ff); }
+@media (max-width:480px){.app-header img{height:36px;}}
+body { margin:0; min-height:100vh; background:radial-gradient(circle at top, #1a002b, #000); display:flex; justify-content:center; align-items:center; padding:15px;}
+.container { width:100%; max-width:420px; background:rgba(0,0,0,0.75); padding:22px; border-radius:18px; box-shadow:0 0 30px #ae00ff99; }
+.toggle { display:flex; gap:10px; margin-bottom:20px; }
+.toggle button { flex:1; padding:12px; border-radius:10px; border:2px solid #ae00ff; background:transparent; color:#ae00ff; cursor:pointer; }
+.toggle button.active { background:#ae00ff; color:#000; }
+form { display:none; }
+form.active { display:block; }
+h2 { text-align:center; color:#ae00ff; }
+input { width:100%; padding:13px; margin:8px 0; border-radius:10px; border:none; background:#111; color:#ae00ff; }
+button.submit { width:100%; padding:13px; margin-top:12px; background:linear-gradient(135deg,#ae00ff,#ff00cc); border:none; border-radius:12px; font-weight:bold; cursor:pointer; }
+.link-btn { background:none; border:none; color:#ae00ff; margin-top:10px; cursor:pointer; }
+.timer { text-align:center; color:#aaa; }
 </style>
 </head>
 
 <body>
-
-<div class="app-header">
-  <img src="file_00000000c938722f8d26b428d0c8069c.png">
-</div>
-
+<div class="app-header"><img src="file_00000000c938722f8d26b428d0c8069c.png"></div>
 <div class="container">
 
-  <div class="toggle">
-    <button id="loginBtn" class="active">Login</button>
-    <button id="registerBtn">Register</button>
-  </div>
+<div class="toggle">
+  <button id="loginBtn" class="active">Login</button>
+  <button id="registerBtn">Register</button>
+</div>
 
-  <!-- LOGIN -->
-  <form id="loginForm" class="active">
-    <h2>Welcome Back</h2>
-    <input id="loginMobile" placeholder="Mobile Number">
-    <input id="loginPassword" type="password" placeholder="Password">
-    <button class="submit">Login</button>
-    <button type="button" class="link-btn" onclick="showForgot()">Forgot Password?</button>
-  </form>
+<!-- LOGIN -->
+<form id="loginForm" class="active">
+  <h2>Welcome Back</h2>
+  <input id="loginMobile" placeholder="Mobile Number">
+  <input id="loginPassword" type="password" placeholder="Password">
+  <button class="submit">Login</button>
+  <button type="button" class="link-btn" onclick="showForgot()">Forgot Password?</button>
+</form>
 
-  <!-- REGISTER -->
-  <form id="registerForm">
-    <h2>Create Account</h2>
-    <input id="regName" placeholder="Full Name">
-    <input id="regMobile" placeholder="Mobile Number">
-    <input id="regEmail" placeholder="Email">
-    <input id="regPassword" type="password" placeholder="Password">
-    <input id="regRePassword" type="password" placeholder="Confirm Password">
-    <button type="button" class="submit" onclick="sendRegisterOTP()">Send Email OTP</button>
-    <input id="regOtp" placeholder="Enter OTP" style="display:none">
-    <div id="regTimer" class="timer" style="display:none">
-      Resend OTP in <span id="regCount">60</span>s
-    </div>
-    <button id="regResendBtn" class="link-btn" style="display:none" onclick="resendRegisterOTP()">Resend OTP</button>
-    <button id="verifyBtn" class="submit" style="display:none" onclick="verifyRegisterOTP()">Verify & Register</button>
-  </form>
+<!-- REGISTER -->
+<form id="registerForm">
+  <h2>Create Account</h2>
+  <input id="regName" placeholder="Full Name">
+  <input id="regMobile" placeholder="Mobile Number">
+  <input id="regEmail" placeholder="Email">
+  <input id="regPassword" type="password" placeholder="Password">
+  <input id="regRePassword" type="password" placeholder="Confirm Password">
+  <button type="button" class="submit" onclick="sendRegisterOTP()">Send Email OTP</button>
+  <input id="regOtp" placeholder="Enter OTP" style="display:none">
+  <div id="regTimer" class="timer" style="display:none">Resend OTP in <span id="regCount">60</span>s</div>
+  <button id="regResendBtn" class="link-btn" style="display:none" onclick="resendRegisterOTP()">Resend OTP</button>
+  <button id="verifyBtn" class="submit" style="display:none" onclick="verifyRegisterOTP()">Verify & Register</button>
+</form>
 
-  <!-- FORGOT -->
-  <form id="forgotForm">
-    <h2>Reset Password</h2>
-    <input id="fpMobile" placeholder="Mobile Number">
-    <input id="fpEmail" placeholder="Registered Email">
-    <button type="button" class="submit" onclick="sendForgotOTP()">Send OTP</button>
-    <input id="fpOtp" placeholder="OTP" style="display:none">
-    <input id="fpNewPass" type="password" placeholder="New Password" style="display:none">
-    <div id="fpTimer" class="timer" style="display:none">
-      Resend OTP in <span id="fpCount">60</span>s
-    </div>
-    <button id="fpResendBtn" class="link-btn" style="display:none" onclick="resendForgotOTP()">Resend OTP</button>
-    <button id="fpVerifyBtn" class="submit" style="display:none" onclick="resetPassword()">Reset Password</button>
-  </form>
+<!-- FORGOT PASSWORD -->
+<form id="forgotForm">
+  <h2>Reset Password</h2>
+  <input id="fpMobile" placeholder="Mobile Number">
+  <input id="fpEmail" placeholder="Registered Email">
+  <button type="button" class="submit" onclick="sendForgotOTP()">Send OTP</button>
+  <input id="fpOtp" placeholder="OTP" style="display:none">
+  <input id="fpNewPass" type="password" placeholder="New Password" style="display:none">
+  <div id="fpTimer" class="timer" style="display:none">Resend OTP in <span id="fpCount">60</span>s</div>
+  <button id="fpResendBtn" class="link-btn" style="display:none" onclick="resendForgotOTP()">Resend OTP</button>
+  <button id="fpVerifyBtn" class="submit" style="display:none" onclick="resetPassword()">Reset Password</button>
+</form>
 
 </div>
 
 <script>
-const API = "https://battlepurse-27.onrender.com/api/wallet";
+const API = "https://battlepurse-28.onrender.com/api/wallet";
+
+const loginBtn = document.getElementById("loginBtn");
+const registerBtn = document.getElementById("registerBtn");
+const loginForm = document.getElementById("loginForm");
+const registerForm = document.getElementById("registerForm");
+const forgotForm = document.getElementById("forgotForm");
 
 loginBtn.onclick = () => showForm("login");
 registerBtn.onclick = () => showForm("register");
@@ -176,9 +90,8 @@ function showForm(type){
   forgotForm.classList.remove("active");
   loginBtn.classList.remove("active");
   registerBtn.classList.remove("active");
-
-  if(type === "login"){ loginForm.classList.add("active"); loginBtn.classList.add("active"); }
-  if(type === "register"){ registerForm.classList.add("active"); registerBtn.classList.add("active"); }
+  if(type==="login"){loginForm.classList.add("active"); loginBtn.classList.add("active");}
+  if(type==="register"){registerForm.classList.add("active"); registerBtn.classList.add("active");}
 }
 
 function showForgot(){
@@ -187,73 +100,158 @@ function showForgot(){
 }
 
 function startTimer(countEl, timerBox, resendBtn){
-  let t = 60;
-  resendBtn.style.display = "none";
-  timerBox.style.display = "block";
-  countEl.innerText = t;
-  const i = setInterval(()=>{
+  let t=60;
+  resendBtn.style.display="none";
+  timerBox.style.display="block";
+  countEl.innerText=t;
+  const i=setInterval(()=>{
     t--;
-    countEl.innerText = t;
-    if(t <= 0){
-      clearInterval(i);
-      timerBox.style.display = "none";
-      resendBtn.style.display = "block";
-    }
+    countEl.innerText=t;
+    if(t<=0){clearInterval(i); timerBox.style.display="none"; resendBtn.style.display="block";}
   },1000);
 }
 
-/* REGISTER */
+/* ================= REGISTER ================= */
 async function sendRegisterOTP(){
-  if(regPassword.value !== regRePassword.value) return alert("Password mismatch");
-
-  const res = await fetch(API + "/register-email", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({
-      name: regName.value,
-      phone: regMobile.value,
-      email: regEmail.value,
-      password: regPassword.value
-    })
-  });
-
-  const d = await res.json();
-  if(!res.ok) return alert(d.msg);
-
-  regOtp.style.display = "block";
-  verifyBtn.style.display = "block";
-  startTimer(regCount, regTimer, regResendBtn);
+  if(regPassword.value!==regRePassword.value){alert("Password mismatch"); return;}
+  try{
+    const res = await fetch(API+"/register-email",{method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({name:regName.value, phone:regMobile.value, email:regEmail.value, password:regPassword.value})
+    });
+    const d = await res.json();
+    if(!res.ok){alert(d.msg); return;}
+    regOtp.style.display="block"; verifyBtn.style.display="block"; regResendBtn.style.display="none";
+    startTimer(regCount, regTimer, regResendBtn);
+  }catch(e){alert("Registration failed: "+e.message);}
 }
+
+async function resendRegisterOTP(){
+  try{
+    const res = await fetch(API+"/resend-otp",{method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({email:regEmail.value, purpose:"register"})
+    });
+    const d = await res.json();
+    if(!res.ok){alert(d.msg); return;}
+    alert("New OTP sent!"); startTimer(regCount, regTimer, regResendBtn);
+  }catch(e){alert("Failed to resend OTP: "+e.message);}
+}
+
+
+/* ================= REGISTER ================= */
 
 async function verifyRegisterOTP(){
-  const res = await fetch(API + "/verify-email-otp", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({ email: regEmail.value, otp: regOtp.value })
-  });
-  const d = await res.json();
-  if(!res.ok) return alert(d.msg);
-  alert("Registered Successfully");
-  showForm("login");
+  // ⛔ prevent form default behavior (very important)
+  event.preventDefault();
+
+  // Basic check
+  if (!regOtp.value) {
+    alert("Please enter OTP");
+    return;
+  }
+
+  try {
+    const res = await fetch(API + "/verify-email-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: regEmail.value.trim(),
+        otp: regOtp.value.trim()
+      })
+    });
+
+    const d = await res.json();
+
+    // ❌ OTP FAILED → STAY ON REGISTER PAGE
+    if (!res.ok) {
+      alert(d.msg || "Invalid or expired OTP");
+      return; // ⛔ STOP HERE (NO PAGE CHANGE)
+    }
+
+    // ✅ OTP SUCCESS
+    alert("Registered Successfully!");
+
+    // Clear register form (optional but clean)
+    registerForm.reset();
+
+    // Hide OTP-related UI
+    regOtp.style.display = "none";
+    verifyBtn.style.display = "none";
+    regTimer.style.display = "none";
+    regResendBtn.style.display = "none";
+
+    // ✅ ONLY NOW go to login page
+    showForm("login");
+
+  } catch (err) {
+    alert("OTP verification failed. Please try again.");
+  }
 }
 
-/* LOGIN */
+
+
+/* ================= LOGIN ================= */
 loginForm.onsubmit = async e => {
   e.preventDefault();
-  const res = await fetch(API + "/login", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({
-      phone: loginMobile.value,
-      password: loginPassword.value
-    })
-  });
-  const d = await res.json();
-  if(!res.ok) return alert(d.msg);
-  localStorage.setItem("token", d.token);
-  location.href = "gamezone.html";
-};
-</script>
+  try {
+    const res = await fetch(API + "/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: loginMobile.value, password: loginPassword.value })
+    });
 
+    const d = await res.json();
+
+    if (!res.ok) {
+      // ❌ Wrong password or user not found → STAY on login page
+      alert(d.msg || "Login failed. Check your credentials.");
+      return;
+    }
+
+    // ✅ Login successful → only now go to gamezone
+    localStorage.setItem("token", d.token);
+    location.href = "gamezone.html";
+
+  } catch(e){
+    alert("Login failed: "+e.message);
+  }
+};
+
+
+
+/* ================= FORGOT PASSWORD ================= */
+async function sendForgotOTP(){
+  try{
+    const res = await fetch(API+"/forgot/send-otp",{method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({phone:fpMobile.value,email:fpEmail.value})
+    });
+    const d = await res.json();
+    if(!res.ok){alert(d.msg); return;}
+    fpOtp.style.display="block"; fpNewPass.style.display="block"; fpVerifyBtn.style.display="block"; fpResendBtn.style.display="none";
+    startTimer(fpCount, fpTimer, fpResendBtn);
+  }catch(e){alert("Failed to send OTP: "+e.message);}
+}
+
+async function resendForgotOTP(){
+  try{
+    const res = await fetch(API+"/resend-otp",{method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({email:fpEmail.value, purpose:"forgot"})
+    });
+    const d = await res.json();
+    if(!res.ok){alert(d.msg); return;}
+    alert("New OTP sent!"); startTimer(fpCount, fpTimer, fpResendBtn);
+  }catch(e){alert("Failed to resend OTP: "+e.message);}
+}
+
+async function resetPassword(){
+  try{
+    const res = await fetch(API+"/forgot/reset",{method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({phone:fpMobile.value,email:fpEmail.value,otp:fpOtp.value,newPassword:fpNewPass.value})
+    });
+    const d = await res.json();
+    if(!res.ok){alert(d.msg); return;}
+    alert("Password updated successfully"); fpOtp.value=""; fpNewPass.value=""; showForm("login");
+  }catch(e){alert("Reset failed: "+e.message);}
+}
+</script>
 </body>
 </html>
