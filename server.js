@@ -1,59 +1,49 @@
+
+
+
 require("dotenv").config();
+console.log("RUNNING SERVER FROM:", __filename);
 
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const path = require("path");
-const nodemailer = require("nodemailer");
 
 const app = express();
 process.setMaxListeners(20);
 
 /* ======================
-   DEBUG ENV (VERY IMPORTANT)
+   ENV DEBUG (SAFE LOGS)
 ====================== */
+console.log("APP PORT =", process.env.PORT);
 console.log("SMTP HOST =", process.env.EMAIL_HOST);
 console.log("SMTP PORT =", process.env.EMAIL_PORT);
 console.log("SMTP USER =", process.env.EMAIL_USER);
 console.log("SMTP PASS LENGTH =", process.env.EMAIL_PASS?.length);
-console.log("APP PORT =", process.env.PORT);
 
 /* ======================
-   FAIL FAST IF SMTP ENV MISSING
+   REQUIRED ENV CHECK
 ====================== */
-if (!process.env.EMAIL_HOST || !process.env.EMAIL_PORT) {
-  console.error("❌ SMTP ENV VARIABLES MISSING");
+if (!process.env.PORT) {
+  console.error("❌ PORT missing in .env");
   process.exit(1);
 }
 
-/* ======================
-   SMTP VERIFY (ONE TIME)
-====================== */
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: Number(process.env.EMAIL_PORT),
-  secure: false, // MUST be false for 587
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
-transporter.verify((err) => {
-  if (err) {
-    console.error("❌ SMTP VERIFY FAILED:", err.message);
-  } else {
-    console.log("✅ SMTP VERIFIED & READY");
-  }
-});
+if (!process.env.MONGO_URI) {
+  console.error("❌ MONGO_URI missing in .env");
+  process.exit(1);
+}
 
 /* ======================
    MIDDLEWARE
 ====================== */
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ limit: "50mb", extended: true }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
+/* ======================
+   HEALTH CHECK
+====================== */
 app.get("/ping", (req, res) => {
   res.json({ ok: true, msg: "Server is responding" });
 });
@@ -65,21 +55,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 /* ======================
-   MONGODB CONNECTION
-====================== */
-mongoose
-  .connect(process.env.MONGO_URI, {
-    maxPoolSize: 10,
-    serverSelectionTimeoutMS: 5000,
-  })
-  .then(() => console.log("✅ MongoDB Atlas connected"))
-  .catch((err) => {
-    console.error("❌ MongoDB connection error:", err.message);
-    process.exit(1);
-  });
-
-/* ======================
-   ROUTES
+   API ROUTES
 ====================== */
 app.use("/api/wallet", require("./routes/wallet"));
 
@@ -94,13 +70,30 @@ app.get("/", (req, res) => {
    404 HANDLER
 ====================== */
 app.use((req, res) => {
-  res.status(404).json({ msg: "Route not found" });
+  res.status(404).json({ success: false, msg: "Route not found" });
 });
+
+/* ======================
+   DATABASE CONNECT
+====================== */
+mongoose
+  .connect(process.env.MONGO_URI, {
+    maxPoolSize: 10,
+    serverSelectionTimeoutMS: 5000,
+  })
+  .then(() => {
+    console.log("✅ MongoDB Atlas connected");
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB connection failed:", err.message);
+    process.exit(1);
+  });
 
 /* ======================
    START SERVER
 ====================== */
-const PORT = process.env.PORT;
+const PORT = Number(process.env.PORT);
+
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });

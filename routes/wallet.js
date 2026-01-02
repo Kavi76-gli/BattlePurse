@@ -37,7 +37,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const Otp = require("../models/Otp");
 
 const sendEmail = require("../utils/sendEmail");
-
+const emailTransporter = require("../utils/emailTransporter");
 
 
 
@@ -7423,6 +7423,7 @@ router.post("/payment-config", authAdmin, upload.single("qrImage"), async (req, 
     res.status(500).json({ success: false, msg: "Server error", error: err.message });
   }
 });
+
 
 
 

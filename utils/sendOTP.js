@@ -1,20 +1,17 @@
-const nodemailer = require("nodemailer");
-
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
+const sendEmail = require("./sendEmail");
 
 module.exports = async (email, otp) => {
-  await transporter.sendMail({
+  return sendEmail({
     to: email,
     subject: "Your OTP Verification",
     html: `
-      <h2>Your OTP: ${otp}</h2>
-      <p>This OTP is valid for 5 minutes.</p>
-    `
+      <div style="text-align:center;font-family:Arial,sans-serif;">
+        <h2>Your OTP</h2>
+        <p style="font-size:26px;font-weight:bold;color:#007bff;">
+          ${otp}
+        </p>
+        <p>This OTP is valid for 5 minutes.</p>
+      </div>
+    `,
   });
 };
