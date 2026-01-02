@@ -41,6 +41,7 @@ app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
+console.log("JWT SECRET EXISTS:", !!process.env.JWT_SECRET);
 
 
 /* ======================
