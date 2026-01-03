@@ -266,74 +266,191 @@ button:hover { background: #00faff44; }
 .win-card p { font-size: 0.85rem; margin: 2px 0; }
 
 /* Bottom Nav */
-.sidebar { position: fixed; bottom: 0; left: 0; width: 100%; background: #111; display: flex; justify-content: space-around; padding: 8px 0; border-top: 1px solid #222; z-index: 1000; }
-.nav-btn { flex: 1; text-align: center; color: #aaa; font-size: 12px; cursor: pointer; transition: 0.3s; }
-.nav-btn i { display: block; font-size: 20px; margin-bottom: 3px; }
-.nav-btn:hover { color: #fff; }
-.nav-btn.active { color: #ffcc00; font-weight: bold; }
-
-.winnerCard{
-  background:#111; color:#fff; border:1px solid rgba(0,213,255,0.08);
-  border-radius:10px; padding:12px; margin-bottom:12px; font-size:14px;
+/* =========================
+   PRO BOTTOM NAV (ANDROID)
+   ========================= */
+.sidebar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 62px;
+  background: rgba(12, 12, 14, 0.95);
+  backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  z-index: 1000;
 }
-.winnerCard b{color:#00d5ff;}
-.winnerCard .small{color:#9aa; font-size:12px;}
 
+.nav-btn {
+  flex: 1;
+  text-align: center;
+  color: #9aa;
+  font-size: 11px;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.nav-btn i {
+  display: block;
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+
+.nav-btn.active {
+  color: #00eaff;
+  font-weight: 600;
+}
+
+.nav-btn.active i {
+  text-shadow: 0 0 10px rgba(0,234,255,0.8);
+}
+
+.nav-btn:hover {
+  color: #fff;
+}  /* =========================
+   WINNER CARD – PRO STYLE
+   ========================= */
+.winnerCard {
+  background: linear-gradient(145deg, #111, #0b0b0b);
+  color: #eafcff;
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 14px;
+  font-size: 14px;
+  border: 1px solid rgba(0,234,255,0.12);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.7),
+              inset 0 0 12px rgba(0,234,255,0.05);
+}
+
+.winnerCard b {
+  color: #00eaff;
+  text-shadow: 0 0 6px rgba(0,234,255,0.6);
+}
+
+.winnerCard .small {
+  color: #9aa;
+  font-size: 12px;
+}  /* =========================
+   WINNER PANEL
+   ========================= */
 .winner-card {
   display: flex;
-  background: #0f0f0f;
-  border-radius: 10px;
-  border: 1px solid #242424;
-  margin-bottom: 20px;
+  background: rgba(15, 15, 20, 0.9);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.05);
+  margin-bottom: 18px;
   overflow: hidden;
-  color: #fff;
 }
 
+/* Sidebar */
 .winner-sidebar {
-  width: 260px;
-  background: #111827;
-  padding: 20px;
-  border-right: 2px solid #333;
+  width: 240px;
+  background: linear-gradient(180deg, #0f172a, #020617);
+  padding: 18px;
+  border-right: 1px solid rgba(255,255,255,0.08);
 }
 
 .winner-sidebar h3 {
   margin: 0 0 10px;
-  color: #4ADE80;
+  color: #4ade80;
+  font-size: 18px;
+  text-shadow: 0 0 8px rgba(74,222,128,0.6);
 }
 
+/* List */
 .winner-list {
   flex: 1;
-  padding: 20px;
+  padding: 18px;
 }
 
 .winner-row {
   display: flex;
   align-items: center;
-  gap: 15px;
-  background: #1a1a1a;
+  gap: 14px;
+  background: linear-gradient(145deg, #1a1a1a, #111);
   padding: 12px;
-  border-radius: 10px;
-  margin-bottom: 10px;
+  border-radius: 14px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255,255,255,0.04);
+  transition: 0.25s ease;
 }
 
+.winner-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,234,255,0.25);
+}
+
+/* Avatar */
 .winner-avatar {
-  width: 80px;
-  height: 80px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   border: 3px solid #4ade80;
   object-fit: cover;
+  box-shadow: 0 0 12px rgba(74,222,128,0.6);
 }
 
+/* Text */
 .winner-name {
-  font-size: 18px;
-  margin-bottom: 3px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #eaffff;
 }
 
 .no-winner {
-  color: #999;
+  color: #9aa;
+  font-size: 14px;
   font-style: italic;
-}
+}  @media (max-width: 480px) {
 
+  /* Bottom nav */
+  .sidebar {
+    height: 58px;
+  }
+
+  .nav-btn i {
+    font-size: 20px;
+  }
+
+  /* Winner layout stacks cleanly */
+  .winner-card {
+    flex-direction: column;
+  }
+
+  .winner-sidebar {
+    width: 100%;
+    text-align: center;
+    border-right: none;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .winner-row {
+    flex-direction: row;
+    padding: 10px;
+  }
+
+  .winner-avatar {
+    width: 52px;
+    height: 52px;
+  }
+
+  .winner-name {
+    font-size: 14px;
+  }
+
+  .winnerCard {
+    font-size: 13px;
+    padding: 12px;
+  }
+
+  .winnerCard .small {
+    font-size: 11px;
+  }
+}
 /* 🔽 Slide Down Animation */
 /* ⚔️ WAR THEME STICKY BAR */
 /* Wrapper for scrolling */
@@ -1278,17 +1395,28 @@ select{
           <input id="whatsappNumber" type="text" placeholder="e.g. 9876543210" />
         </div>
 
-        <label>Entry fee</label>
-        <div style="display:flex;gap:8px">
-          <select id="fee" onchange="toggleCustomFee()">
-            <option value="50">₹50</option>
-            <option value="100">₹100</option>
-            <option value="150">₹150</option>
-            <option value="200">₹200</option>
-            <option value="custom">Custom</option>
-          </select>
-          <input id="customFee" type="number" min="50" placeholder="Custom (min ₹50)" style="display:none"/>
-        </div>
+<div class="form-row">
+  <label>Entry Fee (₹)</label>
+
+  <select onchange="toggleCustomFee(this)">
+    <option value="50">₹50</option>
+    <option value="100">₹100</option>
+    <option value="150">₹150</option>
+    <option value="200">₹200</option>
+    <option value="custom">Custom</option>
+  </select>
+
+  <input
+    type="number"
+    class="custom-fee"
+    placeholder="Enter custom fee (min ₹50)"
+    min="50"
+    style="display:none; margin-top:8px;"
+  />
+</div>
+
+
+        
 
         <div class="controls">
           <button class="btn btn-primary" onclick="joinMatch()">Join Match</button>
@@ -1307,10 +1435,11 @@ select{
 </div>
 
 
+
 <script>
-const API_BASE = "https://battlepurse-99.onrender.com/api/wallet";
+const API_BASE = "https://battlepurse-88.onrender.com/api/wallet";
 const token = localStorage.getItem('token');
-const UPLOADS_BASE = "https://battlepurse-99.onrender.com/uploads";
+const UPLOADS_BASE = "https://battlepurse-88.onrender.com/uploads";
 const BACKEND_URL = API_BASE;
 
 
@@ -1327,7 +1456,7 @@ const BACKEND_URL = API_BASE;
 
 (() => {
   /* ------------- Config ------------- */
-  const API_BASE = (typeof BACKEND_URL !== 'undefined' && BACKEND_URL) ? BACKEND_URL : "https://battlepurse-99.onrender.com/api/wallet";
+  const API_BASE = (typeof BACKEND_URL !== 'undefined' && BACKEND_URL) ? BACKEND_URL : "https://battlepurse-88.onrender.com/api/wallet";
   const TOKEN = localStorage.getItem('token') || "";
 
   /* ------------- Simple helpers ------------- */
@@ -1704,9 +1833,38 @@ function toggleGunSelection(){
   }
 }
 
-function toggleCustomFee(){
-  if(feeEl.value === 'custom') show(customFeeEl); else hide(customFeeEl);
+
+
+
+function toggleCustomFee(selectEl) {
+  const container = selectEl.closest(".form-row");
+  const input = container.querySelector(".custom-fee");
+
+  if (!input) return;
+
+  if (selectEl.value === "custom") {
+    input.style.display = "block";
+    input.required = true;
+    input.min = 50;
+    input.value = 50; // default minimum
+    input.focus();
+
+    // Enforce minimum while typing
+    input.oninput = () => {
+      if (input.value && Number(input.value) < 50) {
+        input.value = 50;
+      }
+    };
+
+  } else {
+    input.style.display = "none";
+    input.required = false;
+    input.value = "";
+    input.oninput = null;
+  }
 }
+
+
 
 // Join flow: optional deduct -> joins
 async function joinMatch(){
@@ -2255,7 +2413,7 @@ async function loadRecentWinners(){
 
 async function fetchWinners() {
   try {
-    const res = await fetch('https://battlepurse-99.onrender.com/api/wallet/matches/winners');
+    const res = await fetch('https://battlepurse-88.onrender.com/api/wallet/matches/winners');
     const data = await res.json();
     const container = document.getElementById('matches');
     container.innerHTML = '';
@@ -2424,7 +2582,7 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ----------------------------------
        ENTRY FEE DROPDOWN + CUSTOM
   -----------------------------------*/
-  feeSelect.addEventListener("change", () => {
+feeSelect.addEventListener("change", () => {
     if (feeSelect.value === "custom") {
       entryFee.style.display = "block";
       entryFee.value = "";
@@ -2446,6 +2604,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+
+  
 
   /* ----------------------------------
        GAME CARD CLICK
@@ -2533,7 +2693,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!payload.uid) return setMessage("Enter your UID", "salmon");
     if (!payload.whatsappNumber) return setMessage("Enter WhatsApp Number", "salmon");
 
-    const API = "https://battlepurse-99.onrender.com/api/wallet/join";
+    const API = "https://battlepurse-88.onrender.com/api/wallet/join";
     const token = localStorage.getItem("token");
 
     try {

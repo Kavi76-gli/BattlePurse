@@ -1,120 +1,205 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Withdrawal</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(145deg, #0d0d0d, #1e1e1e);
-      color: #fff;
-      padding: 30px 20px;
-      text-align: center;
-    }
-    .container {
-      max-width: 450px;
-      margin: 30px auto;
-      padding: 20px;
-      background: #1c1c1c;
-      border-radius: 16px;
-      box-shadow: 0 0 15px #00faff88;
-    }
-    h2 {
-      font-size: 28px;
-      font-weight: 700;
-      background: linear-gradient(90deg, #00faff, #00c6ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      animation: pulse 2s infinite alternate;
-    }
-    @keyframes pulse {
-      from { letter-spacing: 1px; transform: scale(1); }
-      to { letter-spacing: 2px; transform: scale(1.03); }
-    }
-    .wallet {
-      margin-top: 20px;
-      font-size: 20px;
-      font-weight: bold;
-      background: #121212;
-      padding: 12px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px #00faff44;
-    }
-    .method-selector {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      margin: 30px 0 20px 0;
-    }
-    .method-btn {
-      padding: 12px 20px;
-      background: #1e1e1e;
-      border: 2px solid #00faffaa;
-      border-radius: 30px;
-      color: #00faff;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 0 12px rgba(0,255,255,0.1);
-    }
-    .method-btn:hover {
-      background: #00faff;
-      color: #000;
-      transform: scale(1.05);
-    }
-    .method-btn.selected {
-      background: #00faff;
-      color: #000;
-      box-shadow: 0 0 16px rgba(0,255,255,0.6);
-    }
-    .form-group {
-      text-align: left;
-      margin: 20px 0;
-    }
-    .form-group label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-    .form-group input {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 10px;
-      background: #121212;
-      color: #fff;
-      box-shadow: inset 0 0 5px #00faff55;
-      margin-bottom: 18px;
-      font-size: 16px;
-    }
-    .submit-btn {
-      width: 100%;
-      padding: 16px;
-      background: linear-gradient(90deg, #00faff, #00c6ff);
-      color: #000;
-      border: none;
-      font-size: 18px;
-      font-weight: bold;
-      border-radius: 30px;
-      cursor: pointer;
-      box-shadow: 0 0 15px #00faff77;
-      transition: background 0.3s ease;
-    }
-    .submit-btn:hover {
-      background: #00c6d6;
-    }
-    .note {
-      margin-top: 15px;
-      font-size: 14px;
-      color: #aaa;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Withdrawal</title>
+<style>
+:root {
+  --bg: #121212;
+  --card: #1c1c1c;
+  --accent: #00faff;
+  --accent-dark: #00c6ff;
+}
+
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(145deg, #0d0d0d, #1e1e1e);
+  color: #fff;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* ================= SWIPE AREA ================= */
+.swipe-area {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  z-index: 50;
+}
+
+/* ================= APP BAR ================= */
+.app-bar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  height: 56px;
+  background: var(--card);
+  padding: 0 16px;
+  box-shadow: 0 2px 6px #00000080;
+  z-index: 100;
+  transition: transform 0.3s ease;
+}
+.app-bar button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 22px;
+  margin-right: 12px;
+  cursor: pointer;
+}
+.app-bar .title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* ================= MAIN CONTAINER ================= */
+.container {
+  flex: 1;
+  padding: 20px;
+  max-width: 450px;
+  margin: 20px auto;
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: 0 0 15px #00faff88;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: slideIn 0.3s ease forwards;
+}
+
+h2 {
+  font-size: 28px;
+  font-weight: 700;
+  background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: pulse 2s infinite alternate;
+}
+
+@keyframes pulse {
+  from { letter-spacing: 1px; transform: scale(1); }
+  to { letter-spacing: 2px; transform: scale(1.03); }
+}
+
+.wallet {
+  margin-top: 20px;
+  font-size: 20px;
+  font-weight: bold;
+  background: var(--bg);
+  padding: 12px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px var(--accent)44;
+  width: 100%;
+  text-align: center;
+}
+
+.method-selector {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 25px 0 20px 0;
+}
+
+.method-btn {
+  padding: 12px 20px;
+  background: var(--card);
+  border: 2px solid var(--accent)aa;
+  border-radius: 30px;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 12px rgba(0,255,255,0.1);
+}
+.method-btn:hover {
+  background: var(--accent);
+  color: #000;
+  transform: scale(1.05);
+}
+.method-btn.selected {
+  background: var(--accent);
+  color: #000;
+  box-shadow: 0 0 16px rgba(0,255,255,0.6);
+}
+
+.form-group {
+  text-align: left;
+  margin: 15px 0;
+  width: 100%;
+}
+.form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: #121212;
+  color: #fff;
+  box-shadow: inset 0 0 5px var(--accent)55;
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+  color: #000;
+  border: none;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 30px;
+  cursor: pointer;
+  box-shadow: 0 0 15px var(--accent)77;
+  transition: background 0.3s ease;
+}
+.submit-btn:hover {
+  background: var(--accent-dark);
+}
+
+.note {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #aaa;
+}
+
+/* ================= ANIMATIONS ================= */
+@keyframes slideIn {
+  0% { transform: translateX(100%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOut {
+  0% { transform: translateX(0); opacity: 1; }
+  100% { transform: translateX(100%); opacity: 0; }
+}
+</style>
 </head>
 <body>
 
-<div class="container">
+<!-- SWIPE BACK EDGE -->
+<div class="swipe-area"></div>
+
+<!-- APP BAR -->
+<div class="app-bar">
+  <button onclick="goBack()">←</button>
+  <div class="title">Withdrawal</div>
+</div>
+
+<!-- MAIN CONTAINER -->
+<div class="container" id="withdrawalCard">
   <h2>🏦 Withdrawal</h2>
 
   <div class="wallet" id="walletBalance">Wallet Balance: ₹0</div>
@@ -129,127 +214,100 @@
     <input type="number" id="withdrawAmount" placeholder="Enter Amount" min="1000" />
   </div>
 
-  <!-- Bank Card Details -->
+  <!-- Bank Form -->
   <div id="bankForm">
-    <div class="form-group">
-      <label for="bankName">Bank Name</label>
-      <input type="text" id="bankName" placeholder="Enter Bank Name" />
-    </div>
-    <div class="form-group">
-      <label for="cardNumber">Card/Account Number</label>
-      <input type="text" id="cardNumber" placeholder="Enter Account Number" />
-    </div>
-    <div class="form-group">
-      <label for="ifsc">IFSC Code</label>
-      <input type="text" id="ifsc" placeholder="Enter IFSC Code" />
-    </div>
-    <div class="form-group">
-      <label for="accountHolder">Account Holder Name</label>
-      <input type="text" id="accountHolder" placeholder="Enter Account Holder Name" />
-    </div>
+    <div class="form-group"><label>Bank Name</label><input type="text" id="bankName" placeholder="Enter Bank Name" /></div>
+    <div class="form-group"><label>Card/Account Number</label><input type="text" id="cardNumber" placeholder="Enter Account Number" /></div>
+    <div class="form-group"><label>IFSC Code</label><input type="text" id="ifsc" placeholder="Enter IFSC Code" /></div>
+    <div class="form-group"><label>Account Holder Name</label><input type="text" id="accountHolder" placeholder="Enter Account Holder Name" /></div>
   </div>
 
   <!-- UPI Form -->
   <div id="upiForm" style="display:none;">
-    <div class="form-group">
-      <label for="upiId">UPI ID</label>
-      <input type="text" id="upiId" placeholder="Enter UPI ID" />
-    </div>
-    
+    <div class="form-group"><label>UPI ID</label><input type="text" id="upiIdInput" placeholder="Enter UPI ID" /></div>
   </div>
 
   <button class="submit-btn" onclick="submitWithdrawal()">Submit Withdrawal</button>
-
   <div class="note">* Withdrawal amount must be at least ₹1000</div>
 </div>
 
 <script>
-  let selectedMethod = 'bank'; // Default
+let selectedMethod = 'bank';
 
-  function selectMethod(method) {
-    selectedMethod = method;
-    if (method === 'bank') {
-      document.getElementById("bankForm").style.display = "block";
-      document.getElementById("upiForm").style.display = "none";
-      document.getElementById("bankBtn").classList.add("selected");
-      document.getElementById("upiBtn").classList.remove("selected");
+function selectMethod(method) {
+  selectedMethod = method;
+  document.getElementById("bankForm").style.display = method==='bank' ? "block":"none";
+  document.getElementById("upiForm").style.display = method==='upi' ? "block":"none";
+  document.getElementById("bankBtn").classList.toggle("selected", method==='bank');
+  document.getElementById("upiBtn").classList.toggle("selected", method==='upi');
+}
+
+async function submitWithdrawal() {
+  const token = localStorage.getItem("token");
+  if (!token) return alert("Login required");
+
+  const amount = Number(document.getElementById("withdrawAmount").value);
+  if (!amount || amount < 1000) return alert("Minimum withdrawal amount is ₹1000");
+
+  let body = { amount, method: selectedMethod };
+
+  if (selectedMethod==='bank') {
+    body.bankName = document.getElementById("bankName").value.trim();
+    body.accountNumber = document.getElementById("cardNumber").value.trim();
+    body.ifsc = document.getElementById("ifsc").value.trim();
+    body.accountHolder = document.getElementById("accountHolder").value.trim();
+  } else {
+    body.upiId = document.getElementById("upiIdInput").value.trim();
+  }
+
+  try {
+    const res = await fetch("https://battlepurse-88.onrender.com/api/wallet/request-withdrawal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer "+token },
+      body: JSON.stringify(body)
+    });
+    const result = await res.json();
+    if (res.ok) {
+      alert("✅ "+result.msg);
+      location.reload();
     } else {
-      document.getElementById("bankForm").style.display = "none";
-      document.getElementById("upiForm").style.display = "block";
-      document.getElementById("upiBtn").classList.add("selected");
-      document.getElementById("bankBtn").classList.remove("selected");
+      alert("❌ "+(result.msg||"Something went wrong"));
     }
+  } catch(err) {
+    console.error(err);
+    alert("❌ Error submitting withdrawal");
   }
+}
 
-  async function submitWithdrawal() {
-    const token = localStorage.getItem("token");
-    if (!token) return alert("Login required");
+async function loadWalletBalance() {
+  const token = localStorage.getItem("token");
+  if (!token) return;
+  try {
+    const res = await fetch("https://battlepurse-88.onrender.com/api/wallet/balance", { headers: { Authorization:"Bearer "+token }});
+    const data = await res.json();
+    document.getElementById("walletBalance").innerText = "Wallet Balance: ₹" + (data.balance||0);
+  } catch(err){ console.error(err); }
+}
 
-    const amount = Number(document.getElementById("withdrawAmount").value);
-    if (!amount || amount < 1000) {
-      return alert("Minimum withdrawal amount is ₹1000");
-    }
+window.onload = loadWalletBalance;
 
-    let body = {
-      amount,
-      method: selectedMethod
-    };
+/* ================= BACK LOGIC ================= */
+function goBack() {
+  document.getElementById("withdrawalCard").style.animation = "slideOut 0.3s forwards";
+  setTimeout(() => {
+    if(document.referrer && document.referrer!==location.href){ history.back(); }
+    else { location.href="gamezone.html"; }
+  }, 300);
+}
 
-    if (selectedMethod === 'bank') {
-      body.bankName = document.getElementById("bankName").value.trim();
-      body.accountNumber = document.getElementById("cardNumber").value.trim();
-      body.ifsc = document.getElementById("ifsc").value.trim();
-      body.accountHolder = document.getElementById("accountHolder").value.trim();
-    } else {
-      body.upiId = document.getElementById("upiId").value.trim();
-    }
-
-    try {
-      const res = await fetch("https://battlepurse-99.onrender.com/api/wallet/request-withdrawal", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token
-        },
-        body: JSON.stringify(body)
-      });
-
-      const result = await res.json();
-      if (res.ok) {
-        alert("✅ " + result.msg);
-        location.reload();
-      } else {
-        alert("❌ " + (result.msg || "Something went wrong"));
-      }
-    } catch (err) {
-      console.error("Error:", err);
-      alert("❌ Error submitting withdrawal");
-    }
-  }
-
-  async function loadWalletBalance() {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
-    try {
-      const res = await fetch("https://battlepurse-99.onrender.com/api/wallet/balance", {
-        headers: {
-          Authorization: "Bearer " + token
-        }
-      });
-      const data = await res.json();
-      document.getElementById("walletBalance").innerText = "Wallet Balance: ₹" + (data.balance || 0);
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-  window.onload = loadWalletBalance;
+/* ================= SWIPE BACK ================= */
+let startX = 0;
+document.addEventListener("touchstart", e => startX = e.touches[0].clientX );
+document.addEventListener("touchend", e => { 
+  const endX = e.changedTouches[0].clientX; 
+  if(startX<40 && endX-startX>90) goBack(); 
+});
 </script>
 
 </body>
 </html>
-
-
-
-

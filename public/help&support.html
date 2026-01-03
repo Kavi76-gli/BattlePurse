@@ -1,104 +1,152 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Help & Support</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Poppins', sans-serif;
-      background-color: #121212;
-      color: #fff;
-    }
-    header {
-      background: #1e1e1e;
-      padding: 15px 20px;
-      text-align: center;
-      font-size: 20px;
-      font-weight: bold;
-      color: #00faff;
-      border-bottom: 1px solid #333;
-    }
-    .container {
-      max-width: 500px;
-      margin: 20px auto;
-      padding: 20px;
-    }
-    h2 {
-      color: #00faff;
-      margin-bottom: 10px;
-    }
-    .faq {
-      margin-bottom: 20px;
-    }
-    .faq h3 {
-      font-size: 16px;
-      color: #00faff;
-      margin: 10px 0 5px;
-    }
-    .faq p {
-      margin: 0;
-      font-size: 14px;
-      color: #ddd;
-    }
-    .contact {
-      background: #1c1c1c;
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-      box-shadow: 0 0 8px #00faff44;
-    }
-    .contact p {
-      margin: 8px 0;
-      font-size: 14px;
-    }
-    .form-group {
-      margin-bottom: 15px;
-    }
-    label {
-      display: block;
-      margin-bottom: 6px;
-      color: #00faff;
-    }
-    input[type="text"],
-    textarea {
-      width: 100%;
-      padding: 12px;
-      background: #1e1e1e;
-      border: none;
-      border-radius: 10px;
-      color: #fff;
-      font-size: 14px;
-      box-shadow: inset 0 0 6px #00faff55;
-    }
-    textarea {
-      resize: vertical;
-      height: 100px;
-    }
-    .button {
-      width: 100%;
-      padding: 14px;
-      font-size: 16px;
-      font-weight: bold;
-      background: #00faff;
-      color: #000;
-      border: none;
-      border-radius: 30px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
-    .button:hover {
-      background: #00c6e0;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Help & Support</title>
+<style>
+:root{
+  --bg:#121212;
+  --card:#1e1e1e;
+  --accent:#00faff;
+}
+
+/* ================= GLOBAL ================= */
+*{box-sizing:border-box;}
+body {
+  margin:0;
+  font-family: 'Poppins', sans-serif;
+  background: var(--bg);
+  color: #fff;
+  padding-bottom: 70px; /* space for footer */
+}
+
+/* ================= SWIPE AREA ================= */
+.swipe-area {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  z-index: 50;
+}
+
+/* ================= APP BAR ================= */
+.app-bar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  height: 56px;
+  background: var(--card);
+  padding: 0 16px;
+  box-shadow: 0 2px 6px #00000080;
+  z-index: 100;
+}
+.app-bar button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 22px;
+  margin-right: 12px;
+  cursor: pointer;
+}
+.app-bar .title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* ================= CONTAINER ================= */
+.container {
+  max-width: 500px;
+  margin: 20px auto;
+  padding: 20px;
+}
+
+/* ================= FAQ ================= */
+h2 { color: var(--accent); margin-bottom: 10px; }
+.faq { margin-bottom: 20px; }
+.faq h3 { font-size: 16px; color: var(--accent); margin: 10px 0 5px; }
+.faq p { margin: 0; font-size: 14px; color: #ddd; }
+
+/* ================= CONTACT ================= */
+.contact {
+  background: #1c1c1c;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 0 8px rgba(0,255,255,0.27);
+}
+.contact p { margin: 8px 0; font-size: 14px; }
+.contact a { color: var(--accent); text-decoration: none; }
+
+/* ================= FORM ================= */
+.form-group { margin-bottom: 15px; }
+label { display: block; margin-bottom: 6px; color: var(--accent); }
+input[type="text"], textarea {
+  width: 100%;
+  padding: 12px;
+  background: var(--card);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  box-shadow: inset 0 0 6px rgba(0,255,255,0.33);
+}
+textarea { resize: vertical; height: 100px; }
+.button {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: bold;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+.button:hover { background: #00c6e0; }
+
+/* ================= FOOTER NAV ================= */
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: var(--card);
+  display: flex;
+  justify-content: space-around;
+  padding: 10px 0;
+  border-top: 1px solid #333;
+  z-index: 50;
+}
+.nav-btn {
+  color: #aaa;
+  text-align: center;
+  font-size: 14px;
+  cursor: pointer;
+}
+.nav-btn i {
+  font-size: 20px;
+  display: block;
+}
+.nav-btn.active { color: var(--accent); }
+</style>
 </head>
 <body>
 
-<header>Help & Support</header>
+<!-- SWIPE BACK EDGE -->
+<div class="swipe-area"></div>
+
+<!-- APP BAR -->
+<div class="app-bar">
+  <button onclick="goBack()">←</button>
+  <div class="title">Help & Support</div>
+</div>
 
 <div class="container">
-
   <h2>Frequently Asked Questions</h2>
   <div class="faq">
     <h3>❓ How to deposit money?</h3>
@@ -117,8 +165,8 @@
   <h2>Contact Us</h2>
   <div class="contact">
     <p>📧 Email: support@example.com</p>
-    <p>📱 WhatsApp: <a href="https://wa.me/917412850353" target="_blank" style="color: #00faff;">+91 7412850353 </a></p>
-    <p>📨 Telegram: <a href="https://t.me/BattlePurse_bot" target="_blank" style="color: #00faff;">@BattlePurse_bot</a></p>
+    <p>📱 WhatsApp: <a href="https://wa.me/917412850353" target="_blank">+91 7412850353</a></p>
+    <p>📨 Telegram: <a href="https://t.me/BattlePurse_bot" target="_blank">@BattlePurse_bot</a></p>
   </div>
 
   <h2>Send a Message</h2>
@@ -126,59 +174,83 @@
     <label for="name">Your Name</label>
     <input type="text" id="name" placeholder="Enter your name">
   </div>
-
   <div class="form-group">
-  <label for="username">Telegram Username </label>
-  <input type="text" id="username" placeholder="@yourusername">
-</div>
-
-
+    <label for="username">Telegram Username</label>
+    <input type="text" id="username" placeholder="@yourusername">
+  </div>
   <div class="form-group">
     <label for="mobile">Mobile Number</label>
     <input type="text" id="mobile" placeholder="Enter mobile number">
   </div>
-
   <div class="form-group">
     <label for="message">Your Message</label>
     <textarea id="message" placeholder="Write your message..."></textarea>
   </div>
-
   <button class="button" onclick="submitSupport()">📩 Submit</button>
-
 </div>
 
+<!-- FOOTER NAV -->
+<footer>
+  <div class="nav-btn" onclick="location.href='gamezone.html'"><i>🎮</i>Game</div>
+  <div class="nav-btn" onclick="location.href='history.html'"><i>📜</i>History</div>
+  <div class="nav-btn" onclick="location.href='leaderboard.html'"><i>🏆</i>Leaderboard</div>
+  <div class="nav-btn" onclick="location.href='profile.html'"><i>👤</i>Profile</div>
+  <div class="nav-btn active"><i>⋯</i>More</div>
+</footer>
+
 <script>
-  function submitSupport() {
-    const name = document.getElementById("name").value;
-    const username = document.getElementById("username").value;
-    const mobile = document.getElementById("mobile").value;
-    const message = document.getElementById("message").value;
+const token = localStorage.getItem("token");
 
-    if (!name || !username || !mobile || !message) {
-      return alert("All fields are required.");
-    }
-
-    fetch("https://battlepurse-99.onrender.com/api/wallet/support/contact", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, Username: username, mobile, message })
-    })
-      .then(res => res.json())
-      .then(data => {
-        alert("✅ " + (data.msg || "Message sent!"));
-        // Optionally clear form
-        document.getElementById("name").value = "";
-        document.getElementById("username").value = "";
-        document.getElementById("mobile").value = "";
-        document.getElementById("message").value = "";
-      })
-      .catch(err => {
-        console.error(err);
-        alert("❌ Failed to send message.");
-      });
+/* ================= BACK LOGIC ================= */
+function goBack() {
+  if (document.referrer && document.referrer !== location.href) {
+    history.back();
+  } else {
+    location.href = "gamezone.html"; // fallback
   }
-</script>
+}
 
+/* ================= SWIPE BACK ================= */
+let startX = 0;
+document.addEventListener("touchstart", e => { startX = e.touches[0].clientX; });
+document.addEventListener("touchend", e => {
+  const endX = e.changedTouches[0].clientX;
+  if (startX < 40 && endX - startX > 90) {
+    goBack();
+  }
+});
+
+/* ================= SUBMIT SUPPORT ================= */
+function submitSupport() {
+  const name = document.getElementById("name").value.trim();
+  const username = document.getElementById("username").value.trim();
+  const mobile = document.getElementById("mobile").value.trim();
+  const message = document.getElementById("message").value.trim();
+
+  if(!name || !username || !mobile || !message) {
+    return alert("All fields are required.");
+  }
+
+  fetch("https://battlepurse-88.onrender.com/api/wallet/support/contact", {
+    method: "POST",
+    headers: { "Content-Type":"application/json" },
+    body: JSON.stringify({ name, Username: username, mobile, message })
+  })
+  .then(res=>res.json())
+  .then(data => {
+    alert("✅ " + (data.msg || "Message sent!"));
+    // clear form
+    document.getElementById("name").value = "";
+    document.getElementById("username").value = "";
+    document.getElementById("mobile").value = "";
+    document.getElementById("message").value = "";
+  })
+  .catch(err => {
+    console.error(err);
+    alert("❌ Failed to send message.");
+  });
+}
+</script>
 
 </body>
 </html>

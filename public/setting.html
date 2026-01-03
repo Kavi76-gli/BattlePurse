@@ -1,73 +1,163 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Settings</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Poppins', sans-serif;
-      background-color: #121212;
-      color: #fff;
-    }
-    header {
-      background: #1e1e1e;
-      padding: 15px 20px;
-      text-align: center;
-      font-size: 20px;
-      font-weight: bold;
-      color: #00faff;
-      border-bottom: 1px solid #333;
-    }
-    .container {
-      max-width: 450px;
-      margin: 20px auto;
-      padding: 20px;
-    }
-    .form-group {
-      margin-bottom: 20px;
-    }
-    label {
-      display: block;
-      margin-bottom: 6px;
-      font-weight: 600;
-      color: #00faff;
-    }
-    input[type="text"],
-    input[type="password"] {
-      width: 100%;
-      padding: 12px;
-      background: #1e1e1e;
-      border: none;
-      border-radius: 10px;
-      color: #fff;
-      box-shadow: inset 0 0 6px #00faff55;
-      font-size: 14px;
-    }
-    .button {
-      width: 100%;
-      padding: 14px;
-      font-size: 16px;
-      font-weight: 700;
-      background: #00faff;
-      color: #000;
-      border: none;
-      border-radius: 30px;
-      margin-top: 25px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
-    .button:hover {
-      background: #00d6e0;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Settings</title>
+<style>
+:root{
+  --bg:#121212;
+  --card:#1e1e1e;
+  --accent:#00faff;
+}
+
+*{box-sizing:border-box;}
+
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: var(--bg);
+  color: #fff;
+  padding-bottom: 70px; /* space for footer */
+}
+
+/* ================= APP BAR ================= */
+.app-bar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  height: 56px;
+  background: var(--card);
+  padding: 0 16px;
+  box-shadow: 0 2px 6px #00000080;
+  z-index: 100;
+}
+
+.app-bar button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 22px;
+  margin-right: 12px;
+  cursor: pointer;
+}
+
+.app-bar .title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* ================= CONTAINER ================= */
+.container {
+  max-width: 480px;
+  margin: 20px auto;
+  padding: 20px;
+}
+
+/* ================= FORM ================= */
+.form-group {
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+input[type="text"],
+input[type="password"] {
+  width: 100%;
+  padding: 12px;
+  background: var(--card);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  box-shadow: inset 0 0 6px rgba(0,255,255,0.33);
+  font-size: 14px;
+}
+
+.button {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: 30px;
+  margin-top: 25px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.button:hover {
+  background: #00d6e0;
+}
+
+hr {
+  border: 1px solid #333;
+  margin: 25px 0;
+}
+
+/* ================= FOOTER NAV ================= */
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: var(--card);
+  display: flex;
+  justify-content: space-around;
+  padding: 10px 0;
+  border-top: 1px solid #333;
+  z-index: 50;
+}
+
+.nav-btn {
+  color: #aaa;
+  text-align: center;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.nav-btn i {
+  font-size: 20px;
+  display: block;
+}
+
+.nav-btn.active {
+  color: var(--accent);
+}
+
+/* ================= SWIPE AREA ================= */
+.swipe-area {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  z-index: 50;
+}
+</style>
 </head>
 <body>
 
-<header>Account Settings</header>
+<!-- SWIPE BACK EDGE -->
+<div class="swipe-area"></div>
 
+<!-- APP BAR -->
+<div class="app-bar">
+  <button onclick="goBack()">←</button>
+  <div class="title">Account Settings</div>
+</div>
+
+<!-- CONTAINER -->
 <div class="container">
+
   <!-- Change Password -->
   <div class="form-group">
     <label for="oldPassword">Current Password</label>
@@ -79,7 +169,7 @@
   </div>
   <button class="button" onclick="changePassword()">🔒 Change Password</button>
 
-  <hr style="border: 1px solid #333; margin: 25px 0;">
+  <hr>
 
   <!-- Save Game UIDs -->
   <div class="form-group">
@@ -90,10 +180,7 @@
     <label for="bgmiid">BGMI UID</label>
     <input type="text" id="bgmiid" placeholder="BGMI UID">
   </div>
-<div class="form-group">
-  <label for="cricketid">cricket UID</label>
-  <input type="text" id="cricketid" placeholder="Cricket UID" />
-    </div>
+  
   <div class="form-group">
     <label for="ludoid">Ludo UID</label>
     <input type="text" id="ludoid" placeholder="Ludo UID">
@@ -102,64 +189,78 @@
     <label for="carromid">Carrom UID</label>
     <input type="text" id="carromid" placeholder="Carrom UID">
   </div>
-  <div class="form-group">
-    <label for="eightballid">8 Ball Pool UID</label>
-    <input type="text" id="eightballid" placeholder="8 Ball Pool UID">
-  </div>
+  
 
   <button class="button" onclick="saveUIDs()">💾 Save UIDs</button>
 </div>
 
+<!-- FOOTER NAV -->
+<footer>
+  <div class="nav-btn" onclick="location.href='gamezone.html'"><i>🎮</i>Game</div>
+  <div class="nav-btn" onclick="location.href='history.html'"><i>📜</i>History</div>
+  <div class="nav-btn" onclick="location.href='leaderboard.html'"><i>🏆</i>Leaderboard</div>
+  <div class="nav-btn" onclick="location.href='profile.html'"><i>👤</i>Profile</div>
+  <div class="nav-btn"><i>⋯</i>More</div>
+</footer>
+
 <script>
-  const token = localStorage.getItem("token");
+const token = localStorage.getItem("token");
 
-  async function changePassword() {
-    const oldPassword = document.getElementById("oldPassword").value;
-    const newPassword = document.getElementById("newPassword").value;
-
-    if (!oldPassword || !newPassword) {
-      return alert("Please enter both current and new passwords.");
-    }
-
-    try {
-      const res = await fetch("https://battlepurse-99.onrender.com/api/wallet/change-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ oldPassword, newPassword })
-      });
-
-      const data = await res.json();
-      alert(data.msg || "Password change failed.");
-    } catch (err) {
-      console.error("Change password error:", err);
-      alert("Error changing password.");
-    }
+/* ================= BACK LOGIC ================= */
+function goBack() {
+  if (document.referrer && document.referrer !== location.href) {
+    history.back();
+  } else {
+    location.href = "gamezone.html"; // fallback
   }
+}
 
-  async function saveUIDs() {
+/* ================= SWIPE BACK ================= */
+let startX = 0;
+document.addEventListener("touchstart", e => { startX = e.touches[0].clientX; });
+document.addEventListener("touchend", e => {
+  const endX = e.changedTouches[0].clientX;
+  if (startX < 40 && endX - startX > 90) {
+    goBack();
+  }
+});
+
+/* ================= CHANGE PASSWORD ================= */
+async function changePassword() {
+  const oldPassword = document.getElementById("oldPassword").value;
+  const newPassword = document.getElementById("newPassword").value;
+  if (!oldPassword || !newPassword) return alert("Please enter both current and new passwords.");
+
+  try {
+    const res = await fetch("https://battlepurse-88.onrender.com/api/wallet/change-password", {
+      method: "POST",
+      headers: { "Content-Type":"application/json", "Authorization": `Bearer ${token}` },
+      body: JSON.stringify({ oldPassword, newPassword })
+    });
+    const data = await res.json();
+    alert(data.msg || "Password change failed.");
+  } catch (err) {
+    console.error("Change password error:", err);
+    alert("Error changing password.");
+  }
+}
+
+/* ================= SAVE UIDS ================= */
+async function saveUIDs() {
   const uids = {
     freeFire: document.getElementById("ffid").value.trim(),
     bgmi: document.getElementById("bgmiid").value.trim(),
     carrom: document.getElementById("carromid").value.trim(),
     ludo: document.getElementById("ludoid").value.trim(),
-    eightBall: document.getElementById("eightballid").value.trim(),
-    cricket: document.getElementById("cricketid").value.trim(), // New field
+    
   };
 
   try {
-    const token = localStorage.getItem("token");
-    const res = await fetch("https://battlepurse-99.onrender.com/api/wallet/save-uids", {
+    const res = await fetch("https://battlepurse-88.onrender.com/api/wallet/save-uids", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
+      headers: { "Content-Type":"application/json", "Authorization": `Bearer ${token}` },
       body: JSON.stringify(uids)
     });
-
     const data = await res.json();
     alert(data.msg || "UID save failed.");
   } catch (err) {
@@ -168,27 +269,26 @@
   }
 }
 
+/* ================= LOAD EXISTING UIDS ================= */
+async function loadExistingUIDs() {
+  try {
+    const res = await fetch("https://battlepurse-88.onrender.com/api/wallet/profile", {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    const data = await res.json();
+    const u = data?.user?.uids || {};
 
-  async function loadExistingUIDs() {
-    try {
-      const res = await fetch("https://battlepurse-99.onrender.com/api/wallet/profile", {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      const data = await res.json();
-      const u = data?.user?.uids || {};
-
-      document.getElementById("ffid").value = u.freeFire || "";
-      document.getElementById("bgmiid").value = u.bgmi || "";
-      document.getElementById("ludoid").value = u.ludo || "";
-      document.getElementById("carromid").value = u.carrom || "";
-      document.getElementById("eightballid").value = u.eightBall || "";
-    } catch (err) {
-      console.error("Failed to load UIDs", err);
-    }
+    document.getElementById("ffid").value = u.freeFire || "";
+    document.getElementById("bgmiid").value = u.bgmi || "";
+    document.getElementById("ludoid").value = u.ludo || "";
+    document.getElementById("carromid").value = u.carrom || "";
+    
+  } catch(err) {
+    console.error("Failed to load UIDs", err);
   }
+}
 
-  window.onload = loadExistingUIDs;
+window.onload = loadExistingUIDs;
 </script>
-
 </body>
 </html>

@@ -1,96 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Logout</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Poppins', sans-serif;
-      background-color: #121212;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      text-align: center;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logout</title>
+<style>
+:root {
+  --bg: #121212;
+  --card: #1c1c1c;
+  --accent: #00faff;
+}
 
-    .container {
-      background: #1c1c1c;
-      padding: 30px;
-      border-radius: 20px;
-      box-shadow: 0 0 15px #00faff88;
-      max-width: 400px;
-    }
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: var(--bg);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow-x: hidden;
+}
 
-    h1 {
-      color: #00faff;
-      margin-bottom: 15px;
-    }
+/* ================= SWIPE AREA ================= */
+.swipe-area {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  z-index: 50;
+}
 
-    p {
-      margin-bottom: 30px;
-      color: #ccc;
-    }
+/* ================= APP BAR ================= */
+.app-bar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  height: 56px;
+  background: var(--card);
+  padding: 0 16px;
+  box-shadow: 0 2px 6px #00000080;
+  z-index: 100;
+  transition: transform 0.3s ease;
+}
+.app-bar button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 22px;
+  margin-right: 12px;
+  cursor: pointer;
+}
+.app-bar .title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent);
+}
 
-    .button {
-      padding: 14px 30px;
-      font-size: 16px;
-      font-weight: 600;
-      background: #00faff;
-      color: #000;
-      border: none;
-      border-radius: 30px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-      text-decoration: none;
-      display: inline-block;
-    }
+/* ================= CONTAINER ================= */
+.container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: slideIn 0.3s ease forwards;
+}
 
-    .button:hover {
-      background: #00c8e6;
-    }
-  </style>
+.card {
+  background: var(--card);
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 0 15px rgba(0,250,255,0.5);
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
+}
+
+.card h1 {
+  color: var(--accent);
+  margin-bottom: 15px;
+  font-size: 28px;
+}
+
+.card p {
+  color: #ccc;
+  margin-bottom: 30px;
+  font-size: 16px;
+}
+
+.button {
+  padding: 14px 30px;
+  font-size: 16px;
+  font-weight: 600;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+.button:hover {
+  background: #00c8e6;
+}
+
+/* ================= ANIMATIONS ================= */
+@keyframes slideIn {
+  0% { transform: translateX(100%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOut {
+  0% { transform: translateX(0); opacity: 1; }
+  100% { transform: translateX(100%); opacity: 0; }
+}
+</style>
 </head>
 <body>
 
-<div class="container">
-  <h1>🚪 Logged Out</h1>
-  <p>You have been successfully logged out.</p>
-  <a href="auth.html" class="button">🔐 Login Again</a>
+<!-- SWIPE BACK EDGE -->
+<div class="swipe-area"></div>
+
+<!-- APP BAR -->
+<div class="app-bar">
+  <button onclick="goBack()">←</button>
+  <div class="title">Logout</div>
+</div>
+
+<div class="container" id="logoutCard">
+  <div class="card">
+    <h1>🚪 Logged Out</h1>
+    <p>You have been successfully logged out.</p>
+    <a href="auth.html" class="button">🔐 Login Again</a>
+  </div>
 </div>
 
 <script>
-  async function logoutUser() {
-    const token = localStorage.getItem("token");
-
-    try {
-      if (token) {
-        await fetch("https://battlepurse-99.onrender.com/api/auth/logout", {
-          method: "POST",
-          headers: {
-            "Authorization": "Bearer " + token
-          }
-        });
-      }
-    } catch (err) {
-      console.log("Logout error:", err);
+/* ================= BACK LOGIC ================= */
+function goBack() {
+  document.getElementById("logoutCard").style.animation = "slideOut 0.3s forwards";
+  setTimeout(() => {
+    if (document.referrer && document.referrer !== location.href) {
+      history.back();
+    } else {
+      location.href = "gamezone.html"; // fallback
     }
+  }, 300);
+}
 
-    // Always clear token
-    localStorage.removeItem("token");
+/* ================= SWIPE BACK ================= */
+let startX = 0;
+document.addEventListener("touchstart", e => { startX = e.touches[0].clientX; });
+document.addEventListener("touchend", e => {
+  const endX = e.changedTouches[0].clientX;
+  if (startX < 40 && endX - startX > 90) { goBack(); }
+});
 
-    // Redirect after 1 second
-    setTimeout(() => {
-      window.location.href = "auth.html";
-    }, 1000);
+/* ================= AUTO LOGOUT ================= */
+async function logoutUser() {
+  const token = localStorage.getItem("token");
+  try {
+    if(token){
+      await fetch("https://battlepurse-88.onrender.com/api/auth/logout", {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + token }
+      });
+    }
+  } catch(err) {
+    console.log("Logout error:", err);
   }
-
-  // Auto logout when page loads
-  logoutUser();
+  localStorage.removeItem("token");
+}
+logoutUser();
 </script>
 
 </body>

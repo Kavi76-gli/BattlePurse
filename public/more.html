@@ -1,95 +1,146 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>More</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Poppins', sans-serif;
-      background-color: #121212;
-      color: #fff;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>More</title>
+<style>
+:root{
+  --bg:#121212;
+  --card:#1e1e1e;
+  --accent:#00faff;
+}
 
-    header {
-      background: #1e1e1e;
-      padding: 15px 20px;
-      font-size: 20px;
-      font-weight: 600;
-      border-bottom: 1px solid #333;
-    }
+*{box-sizing:border-box;}
 
-    .more-options {
-      padding: 20px;
-    }
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--bg);
+  color: #fff;
+  padding-bottom: 70px; /* space for footer */
+}
 
-    .option {
-      background: #1e1e1e;
-      border-radius: 10px;
-      padding: 15px 20px;
-      margin-bottom: 15px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: pointer;
-      box-shadow: 0 0 10px rgba(0,255,255,0.05);
-      transition: background 0.2s ease;
-    }
+/* ================= APP BAR ================= */
+.app-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  height: 56px;
+  background: var(--card);
+  padding: 0 16px;
+  box-shadow: 0 2px 6px #00000080;
+}
 
-    .option:hover {
-      background: #2a2a2a;
-    }
+.app-bar button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 22px;
+  margin-right: 12px;
+  cursor: pointer;
+}
 
-    .option span {
-      font-size: 16px;
-    }
+.app-bar .title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent);
+}
 
-    .option i {
-      color: #00faff;
-    }
+/* ================= MORE OPTIONS ================= */
+.more-options {
+  padding: 20px;
+  margin-top: 0;
+}
 
-    footer {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      background: #1e1e1e;
-      display: flex;
-      justify-content: space-around;
-      padding: 10px 0;
-      border-top: 1px solid #333;
-    }
+.option {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(0,255,255,0.05);
+  transition: background 0.2s ease;
+  text-decoration: none;
+  color: #fff;
+  font-size: 16px;
+}
 
-    .nav-btn {
-      color: #aaa;
-      text-align: center;
-      font-size: 14px;
-      cursor: pointer;
-    }
+.option:hover {
+  background: #2a2a2a;
+}
 
-    .nav-btn i {
-      font-size: 20px;
-      display: block;
-    }
+.option i {
+  color: var(--accent);
+  font-size: 20px;
+}
 
-    .nav-btn.active {
-      color: #00faff;
-    }
-  </style>
+/* ================= FOOTER NAV ================= */
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: var(--card);
+  display: flex;
+  justify-content: space-around;
+  padding: 10px 0;
+  border-top: 1px solid #333;
+  z-index: 50;
+}
+
+.nav-btn {
+  color: #aaa;
+  text-align: center;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.nav-btn i {
+  font-size: 20px;
+  display: block;
+}
+
+.nav-btn.active {
+  color: var(--accent);
+}
+
+/* ================= SWIPE AREA ================= */
+.swipe-area {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  z-index: 50;
+}
+</style>
 </head>
 <body>
 
-<header>⋯ More Options</header>
+<!-- SWIPE BACK EDGE -->
+<div class="swipe-area"></div>
 
-<div class="more-options">
-    <a href="setting.html" class="option" onclick="showPage('setting.html',this)"><i>⚙️</i>Settings</a>
-  <a href="help&support.html" class="option" onclick="showPage('setting.html',this)"><i>❓</i>Help & Support</a>
-  <a href="contactus.html" class="option" onclick="showPage('setting.html',this)"><i>📩</i>Contact Us</a>
-  <a href="logout.html" class="option" onclick="showPage('setting.html',this)"><i>🚪</i>Logout</a>
-  
+<!-- APP BAR -->
+<div class="app-bar">
+  <button onclick="goBack()">←</button>
+  <div class="title">⋯ More Options</div>
 </div>
 
+<!-- MORE OPTIONS LIST -->
+<div class="more-options">
+  <a href="setting.html" class="option"><span>Settings</span> <i>⚙️</i></a>
+  <a href="help&support.html" class="option"><span>Help & Support</span> <i>❓</i></a>
+  <a href="contactus.html" class="option"><span>Contact Us</span> <i>📩</i></a>
+  <a href="logout.html" class="option"><span>Logout</span> <i>🚪</i></a>
+</div>
+
+<!-- FOOTER NAV -->
 <footer>
   <div class="nav-btn" onclick="location.href='gamezone.html'"><i>🎮</i>Game</div>
   <div class="nav-btn" onclick="location.href='history.html'"><i>📜</i>History</div>
@@ -97,6 +148,27 @@
   <div class="nav-btn" onclick="location.href='profile.html'"><i>👤</i>Profile</div>
   <div class="nav-btn active"><i>⋯</i>More</div>
 </footer>
+
+<script>
+/* ================= BACK LOGIC ================== */
+function goBack() {
+  if (document.referrer && document.referrer !== location.href) {
+    history.back();
+  } else {
+    location.href = "gamezone.html"; // fallback
+  }
+}
+
+/* ================= SWIPE BACK ================== */
+let startX = 0;
+document.addEventListener("touchstart", e => { startX = e.touches[0].clientX; });
+document.addEventListener("touchend", e => {
+  const endX = e.changedTouches[0].clientX;
+  if (startX < 40 && endX - startX > 90) {
+    goBack();
+  }
+});
+</script>
 
 </body>
 </html>

@@ -38,6 +38,8 @@ const PlayerSchema = new mongoose.Schema(
       default: null
     },
 
+ rounds: { type: Number, enum: [7,9,11,13,15], required: true },
+
     joinedAt: { type: Date, default: Date.now },
 
     /* ⭐ FREE FIRE SETTINGS (ROUTES SAFE) ⭐ */
@@ -124,12 +126,7 @@ const QuickMatchSchema = new mongoose.Schema(
       type: Number,
       required: true
     },
-rounds: {
-  type: Number,
-  required: true,
-  enum: [7, 9, 11, 13, 15]
-}
-,
+
    
 
 

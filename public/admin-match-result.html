@@ -43,11 +43,101 @@ select,input[type="text"]{ background:#0b0b0b; border:1px solid #222; color:#fff
   .controls{ flex-direction:column; align-items:flex-start; }
   .btn{ width:100%; }
 }
+
+/* ===== ANDROID APP BAR ===== */
+.app-bar{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:56px;
+  background:#0f172a;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:0 14px;
+  z-index:10000;
+  box-shadow:0 4px 16px rgba(0,0,0,.7);
+}
+
+.back-btn{
+  background:none;
+  border:none;
+  color:#00d5ff;
+  font-size:26px;
+  cursor:pointer;
+  padding:4px 10px;
+}
+
+.app-title{
+  font-size:15px;
+  font-weight:600;
+  color:#fff;
+}
+
+/* push content below app bar */
+body{
+  padding-top:76px;
+}
+
+/* ===== SWIPE EDGE ===== */
+.swipe-area{
+  position:fixed;
+  left:0;
+  top:0;
+  width:26px;
+  height:100%;
+  z-index:9998;
+}
+
+/* ===== SWIPE ARROW ===== */
+.swipe-arrow{
+  position:fixed;
+  left:-48px;
+  top:50%;
+  transform:translateY(-50%);
+  width:42px;
+  height:42px;
+  background:rgba(0,0,0,.85);
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  color:#fff;
+  box-shadow:0 0 18px rgba(0,213,255,.85);
+  opacity:0;
+  transition:all .18s ease;
+  z-index:10001;
+  pointer-events:none;
+}
+
+/* hide on desktop */
+@media (min-width:900px){
+  .app-bar,
+  .swipe-area,
+  .swipe-arrow{
+    display:none;
+  }
+}
+
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Admin — Complete Match Results & Payout</h1>
+<!-- 🔝 ANDROID APP BAR -->
+<div class="app-bar">
+  <button class="back-btn" onclick="goBack()">←</button>
+  <span class="app-title">Admin — Complete Match Results & Payout</span>
+</div>
+
+<!-- 👆 SWIPE EDGE -->
+<div class="swipe-area"></div>
+
+<!-- ⬅ SWIPE ARROW -->
+<div class="swipe-arrow">←</div>
+
+
+
 
   <div id="error" class="info" style="display:none;margin-bottom:12px"></div>
   <div id="loading" class="loading">Loading matches...</div>
@@ -55,7 +145,7 @@ select,input[type="text"]{ background:#0b0b0b; border:1px solid #222; color:#fff
   <!-- Top controls -->
   <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
     <div class="label">API Base:</div>
-    <input id="apiBaseInput" type="text" value="https://battlepurse-99.onrender.com/api/wallet" style="min-width:320px">
+    <input id="apiBaseInput" type="text" value="https://battlepurse-88.onrender.com/api/wallet" style="min-width:320px">
     <button class="btn" id="saveApiBtn">Save</button>
     <div style="margin-left:auto">
       <button class="btn btn-danger" id="clearTokenBtn">Clear token</button>
@@ -72,7 +162,7 @@ select,input[type="text"]{ background:#0b0b0b; border:1px solid #222; color:#fff
 </div>
 
 <script>
-let API_BASE = localStorage.getItem('adminApiBase') || "https://battlepurse-99.onrender.com/api/wallet";
+let API_BASE = localStorage.getItem('adminApiBase') || "https://battlepurse-88.onrender.com/api/wallet";
 document.getElementById('apiBaseInput').value = API_BASE;
 const token = localStorage.getItem("token") || "";
 const selection = {};
@@ -286,6 +376,55 @@ function previewPayout(matchId, entryFee, matchType, serverPrizeSystem, matchGam
 }
 
 loadMatches();
+
+
+/* ⬅ BACK LOGIC (ANDROID STYLE) */
+function goBack(){
+  if(document.referrer && document.referrer !== location.href){
+    history.back();
+  }else{
+    location.href = "gamezone.html";
+  }
+}
+
+/* 👆 SWIPE BACK */
+let startX = 0;
+let startY = 0;
+const arrow = document.querySelector(".swipe-arrow");
+
+document.addEventListener("touchstart", e=>{
+  const t = e.touches[0];
+  if(t.clientX < 30){
+    startX = t.clientX;
+    startY = t.clientY;
+    arrow.style.opacity = "1";
+  }
+});
+
+document.addEventListener("touchmove", e=>{
+  if(!startX) return;
+  const dx = e.touches[0].clientX - startX;
+  if(dx > 0){
+    arrow.style.left = Math.min(dx - 20, 64) + "px";
+  }
+});
+
+document.addEventListener("touchend", e=>{
+  if(!startX) return;
+
+  const dx = e.changedTouches[0].clientX - startX;
+  const dy = Math.abs(e.changedTouches[0].clientY - startY);
+
+  arrow.style.left = "-48px";
+  arrow.style.opacity = "0";
+
+  if(startX < 30 && dx > 90 && dy < 70){
+    goBack();
+  }
+  startX = 0;
+});
+
+
 </script> 
 </body>
 </html>

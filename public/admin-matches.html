@@ -5,31 +5,179 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Admin — Match Dashboard</title>
 <style>
-  body { font-family: 'Poppins', sans-serif; background: #0b0b0b; color: #fff; margin: 0; padding: 20px; }
-  h1 { margin-bottom: 20px; }
-  .tabs { display:flex; gap:10px; margin-bottom:18px; }
-  .tab-btn { padding:8px 14px; border-radius:6px; border:none; background:#111; color:#fff; cursor:pointer; }
-  .tab-btn.active { background:#00faff; color:#000; }
-  .controls { display:flex; gap:8px; align-items:center; margin-bottom:14px; flex-wrap:wrap; }
-  .btn { padding:8px 12px; border-radius:8px; border:none; cursor:pointer; background:#00d5ff; color:#000; font-weight:600; }
-  .danger { background:#ff4d4d; color:#fff; padding:6px 10px; border-radius:6px; border:none; cursor:pointer; }
-  .pair { background:#ffa500; color:#000; padding:8px 12px; border-radius:6px; border:none; cursor:pointer; }
-  table { width:100%; border-collapse:collapse; margin-bottom:18px; }
-  th, td { padding:8px; border:1px solid #333; text-align:left; font-size:13px; }
-  th { background:#111; color:#00faff; }
-  tr:nth-child(even) { background:#161616; }
-  .small { font-size:12px; color:#aaa; margin-left:8px; }
-  .msg { margin-top:10px; color:#9ae; }
-  .error { color:#ff8a8a; }
-  .wa-btn { background:#25D366; color:#fff; border:none; padding:6px 8px; border-radius:6px; cursor:pointer; }
-  .copy-btn { background:#00faff; color:#000; border:none; padding:6px 8px; border-radius:6px; cursor:pointer; }
-  .template-editor { background:#0f0f0f; padding:10px; border-radius:8px; margin-left:8px; display:inline-block; }
-  textarea { width:420px; max-width:100%; height:80px; background:#0b0b0b; color:#fff; border:1px solid #222; padding:8px; border-radius:6px; }
-  @media (max-width:820px){ .controls { flex-direction:column; align-items:flex-start } textarea { width:100%; } }
+:root{
+  --bg:#0b0b0b;
+  --card:#121212;
+  --border:#242424;
+  --accent:#00faff;
+  --danger:#ff4d4d;
+}
+
+*{
+  box-sizing:border-box;
+  font-family:'Poppins',sans-serif;
+}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:#fff;
+}
+
+/* ================= ANDROID APP BAR ================= */
+.app-bar{
+  position:sticky;
+  top:0;
+  z-index:1000;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 14px;
+  background:rgba(10,10,10,.96);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
+}
+
+.app-bar button{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  border:1px solid #222;
+  background:#111;
+  color:#fff;
+  font-size:22px;
+  cursor:pointer;
+}
+
+.app-bar button:active{
+  background:#1f2937;
+}
+
+.app-title{
+  font-size:16px;
+  font-weight:600;
+  color:var(--accent);
+}
+
+/* ================= PAGE CONTENT ================= */
+.page{
+  padding:20px;
+}
+
+h1{
+  font-size:20px;
+  margin-bottom:18px;
+}
+
+.tabs{
+  display:flex;
+  gap:10px;
+  margin-bottom:18px;
+  flex-wrap:wrap;
+}
+
+.tab-btn{
+  padding:8px 14px;
+  border-radius:8px;
+  border:none;
+  background:#111;
+  color:#fff;
+  cursor:pointer;
+}
+
+.tab-btn.active{
+  background:var(--accent);
+  color:#000;
+}
+
+.controls{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:16px;
+}
+
+.btn{
+  padding:8px 14px;
+  border-radius:8px;
+  border:none;
+  background:var(--accent);
+  color:#000;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.danger{
+  background:var(--danger);
+  color:#fff;
+  border:none;
+  padding:8px 12px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+}
+
+th,td{
+  border:1px solid #333;
+  padding:8px;
+}
+
+th{
+  background:#111;
+  color:var(--accent);
+}
+
+tr:nth-child(even){
+  background:#161616;
+}
+
+/* ================= SWIPE BACK ================= */
+.swipe-area{
+  position:fixed;
+  left:0;
+  top:0;
+  width:28px;
+  height:100%;
+  z-index:9998;
+}
+
+.swipe-arrow{
+  position:fixed;
+  left:-42px;
+  top:50%;
+  transform:translateY(-50%);
+  width:38px;
+  height:38px;
+  background:rgba(0,0,0,.75);
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  color:#fff;
+  box-shadow:0 0 14px rgba(0,250,255,.6);
+  opacity:0;
+  transition:.15s ease;
+  z-index:9999;
+  pointer-events:none;
+}
 </style>
 </head>
 <body>
-  <h1>Admin — Match Dashboard</h1>
+<!-- ================= APP BAR ================= -->
+<div class="app-bar">
+  <button onclick="goBack()">←</button>
+  <div class="app-title">Admin • Match Dashboard</div>
+</div>
+
+<!-- ================= SWIPE ELEMENTS ================= -->
+<div class="swipe-area"></div>
+<div class="swipe-arrow">←</div>
 
   <div class="tabs">
     <button class="tab-btn active" data-tab="joined">Joined</button>
@@ -122,7 +270,7 @@
 
 <script>
 /* --------- CONFIG ---------- */
-const API_BASE = 'https://battlepurse-99.onrender.com/api/wallet'; // keep as your backend base
+const API_BASE = 'https://battlepurse-88.onrender.com/api/wallet'; // keep as your backend base
 const token = localStorage.getItem('token'); // admin token
 const headersWithAuth = () => ({ 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' });
 
@@ -656,6 +804,55 @@ function openWhatsAppForPlayer(player){
 
 /* ---------- boot ---------- */
 fetchAllForTab('joined');
+
+
+
+/* ================= BACK LOGIC ================= */
+function goBack(){
+  if(document.referrer && document.referrer !== location.href){
+    history.back();
+  }else{
+    location.href = "gamezone.html";
+  }
+}
+
+/* ================= ANDROID EDGE SWIPE ================= */
+let startX=0,startY=0;
+const arrow=document.querySelector('.swipe-arrow');
+
+document.addEventListener('touchstart',e=>{
+  const t=e.touches[0];
+  if(t.clientX < 28){
+    startX=t.clientX;
+    startY=t.clientY;
+    arrow.style.opacity='1';
+  }
+});
+
+document.addEventListener('touchmove',e=>{
+  if(!startX) return;
+  const dx=e.touches[0].clientX - startX;
+  if(dx > 0){
+    arrow.style.left = Math.min(dx - 18, 44) + 'px';
+  }
+});
+
+document.addEventListener('touchend',e=>{
+  if(!startX) return;
+
+  const dx=e.changedTouches[0].clientX - startX;
+  const dy=Math.abs(e.changedTouches[0].clientY - startY);
+
+  arrow.style.left='-42px';
+  arrow.style.opacity='0';
+
+  if(startX < 28 && dx > 90 && dy < 60){
+    goBack();
+  }
+  startX=0;
+});
+
+
 </script>
 </body>
 </html>

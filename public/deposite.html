@@ -1,66 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Deposit</title>
-  <style>
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: #111;
-      color: #fff;
-      padding: 30px;
-      text-align: center;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Deposit</title>
+<style>
+:root {
+  --bg: #111;
+  --card: #1c1c1c;
+  --accent: #00faff;
+  --accent-dark: #00c6ff;
+}
 
-    h2 {
-      color: #00faff;
-      font-size: 28px;
-    }
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: var(--bg);
+  color: #fff;
+  overflow-x: hidden;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
 
-    .plans, .custom-amount {
-      margin-top: 25px;
-    }
+/* ================= SWIPE AREA ================= */
+.swipe-area {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  z-index: 50;
+}
 
-    .plan-btn {
-      padding: 12px 20px;
-      margin: 5px;
-      border: 2px solid #00faff;
-      border-radius: 25px;
-      background: none;
-      color: #00faff;
-      cursor: pointer;
-    }
+/* ================= APP BAR ================= */
+.app-bar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  height: 56px;
+  background: var(--card);
+  padding: 0 16px;
+  box-shadow: 0 2px 6px #00000080;
+  z-index: 100;
+  transition: transform 0.3s ease;
+}
+.app-bar button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 22px;
+  margin-right: 12px;
+  cursor: pointer;
+}
+.app-bar .title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent);
+}
 
-    .plan-btn.selected {
-      background: #00faff;
-      color: #000;
-    }
+/* ================= CONTAINER ================= */
+.container {
+  flex: 1;
+  padding: 20px;
+  animation: slideIn 0.3s ease forwards;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
-    .custom-amount input {
-      padding: 10px;
-      width: 200px;
-      border-radius: 8px;
-      border: 1px solid #00faff88;
-      background: #222;
-      color: #fff;
-      margin-top: 10px;
-    }
+h2 {
+  color: var(--accent);
+  font-size: 28px;
+  margin-bottom: 20px;
+}
 
-    .pay-btn {
-      margin-top: 30px;
-      padding: 14px 35px;
-      font-size: 16px;
-      border: none;
-      border-radius: 30px;
-      background: linear-gradient(90deg, #00faff, #00c6ff);
-      color: #000;
-      cursor: pointer;
-    }
-  </style>
+.plans {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.plan-btn {
+  padding: 12px 20px;
+  margin: 5px;
+  border: 2px solid var(--accent);
+  border-radius: 25px;
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.plan-btn.selected {
+  background: var(--accent);
+  color: #000;
+}
+
+.custom-amount {
+  margin-top: 20px;
+}
+
+.custom-amount input {
+  padding: 10px;
+  width: 200px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,255,255,0.5);
+  background: #222;
+  color: #fff;
+  margin-top: 10px;
+}
+
+.pay-btn {
+  margin-top: 30px;
+  padding: 14px 35px;
+  font-size: 16px;
+  border: none;
+  border-radius: 30px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+  color: #000;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.pay-btn:hover {
+  opacity: 0.85;
+}
+
+/* ================= ANIMATIONS ================= */
+@keyframes slideIn {
+  0% { transform: translateX(100%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOut {
+  0% { transform: translateX(0); opacity: 1; }
+  100% { transform: translateX(100%); opacity: 0; }
+}
+</style>
 </head>
 <body>
 
+<!-- SWIPE BACK EDGE -->
+<div class="swipe-area"></div>
+
+<!-- APP BAR -->
+<div class="app-bar">
+  <button onclick="goBack()">←</button>
+  <div class="title">Deposit</div>
+</div>
+
+<!-- MAIN CONTAINER -->
+<div class="container" id="depositCard">
   <h2>💰 Deposit to Wallet</h2>
 
   <div class="plans">
@@ -76,25 +166,25 @@
   </div>
 
   <button class="pay-btn" onclick="proceedToPayment()">Proceed to Payment</button>
+</div>
 
-  <script>
-    let selectedAmount = 0;
-    const API_URL = "https://battlepurse-99.onrender.com/api/wallet"; // change if needed
-    const token = localStorage.getItem("token");
+<script>
+let selectedAmount = 0;
+const API_URL = "https://battlepurse-88.onrender.com/api/wallet";
+const token = localStorage.getItem("token");
 
-    function selectAmount(amount) {
-      selectedAmount = amount;
-      document.querySelectorAll('.plan-btn').forEach(btn => btn.classList.remove('selected'));
-      event.target.classList.add('selected');
-      document.getElementById("customAmount").value = "";
-    }
+function selectAmount(amount) {
+  selectedAmount = amount;
+  document.querySelectorAll('.plan-btn').forEach(btn => btn.classList.remove('selected'));
+  event.target.classList.add('selected');
+  document.getElementById("customAmount").value = "";
+}
 
-    async function proceedToPayment() {
+async function proceedToPayment() {
   const customInput = document.getElementById("customAmount").value;
   const custom = parseInt(customInput);
-  const isUsingCustom = customInput !== "";
 
-  if (isUsingCustom) {
+  if (customInput !== "") {
     if (isNaN(custom) || custom < 300) {
       alert("❗ Custom amount must be ₹300 or more.");
       return;
@@ -103,7 +193,7 @@
   }
 
   if (!selectedAmount || selectedAmount < 300) {
-    alert("❗ Please select a valid plan (₹300 or above) or enter a valid custom amount.");
+    alert("❗ Please select a valid plan or enter a custom amount of ₹300+.");
     return;
   }
 
@@ -129,14 +219,32 @@
     } else {
       alert(data.msg || "❌ Deposit failed");
     }
-
   } catch (err) {
     console.error(err);
     alert("❌ Server error. Please try again.");
   }
 }
 
-  </script>
+/* ================= BACK LOGIC ================= */
+function goBack() {
+  document.getElementById("depositCard").style.animation = "slideOut 0.3s forwards";
+  setTimeout(() => {
+    if (document.referrer && document.referrer !== location.href) {
+      history.back();
+    } else {
+      location.href = "gamezone.html";
+    }
+  }, 300);
+}
+
+/* ================= SWIPE BACK ================= */
+let startX = 0;
+document.addEventListener("touchstart", e => { startX = e.touches[0].clientX; });
+document.addEventListener("touchend", e => {
+  const endX = e.changedTouches[0].clientX;
+  if (startX < 40 && endX - startX > 90) { goBack(); }
+});
+</script>
 
 </body>
 </html>

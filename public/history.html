@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Match History</title>
 
 <style>
@@ -22,32 +22,48 @@ body{
   font-family:Poppins,system-ui,sans-serif;
   background:var(--bg);
   color:#fff;
+  padding-bottom:70px;
 }
 
-/* ================= HEADER ================= */
-header{
-  position:sticky;
+/* ================= APP BAR ================= */
+.app-bar{
+  position: sticky;
   top:0;
-  z-index:20;
+  z-index:100;
+  display:flex;
+  align-items:center;
+  height:56px;
   background:var(--card);
-  padding:14px;
-  text-align:center;
+  padding:0 14px;
+  box-shadow:0 2px 6px #00000080;
+}
+
+.app-bar button{
+  background:none;
+  border:none;
+  color:var(--accent);
+  font-size:22px;
+  margin-right:12px;
+  cursor:pointer;
+}
+
+.app-title{
   font-size:18px;
   font-weight:600;
-  border-bottom:1px solid var(--line);
+  color:var(--accent);
 }
 
 /* ================= FILTERS ================= */
 .filters{
-  position:sticky;
-  top:52px;
-  z-index:15;
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
   gap:10px;
   padding:10px;
   background:#161616;
   border-bottom:1px solid var(--line);
+  position: sticky;
+  top:56px;
+  z-index:90;
 }
 
 .filters select,
@@ -135,9 +151,18 @@ footer{
 
 .nav-btn.active{color:var(--accent)}
 
+/* ================= SWIPE AREA ================= */
+.swipe-area{
+  position:fixed;
+  left:0;
+  top:0;
+  bottom:0;
+  width:24px;
+  z-index:50;
+}
+
 /* ================= DESKTOP ================= */
 @media(min-width:900px){
-  header{font-size:20px}
   th,td{font-size:14px}
   .filters{grid-template-columns:repeat(5,1fr)}
 }
@@ -146,8 +171,16 @@ footer{
 
 <body>
 
-<header>📜 Match History</header>
+<!-- SWIPE BACK EDGE -->
+<div class="swipe-area"></div>
 
+<!-- APP BAR -->
+<div class="app-bar">
+  <button onclick="goBack()">←</button>
+  <div class="app-title">📜 Match History</div>
+</div>
+
+<!-- FILTERS -->
 <div class="filters">
   <select id="gameFilter">
     <option value="">All Games</option>
@@ -168,6 +201,7 @@ footer{
   </select>
 </div>
 
+<!-- TABLE -->
 <div class="history-wrap">
 <table>
 <thead>
@@ -185,11 +219,13 @@ footer{
 </table>
 </div>
 
+<!-- PAGINATION -->
 <div class="pagination">
   <button class="page-btn" onclick="prevPage()">Previous</button>
   <button class="page-btn" onclick="nextPage()">Next</button>
 </div>
 
+<!-- FOOTER NAV -->
 <footer>
   <div class="nav-btn" onclick="location.href='gamezone.html'"><i>🎮</i>Game</div>
   <div class="nav-btn active"><i>📜</i>History</div>
@@ -199,6 +235,24 @@ footer{
 </footer>
 
 <script>
+/* ================== BACK LOGIC ================== */
+function goBack(){
+  if(document.referrer && document.referrer !== location.href){
+    history.back();
+  } else {
+    location.href = "gamezone.html"; // fallback
+  }
+}
+
+/* ================== SWIPE BACK ================== */
+let startX = 0;
+document.addEventListener("touchstart", e=>{ startX = e.touches[0].clientX });
+document.addEventListener("touchend", e=>{
+  const endX = e.changedTouches[0].clientX;
+  if(startX < 40 && endX - startX > 90) goBack();
+});
+
+/* ================== MATCH HISTORY LOGIC ================== */
 const tableBody = document.getElementById("matchHistory");
 const gameFilter = document.getElementById("gameFilter");
 const resultFilter = document.getElementById("resultFilter");
@@ -214,7 +268,7 @@ async function loadHistory(){
   try{
     const token = localStorage.getItem("token");
     const res = await fetch(
-      "https://battlepurse-28.onrender.com/api/wallet/history",
+      "https://battlepurse-88.onrender.com/api/wallet/history",
       { headers:{ Authorization:"Bearer " + token } }
     );
 
@@ -243,14 +297,9 @@ function renderTable(rows){
   }
 
   rows.forEach(i=>{
-    const date = new Date(
-      i.createdAt || i.date || i.declaredAt
-    ).toLocaleDateString();
-
+    const date = new Date(i.createdAt || i.date || i.declaredAt).toLocaleDateString();
     const cls = i.result === "win" ? "win" : "loss";
-    const resultText =
-      i.result === "win" && i.position ? "#" + i.position : i.result;
-
+    const resultText = i.result === "win" && i.position ? "#" + i.position : i.result;
     tableBody.innerHTML += `
       <tr>
         <td>${i.matchNumber || i.tournamentName || "-"}</td>
@@ -258,8 +307,7 @@ function renderTable(rows){
         <td>${date}</td>
         <td class="${cls}">${resultText}</td>
         <td>₹${i.prize || 0}</td>
-      </tr>
-    `;
+      </tr>`;
   });
 }
 
@@ -289,8 +337,7 @@ function nextPage(){
     renderPage(currentPage + 1);
 }
 
-[gameFilter, resultFilter, fromDate, toDate]
-  .forEach(el => el.addEventListener("change", applyFilters));
+[gameFilter,resultFilter,fromDate,toDate].forEach(el=>el.addEventListener("change",applyFilters));
 
 loadHistory();
 </script>

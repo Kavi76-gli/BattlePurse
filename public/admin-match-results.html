@@ -53,7 +53,7 @@ th{color:var(--accent)}
 
 <script>
 /* ========== CONFIG ========== */
-const API_BASE = "https://battlepurse-99.onrender.com/api/wallet"; // adjust to your API
+const API_BASE = "https://battlepurse-88.onrender.com/api/wallet"; // adjust to your API
 const token = localStorage.getItem("token") || "";   // ensure admin token is stored here
 
 /* ========== HELPERS ========== */
@@ -302,6 +302,55 @@ async function deleteMatch(matchId) {
 
 /* ========== INIT ========== */
 loadMatches();
+
+
+/* ⬅ BACK LOGIC (ANDROID STYLE) */
+function goBack(){
+  if(document.referrer && document.referrer !== location.href){
+    history.back();
+  }else{
+    location.href = "gamezone.html";
+  }
+}
+
+/* 👆 SWIPE BACK */
+let startX = 0;
+let startY = 0;
+const arrow = document.querySelector(".swipe-arrow");
+
+document.addEventListener("touchstart", e=>{
+  const t = e.touches[0];
+  if(t.clientX < 30){
+    startX = t.clientX;
+    startY = t.clientY;
+    arrow.style.opacity = "1";
+  }
+});
+
+document.addEventListener("touchmove", e=>{
+  if(!startX) return;
+  const dx = e.touches[0].clientX - startX;
+  if(dx > 0){
+    arrow.style.left = Math.min(dx - 20, 64) + "px";
+  }
+});
+
+document.addEventListener("touchend", e=>{
+  if(!startX) return;
+
+  const dx = e.changedTouches[0].clientX - startX;
+  const dy = Math.abs(e.changedTouches[0].clientY - startY);
+
+  arrow.style.left = "-48px";
+  arrow.style.opacity = "0";
+
+  if(startX < 30 && dx > 90 && dy < 70){
+    goBack();
+  }
+  startX = 0;
+});
+
+
 </script>
 </body>
 </html>

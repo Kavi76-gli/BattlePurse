@@ -1,167 +1,262 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Admin - Registered Users</title>
-  <style>
-    body {
-      font-family: 'Poppins', sans-serif;
-      background-color: #121212;
-      color: #fff;
-      padding: 20px;
-    }
-    h1 {
-      text-align: center;
-      color: #00faff;
-    }
-    input[type="text"] {
-      width: 300px;
-      padding: 10px;
-      border-radius: 10px;
-      border: none;
-      margin-bottom: 20px;
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
-      background: #1e1e1e;
-      color: #fff;
-      box-shadow: inset 0 0 6px #00faff44;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background-color: #1e1e1e;
-      margin-top: 20px;
-      box-shadow: 0 0 10px #00faff33;
-    }
-    th, td {
-      padding: 12px;
-      text-align: center;
-      border-bottom: 1px solid #333;
-    }
-    th {
-      background-color: #00faff22;
-    }
-    button {
-      padding: 6px 12px;
-      border: none;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-      margin: 2px;
-    }
-    .ban { background: #ff4d4d; color: #fff; }
-    .unban { background: #4caf50; color: #fff; }
-    .view { background: #00faff; color: #000; }
-    .reset { background: orange; color: #000; }
-  </style>
+<meta charset="UTF-8">
+<title>Admin – Users</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+* {
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #0b0f14;
+  color: #fff;
+}
+
+/* ================= APP BAR ================= */
+.app-bar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  height: 56px;
+  background: linear-gradient(135deg, #00eaff, #0066ff);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  z-index: 1000;
+}
+
+.app-bar button {
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: #000;
+  cursor: pointer;
+}
+
+.app-bar h2 {
+  flex: 1;
+  text-align: center;
+  font-size: 18px;
+  margin: 0;
+  color: #000;
+  font-weight: 600;
+}
+
+/* ================= SEARCH ================= */
+.search-box {
+  margin-top: 70px;
+  padding: 12px;
+  position: sticky;
+  top: 56px;
+  background: #0b0f14;
+  z-index: 999;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  background: #141a22;
+  color: #fff;
+  font-size: 15px;
+  box-shadow: inset 0 0 10px rgba(0,234,255,0.15);
+}
+
+/* ================= USER LIST ================= */
+.user-list {
+  padding: 12px;
+}
+
+.user-card {
+  background: linear-gradient(145deg, #121821, #0d121a);
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+}
+
+.user-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.phone {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+}
+
+.badge.admin { background: #ffd700; color: #000; }
+.badge.user { background: #00eaff; color: #000; }
+
+.status {
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.status.active { color: #4ade80; }
+.status.banned { color: #ff5c5c; }
+
+/* ================= ACTIONS ================= */
+.actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.actions button {
+  padding: 10px;
+  border-radius: 12px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ban { background: #ff4d4d; color: #fff; }
+.unban { background: #4ade80; color: #000; }
+.view { background: #00eaff; color: #000; }
+.reset { background: #ffa500; color: #000; }
+
+/* ================= TOUCH FEEL ================= */
+.actions button:active {
+  transform: scale(0.95);
+}
+
+/* ================= SWIPE AREA ================= */
+.swipe-area {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 30px;
+  height: 100%;
+  z-index: 2000;
+}
+</style>
 </head>
+
 <body>
 
-<h1>👥 Registered Users</h1>
+<!-- APP BAR -->
+<div class="app-bar">
+  <button onclick="goBack()">←</button>
+  <h2>Registered Users</h2>
+</div>
 
-<input type="text" id="search" placeholder="Search by phone..." oninput="filterUsers()" />
+<!-- SEARCH -->
+<div class="search-box">
+  <input type="text" id="search" placeholder="Search by phone..." oninput="filterUsers()">
+</div>
 
-<table id="usersTable">
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>Phone</th>
-      <th>Role</th>
-      <th>Status</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
+<!-- USER LIST -->
+<div class="user-list" id="userList"></div>
+
+<!-- SWIPE EDGE -->
+<div class="swipe-area"></div>
 
 <script>
-  const token = localStorage.getItem("token");
-  let allUsers = [];
+const token = localStorage.getItem("token");
+let allUsers = [];
 
-  async function loadUsers() {
-    try {
-      const res = await fetch("https://battlepurse-99.onrender.com/api/wallet/admin/users", {
-        headers: { Authorization: "Bearer " + token }
-      });
-      const data = await res.json();
-      allUsers = data.users;
-      displayUsers(data.users);
-    } catch (err) {
-      console.error("Failed to fetch users", err);
-      alert("❌ Error fetching users");
-    }
-  }
+/* LOAD USERS */
+async function loadUsers() {
+  const res = await fetch("https://battlepurse-88.onrender.com/api/wallet/admin/users", {
+    headers: { Authorization: "Bearer " + token }
+  });
+  const data = await res.json();
+  allUsers = data.users;
+  renderUsers(allUsers);
+}
 
-  function displayUsers(users) {
-    const tableBody = document.querySelector("#usersTable tbody");
-    tableBody.innerHTML = users.map((user, index) => `
-      <tr>
-        <td>${index + 1}</td>
-        <td>${user.phone}</td>
-        <td>${user.isAdmin ? 'Admin' : 'User'}</td>
-        <td>${user.banned ? 'Banned' : 'Active'}</td>
-        <td>
-          <button class="${user.banned ? 'unban' : 'ban'}" onclick="toggleBan('${user._id}', ${user.banned})">
-            ${user.banned ? 'Unban' : 'Ban'}
-          </button>
-          <button class="view" onclick="viewProfile('${user._id}')">View</button>
-          <button class="reset" onclick="resetPassword('${user._id}')">Reset PW</button>
-        </td>
-      </tr>
-    `).join('');
-  }
+/* RENDER */
+function renderUsers(users) {
+  const list = document.getElementById("userList");
+  list.innerHTML = users.map(u => `
+    <div class="user-card">
+      <div class="user-top">
+        <div class="phone">${u.phone}</div>
+        <span class="badge ${u.isAdmin ? 'admin' : 'user'}">
+          ${u.isAdmin ? 'ADMIN' : 'USER'}
+        </span>
+      </div>
 
-  function filterUsers() {
-    const search = document.getElementById("search").value.trim();
-    const filtered = allUsers.filter(user =>
-      user.phone.includes(search)
-    );
-    displayUsers(filtered);
-  }
+      <div class="status ${u.banned ? 'banned' : 'active'}">
+        ${u.banned ? 'BANNED' : 'ACTIVE'}
+      </div>
 
-  async function toggleBan(userId, isBanned) {
-    const endpoint = isBanned ? 'unban' : 'ban';
-    try {
-      const res = await fetch(`https://battlepurse-99.onrender.com/api/wallet/admin/${endpoint}/${userId}`, {
-        method: "PUT",
-        headers: { Authorization: "Bearer " + token }
-      });
-      const data = await res.json();
-      alert(data.msg);
-      loadUsers();
-    } catch (err) {
-      console.error(err);
-      alert("❌ Failed to update ban status");
-    }
-  }
+      <div class="actions">
+        <button class="${u.banned ? 'unban' : 'ban'}"
+          onclick="toggleBan('${u._id}', ${u.banned})">
+          ${u.banned ? 'UNBAN' : 'BAN'}
+        </button>
+        <button class="view" onclick="viewProfile('${u._id}')">VIEW</button>
+        <button class="reset" onclick="resetPassword('${u._id}')">RESET</button>
+      </div>
+    </div>
+  `).join('');
+}
 
-  function viewProfile(userId) {
-    window.location.href = `user-profile.html?userId=${userId}`;
-  }
+/* SEARCH */
+function filterUsers() {
+  const q = search.value.trim();
+  renderUsers(allUsers.filter(u => u.phone.includes(q)));
+}
 
-  async function resetPassword(userId) {
-    const newPass = prompt("Enter new password (min 4 chars):");
-    if (!newPass || newPass.length < 4) return alert("❌ Password too short");
+/* ACTIONS */
+async function toggleBan(id, banned) {
+  const ep = banned ? 'unban' : 'ban';
+  await fetch(`https://battlepurse-88.onrender.com/api/wallet/admin/${ep}/${id}`, {
+    method: "PUT",
+    headers: { Authorization: "Bearer " + token }
+  });
+  loadUsers();
+}
 
-    try {
-      const res = await fetch(`https://battlepurse-99.onrender.com/api/wallet/admin/reset-password/${userId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token
-        },
-        body: JSON.stringify({ newPassword: newPass })
-      });
-      const data = await res.json();
-      alert(data.msg);
-    } catch (err) {
-      console.error(err);
-      alert("❌ Failed to reset password");
-    }
-  }
+function viewProfile(id) {
+  location.href = `user-profile.html?userId=${id}`;
+}
 
-  window.onload = loadUsers;
+async function resetPassword(id) {
+  const p = prompt("Enter new password");
+  if (!p || p.length < 4) return alert("Min 4 chars");
+  await fetch(`https://battlepurse-88.onrender.com/api/wallet/admin/reset-password/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token
+    },
+    body: JSON.stringify({ newPassword: p })
+  });
+  alert("Password Reset");
+}
+
+/* ANDROID BACK */
+function goBack() {
+  history.length > 1 ? history.back() : location.href = "gamezone.html";
+}
+
+/* SWIPE BACK */
+let startX = 0;
+document.addEventListener("touchstart", e => startX = e.touches[0].clientX);
+document.addEventListener("touchend", e => {
+  if (startX < 40 && e.changedTouches[0].clientX - startX > 90) goBack();
+});
+
+window.onload = loadUsers;
 </script>
 
 </body>

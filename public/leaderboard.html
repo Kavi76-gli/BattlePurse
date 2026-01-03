@@ -5,21 +5,57 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Leaderboard</title>
 
+
 <style>
-/* =====================
-   GLOBAL
-===================== */
-body {
-  background: #111;
-  color: #fff;
-  font-family: Arial, sans-serif;
-  margin: 0;
-  min-height: 100vh;
+:root {
+  --primary: #00eaff;
+  --bg: #111;
+  --card: #1a1a1a;
+  --text-light: #fff;
 }
 
-/* =====================
-   APP LOGO
-===================== */
+* {
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text-light);
+  padding-bottom: 70px;
+}
+
+/* 🔝 APP BAR */
+.app-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: 56px;
+  background: var(--card);
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  box-shadow: 0 3px 8px #00000080;
+}
+
+.app-bar button {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 22px;
+  margin-right: 12px;
+  cursor: pointer;
+}
+
+.app-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/* APP LOGO */
 .app-header {
   position: fixed;
   top: 12px;
@@ -29,46 +65,40 @@ body {
 
 .app-header img {
   height: 42px;
-  filter: drop-shadow(0 0 6px #00eaff);
+  filter: drop-shadow(0 0 6px var(--primary));
 }
 
-/* =====================
-   TITLE
-===================== */
+/* TITLE */
 h1 {
-  color: #00eaff;
+  color: var(--primary);
   text-align: center;
-  margin: 18px 0 10px;
+  margin: 72px 0 12px; /* leave space for app bar */
   font-size: 1.8rem;
 }
 
-/* =====================
-   FILTERS
-===================== */
+/* FILTERS */
 .filters {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
   gap: 10px;
-  padding: 0 10px;
+  padding: 0 10px 10px;
 }
 
 select, input {
   padding: 8px 10px;
   border-radius: 6px;
-  border: 1px solid #00eaff;
-  background: #1a1a1a;
-  color: #00eaff;
+  border: 1px solid var(--primary);
+  background: var(--card);
+  color: var(--primary);
   font-size: 0.9rem;
 }
 
-/* =====================
-   TABLE
-===================== */
+/* TABLE */
 .table-container {
   max-width: 1000px;
-  margin: 15px auto 80px;
-  background: #1a1a1a;
+  margin: 0 auto 80px;
+  background: var(--card);
   padding: 12px;
   border-radius: 10px;
   overflow-x: auto;
@@ -88,7 +118,7 @@ th, td {
 }
 
 th {
-  color: #00eaff;
+  color: var(--primary);
 }
 
 .rank { font-weight: bold; }
@@ -106,16 +136,14 @@ th {
   color: #ff4444;
 }
 
-/* =====================
-   BOTTOM NAV
-===================== */
+/* BOTTOM NAV */
 .bottom-nav {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   height: 60px;
-  background: #1a1a1a;
+  background: var(--card);
   display: flex;
   border-top: 1px solid #333;
 }
@@ -134,25 +162,38 @@ th {
 }
 
 .nav-btn.active {
-  color: #00eaff;
+  color: var(--primary);
 }
 
-/* =====================
-   MOBILE TWEAKS
-===================== */
+/* SWIPE BACK EDGE */
+.swipe-area {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  z-index: 50;
+}
+
+/* MOBILE TWEAKS */
 @media (max-width: 480px) {
   h1 { font-size: 1.5rem; }
   .app-header img { height: 34px; }
 }
 </style>
 </head>
-
 <body>
 
-<!-- APP LOGO -->
-<div class="app-header">
-  <img src="file_00000000c938722f8d26b428d0c8069c.png" >
+<!-- Swipe-back edge -->
+<div class="swipe-area"></div>
+
+<!-- APP BAR -->
+<div class="app-bar">
+  <button onclick="goBack()">←</button>
+  <div class="app-title">Leaderboard</div>
 </div>
+
+
 
 <h1>🏆 Leaderboard</h1>
 
@@ -205,6 +246,24 @@ const leaderboardBody = document.getElementById("leaderboardBody");
 const gameFilter = document.getElementById("gameFilter");
 const dateFilter = document.getElementById("dateFilter");
 
+// ANDROID-STYLE BACK
+function goBack() {
+  if (document.referrer && document.referrer !== location.href) {
+    history.back();
+  } else {
+    location.href = "gamezone.html";
+  }
+}
+
+// SWIPE BACK
+let startX = 0;
+document.addEventListener("touchstart", e => startX = e.touches[0].clientX);
+document.addEventListener("touchend", e => {
+  const endX = e.changedTouches[0].clientX;
+  if (startX < 40 && endX - startX > 90) goBack();
+});
+
+
 if (!token) {
   leaderboardBody.innerHTML = "<tr><td colspan='6'>Please login first.</td></tr>";
 } else {
@@ -221,7 +280,7 @@ async function loadLeaderboard() {
     if (dateFilter.value) params.append("date", dateFilter.value);
 
     const res = await fetch(
-      `https://battlepurse-99.onrender.com/api/wallet/leaderboard?${params}`,
+      `https://battlepurse-88.onrender.com/api/wallet/leaderboard?${params}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
 

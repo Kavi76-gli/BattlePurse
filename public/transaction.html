@@ -3,174 +3,200 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Transactions</title>
+<title>Transaction History</title>
 
 <style>
-  body {
-    margin: 0;
-    padding: 0;
-    background: #111;
-    font-family: "Poppins", sans-serif;
-    color: #fff;
-  }
+:root {
+  --bg: #111;
+  --card: #1c1c1c;
+  --accent: #00faff;
+  --success: #00ff99;
+  --error: #ff4444;
+}
 
-  .header {
-    padding: 15px;
-    font-size: 20px;
-    font-weight: 600;
-    background: #1a1a1a;
-    text-align: center;
-    border-bottom: 1px solid #222;
-  }
+body {
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  background: var(--bg);
+  color: #fff;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
 
-  .balance-box {
-    margin: 15px;
-    padding: 15px;
-    background: #1c1c1c;
-    border-radius: 10px;
-    text-align: center;
-    box-shadow: 0 0 8px #00000055;
-  }
+.swipe-area { position: fixed; left:0; top:0; bottom:0; width:24px; z-index:50; touch-action: pan-y; }
 
-  .balance-value {
-    font-size: 28px;
-    font-weight: 700;
-    margin-top: 8px;
-  }
+.app-bar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  height: 56px;
+  background: var(--card);
+  padding: 0 16px;
+  box-shadow: 0 2px 6px #00000080;
+  z-index: 100;
+}
+.app-bar button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 22px;
+  margin-right: 12px;
+  cursor: pointer;
+}
+.app-bar .title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent);
+}
 
-  .transactions-container {
-    padding: 15px;
-  }
+#transactionCard {
+  flex: 1;
+  max-width: 450px;
+  margin: 10px auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.3s ease forwards;
+}
 
-  .transaction {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #1b1b1b;
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 12px;
-    box-shadow: 0 0 6px #00000040;
-  }
+.balance-box {
+  margin-bottom: 15px;
+  padding: 15px;
+  background: var(--card);
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 0 12px #00000044;
+}
+.balance-value { font-size:28px; font-weight:700; margin-top:8px; }
 
-  .info .title {
-    font-size: 15px;
-    font-weight: 600;
-  }
+.transactions-container { display:flex; flex-direction: column; gap: 10px; }
 
-  .info .date {
-    font-size: 12px;
-    opacity: 0.7;
-  }
+.transaction {
+  display:flex; justify-content:space-between; align-items:center;
+  background:#1b1b1b; padding:12px; border-radius:10px; box-shadow:0 0 6px #00000044;
+  transition: transform 0.2s ease;
+}
+.transaction:hover { transform: translateX(2px); }
 
-  .amount {
-    font-size: 16px;
-    font-weight: 700;
-  }
+.info .title { font-size:15px; font-weight:600; }
+.info .date { font-size:12px; opacity:0.7; }
+.amount { font-size:16px; font-weight:700; }
 
-  .no-records {
-    text-align: center;
-    margin-top: 40px;
-    opacity: 0.7;
-    font-size: 15px;
-  }
+.no-records { text-align:center; margin-top:40px; opacity:0.7; font-size:15px; }
+
+@keyframes slideIn { 0%{ transform:translateX(100%); opacity:0; } 100%{ transform:translateX(0); opacity:1; } }
+@keyframes slideOut { 0%{ transform:translateX(0); opacity:1; } 100%{ transform:translateX(100%); opacity:0; } }
+
 </style>
 </head>
-
 <body>
 
-<div class="header">Transaction History</div>
+<div class="swipe-area"></div>
 
-<div class="balance-box">
-  <div>Wallet Balance</div>
-  <div class="balance-value" id="balance">₹0</div>
+<div class="app-bar">
+  <button onclick="goBack()">←</button>
+  <div class="title">Transaction History</div>
 </div>
 
-<div class="transactions-container" id="transactions"></div>
+<div id="transactionCard">
+  <div class="balance-box">
+    <div>Wallet Balance</div>
+    <div class="balance-value" id="balance">₹0</div>
+  </div>
 
-<div class="no-records" id="emptyMsg" style="display:none;">No transactions found</div>
+  <div class="transactions-container" id="transactions"></div>
+  <div class="no-records" id="emptyMsg" style="display:none;">No transactions found</div>
+</div>
 
 <script>
-  async function loadTransactions() {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("Login required!");
-        return;
-      }
+async function loadTransactions() {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) { alert("Login required!"); return; }
 
-      const res = await fetch("https://battlepurse-99.onrender.com/api/wallet/transactions", {
-        headers: {
-          "Authorization": "Bearer " + token
-        }
-      });
+    const res = await fetch("https://battlepurse-88.onrender.com/api/wallet/transactions", {
+      headers: { "Authorization": "Bearer " + token }
+    });
 
-      const data = await res.json();
+    const data = await res.json();
 
-      if (!data.success) {
-        document.getElementById("emptyMsg").style.display = "block";
-        return;
-      }
+    const container = document.getElementById("transactions");
+    container.innerHTML = "";
 
-      // Set balance
-      document.getElementById("balance").innerHTML = "₹" + data.balance;
+    document.getElementById("balance").innerText = "₹" + (data.balance || 0);
 
-      const container = document.getElementById("transactions");
-      container.innerHTML = "";
-
-   data.transactions.forEach(txn => {
-  const amount = txn.amount;
-  const type = txn.type;
-  const date = new Date(txn.createdAt).toLocaleString();
-
-  // ⭐ Title mapping
-  let title = "";
-  if (type === "deposit") title = "Deposit";
-  else if (type === "withdrawal") title = "Withdrawal";
-  else if (type === "tournament") title = "Tournament Joined";
-  else if (type === "MATCH_REWARD") title = "Match Reward";
-  else if (type === "winning") title = "Tournament Award";
-  else if (type === "refund") title = "Refund";
-  else title = type;
-
-  // ⭐ Strict sign/color rules
-  let sign = "+";
-  let color = "#00ff99"; // green default
-
-  if (type === "withdrawal" || type === "debit" || type === "tournament") {
-    sign = "-";
-    color = "#ff4444"; // red
-  }
-
-  // Deposit / Winning / Reward / Refund = green
-  if (type === "deposit" || type === "winning" || type === "MATCH_REWARD" || type === "refund") {
-    sign = "+";
-    color = "#00ff99"; 
-  }
-
-  // Create UI
-  const div = document.createElement("div");
-  div.className = "transaction";
-
-  div.innerHTML = `
-    <div class="info">
-      <div class="title">${title}</div>
-      <div class="date">${date}</div>
-    </div>
-    <div class="amount" style="color:${color}">
-      ${sign} ₹${amount}
-    </div>
-  `;
-
-  container.appendChild(div);
-});
-
-    } catch (err) {
-      console.error("Error loading transactions:", err);
+    if (!data.success || !data.transactions.length) {
+      document.getElementById("emptyMsg").style.display = "block";
+      return;
     }
-  }
 
-  loadTransactions();
+    data.transactions.forEach(txn => {
+      const amount = txn.amount;
+      const type = txn.type;
+      const date = new Date(txn.createdAt).toLocaleString();
+
+      // Map type to title
+      let title = "";
+      if (type === "deposit") title = "Deposit";
+      else if (type === "withdrawal") title = "Withdrawal";
+      else if (type === "tournament") title = "Tournament Joined";
+      else if (type === "MATCH_REWARD") title = "Match Reward";
+      else if (type === "winning") title = "Tournament Award";
+      else if (type === "refund") title = "Refund";
+      else title = type;
+
+      // Strict + / - and color logic
+      let sign = "+";
+      let color = "#00ff99"; // green default
+
+      if (type === "withdrawal" || type === "debit" || type === "tournament") {
+        sign = "-";
+        color = "#ff4444"; // red
+      }
+
+      if (type === "deposit" || type === "winning" || type === "MATCH_REWARD" || type === "refund") {
+        sign = "+";
+        color = "#00ff99"; 
+      }
+
+      const div = document.createElement("div");
+      div.className = "transaction";
+      div.innerHTML = `
+        <div class="info">
+          <div class="title">${title}</div>
+          <div class="date">${date}</div>
+        </div>
+        <div class="amount" style="color:${color}">${sign} ₹${amount}</div>
+      `;
+      container.appendChild(div);
+    });
+  } catch(err) {
+    console.error("Error loading transactions:", err);
+  }
+}
+
+window.onload = loadTransactions;
+
+// BACK LOGIC
+function goBack() {
+  const card = document.getElementById("transactionCard");
+  card.style.animation = "slideOut 0.3s forwards";
+  setTimeout(() => {
+    if (document.referrer && document.referrer !== location.href) history.back();
+    else location.href = "gamezone.html";
+  }, 300);
+}
+
+// SWIPE BACK
+let startX = 0;
+document.addEventListener("touchstart", e => startX = e.touches[0].clientX);
+document.addEventListener("touchend", e => {
+  const endX = e.changedTouches[0].clientX;
+  if (startX < 40 && endX - startX > 90) goBack();
+});
 </script>
 
 </body>

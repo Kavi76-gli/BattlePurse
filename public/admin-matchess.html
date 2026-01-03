@@ -29,10 +29,97 @@
   input[type="checkbox"] { transform:scale(1.15); }
   .small { font-size:12px; color:#aaa; margin-left:8px; }
   @media (max-width:780px){ .player-row { flex-direction:column; gap:6px; } }
+
+  /* ===== ANDROID APP BAR ===== */
+.app-bar{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:54px;
+  background:#0f172a;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:0 14px;
+  z-index:1000;
+  box-shadow:0 2px 12px rgba(0,0,0,.6);
+}
+
+.back-btn{
+  background:none;
+  border:none;
+  color:#00faff;
+  font-size:26px;
+  cursor:pointer;
+  padding:4px 10px;
+}
+
+.app-title{
+  font-size:16px;
+  font-weight:600;
+  color:#fff;
+}
+
+/* push page below app bar */
+body{
+  padding-top:70px;
+}
+
+/* ===== SWIPE EDGE ===== */
+.swipe-area{
+  position:fixed;
+  left:0;
+  top:0;
+  width:26px;
+  height:100%;
+  z-index:999;
+}
+
+/* swipe arrow feedback */
+.swipe-arrow{
+  position:fixed;
+  left:-44px;
+  top:50%;
+  transform:translateY(-50%);
+  width:38px;
+  height:38px;
+  background:rgba(0,0,0,.75);
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  color:#fff;
+  box-shadow:0 0 16px rgba(0,250,255,.7);
+  opacity:0;
+  transition:all .18s ease;
+  z-index:1001;
+  pointer-events:none;
+}
+
+/* mobile only */
+@media (min-width:900px){
+  .app-bar, .swipe-area, .swipe-arrow{ display:none; }
+}
+
 </style>
 </head>
 <body>
-  <h1>⚙ Admin — Quick Match Control</h1>
+<!-- ANDROID APP BAR -->
+<div class="app-bar">
+  <button class="back-btn" onclick="goBack()">←</button>
+  <span class="app-title">⚙ Admin — Quick Match Control</span>
+</div>
+
+<!-- Swipe-back edge -->
+<div class="swipe-area"></div>
+
+<!-- Swipe arrow indicator -->
+<div class="swipe-arrow">←</div>
+
+
+  
 
   <div class="tabs">
     <button class="tab active" data-route="joined">All Joined</button>
@@ -58,8 +145,8 @@
 
 <script>
 /* ---------- CONFIG ---------- */
-const API_BASE = 'https://battlepurse-28.onrender.com/api/wallet';
-const adminToken = localStorage.getItem('adminToken') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NWQ3MjNkYmE3YjJmY2Q2NDhlZWViYyIsInBob25lIjoiNzQxMjg1MDM1MyIsImlzQWRtaW4iOnRydWUsImlhdCI6MTc2NDk1Mjg5MCwiZXhwIjoxNDM4Nzk5Mjg5MH0.jhmbmbR8Wn6k1ZBp1c4ZqYSBbFZzUNANhs5QNDy_XRo'; // IMPORTANT: set this in browser devtools or login flow
+const API_BASE = 'https://battlepurse-88.onrender.com/api/wallet';
+const adminToken = localStorage.getItem('adminToken') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NWQ3MjNkYmE3YjJmY2Q2NDhlZWViYyIsImlzQWRtaW4iOnRydWUsImlhdCI6MTc2NzM4MTYzNiwiZXhwIjoxNzk4OTE3NjM2fQ.jFr_yV7pVyfktzxAPPNs2BE7hVfpsa-xTLlOI5C1PcU'; // IMPORTANT: set this in browser devtools or login flow
 
 /* helper: fetch with admin auth header */
 async function fetchWithAuth(url, opts = {}) {
@@ -467,6 +554,55 @@ async function deleteSingleJoined(matchId, userId){
     renderForRoute(activeRoute);
   } catch (e) { console.error(e); alert('Error deleting joined member'); }
 }
+
+
+
+/* ⬅ BACK LOGIC (ANDROID STYLE) */
+function goBack(){
+  if(document.referrer && document.referrer !== location.href){
+    history.back();
+  }else{
+    location.href="gamezone.html"; // fallback
+  }
+}
+
+/* 👆 SWIPE BACK */
+let startX=0, startY=0;
+const arrow=document.querySelector('.swipe-arrow');
+
+document.addEventListener("touchstart", e=>{
+  const t=e.touches[0];
+  if(t.clientX < 30){
+    startX=t.clientX;
+    startY=t.clientY;
+    arrow.style.opacity="1";
+  }
+});
+
+document.addEventListener("touchmove", e=>{
+  if(!startX) return;
+  const dx=e.touches[0].clientX - startX;
+  if(dx>0){
+    arrow.style.left=Math.min(dx-18,50)+"px";
+  }
+});
+
+document.addEventListener("touchend", e=>{
+  if(!startX) return;
+
+  const dx=e.changedTouches[0].clientX - startX;
+  const dy=Math.abs(e.changedTouches[0].clientY - startY);
+
+  arrow.style.left="-44px";
+  arrow.style.opacity="0";
+
+  if(startX < 30 && dx > 90 && dy < 70){
+    goBack();
+  }
+  startX=0;
+});
+
+
 </script>
 </body>
 </html>

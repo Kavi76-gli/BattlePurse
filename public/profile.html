@@ -6,61 +6,98 @@
 <title>Profile</title>
 
 <style>
+:root {
+  --primary: #00faff;
+  --bg: #121212;
+  --card: #1c1c1c;
+}
+
 * {
   box-sizing: border-box;
   font-family: 'Poppins', sans-serif;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   margin: 0;
-  background: #121212;
+  background: var(--bg);
   color: #fff;
+  padding-bottom: 70px;
 }
 
+/* 🔝 APP BAR */
+.app-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: 56px;
+  background: #1a1a1a;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  box-shadow: 0 3px 8px #00000080;
+}
+
+.app-bar button {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 22px;
+  margin-right: 12px;
+  cursor: pointer;
+}
+
+.app-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/* 📦 CONTENT */
 .container {
   max-width: 480px;
-  margin: 20px auto 90px;
-  padding: 20px;
-  background: #1c1c1c;
-  border-radius: 16px;
-  box-shadow: 0 0 15px #00faff55;
+  margin: 14px auto;
+  padding: 18px;
+  background: var(--card);
+  border-radius: 18px;
+  box-shadow: 0 0 14px #00faff33;
 }
 
-/* Avatar */
+/* 👤 AVATAR */
 .avatar {
   width: 110px;
   height: 110px;
   border-radius: 50%;
-  display: block;
   margin: 10px auto;
-  border: 3px solid #00faff;
+  display: block;
+  border: 3px solid var(--primary);
   object-fit: cover;
 }
 
 .upload-btn {
   text-align: center;
-  margin-bottom: 15px;
+  margin-bottom: 14px;
 }
 
 .upload-btn input {
   font-size: 12px;
 }
 
-/* User Info */
+/* ℹ USER INFO */
 .user-info {
   text-align: center;
-  margin-bottom: 15px;
+  margin-bottom: 14px;
 }
 
 .user-info div {
-  margin: 5px 0;
   font-size: 14px;
+  margin: 5px 0;
 }
 
-/* Inputs */
+/* ✏ INPUTS */
 label {
-  margin-top: 14px;
   display: block;
+  margin-top: 14px;
   font-size: 13px;
   font-weight: 600;
 }
@@ -68,52 +105,52 @@ label {
 input {
   width: 100%;
   padding: 12px;
-  border-radius: 10px;
-  border: none;
-  background: #121212;
-  color: #fff;
   margin-top: 6px;
+  border-radius: 12px;
+  border: none;
+  background: #111;
+  color: #fff;
   box-shadow: inset 0 0 5px #00faff44;
 }
 
-/* Wallet */
+/* 💰 WALLET */
 .wallet {
   margin: 18px 0;
-  padding: 14px;
+  padding: 16px;
   text-align: center;
-  background: #1a1a1a;
-  border-radius: 12px;
   font-size: 18px;
-  box-shadow: 0 0 10px #00faff66;
+  background: #191919;
+  border-radius: 14px;
+  box-shadow: 0 0 12px #00faff66;
 }
 
-/* Buttons */
+/* 🔘 BUTTONS */
 .button {
   width: 100%;
   padding: 14px;
-  margin-bottom: 12px;
   border-radius: 30px;
   border: none;
+  margin-bottom: 12px;
   font-size: 16px;
   font-weight: 700;
-  cursor: pointer;
-  background: #00faff;
+  background: var(--primary);
   color: #000;
+  cursor: pointer;
 }
 
 .button.secondary {
-  background: #444;
+  background: #333;
   color: #fff;
 }
 
-/* Admin */
+/* 👮 ADMIN */
 #adminSection {
   display: none;
+  margin-top: 18px;
   text-align: center;
-  margin-top: 20px;
 }
 
-/* Footer Nav */
+/* ⬇ BOTTOM NAV */
 footer {
   position: fixed;
   bottom: 0;
@@ -128,19 +165,38 @@ footer {
 }
 
 .nav-btn {
-  color: #aaa;
-  font-size: 13px;
   text-align: center;
+  font-size: 12px;
+  color: #aaa;
   cursor: pointer;
 }
 
 .nav-btn.active {
-  color: #00faff;
+  color: var(--primary);
+}
+
+/* 🧭 Swipe Back Edge */
+.swipe-area {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  z-index: 50;
 }
 </style>
 </head>
 
 <body>
+
+<!-- Swipe-back edge -->
+<div class="swipe-area"></div>
+
+<!-- 🔝 App Bar -->
+<div class="app-bar">
+  <button onclick="goBack()">←</button>
+  <div class="app-title">Profile</div>
+</div>
 
 <div class="container">
 
@@ -201,6 +257,30 @@ if (!token) {
   alert("Please login first");
   location.href = "login.html";
 }
+
+
+/* ⬅ BACK LOGIC (ANDROID STYLE) */
+function goBack() {
+  if (document.referrer && document.referrer !== location.href) {
+    history.back();
+  } else {
+    location.href = "gamezone.html"; // fallback
+  }
+}
+
+/* 👆 SWIPE BACK */
+let startX = 0;
+document.addEventListener("touchstart", e => {
+  startX = e.touches[0].clientX;
+});
+document.addEventListener("touchend", e => {
+  const endX = e.changedTouches[0].clientX;
+  if (startX < 40 && endX - startX > 90) {
+    goBack();
+  }
+});
+
+
 
 const avatarImg = document.getElementById("avatar-img");
 const avatarInput = document.getElementById("avatarInput");
@@ -288,4 +368,4 @@ window.onload = loadProfile;
 </script>
 
 </body>
-</html>
+</html> 

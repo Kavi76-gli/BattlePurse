@@ -3317,6 +3317,106 @@ router.get("/pairss/:matchId", authAdmin, async (req, res) => {
   }
 });
 
+// POST /pair — Admin pairs players for a match
+router.post("/pair", authAdmin, async (req, res) => {
+  try {
+    const { selectedMembers, game, mode, type, entryFee } = req.body;
+
+    if (!Array.isArray(selectedMembers) || selectedMembers.length === 0) {
+      return res.status(400).json({ success: false, msg: "No members selected" });
+    }
+
+    // ❌ Prevent players from joining multiple active matches
+    const activeExists = await QuickMatch.findOne({
+      status: { $in: ["paired", "room_created", "ongoing"] },
+      "players.userId": { $in: selectedMembers.map(p => p.userId) }
+    });
+    if (activeExists) {
+      return res.status(400).json({
+        success: false,
+        msg: "One or more selected players already have an active match"
+      });
+    }
+
+    // Determine team size
+    const n = parseInt(type.split("v")[0], 10);
+    const teamSize = n * 2;
+
+    if (selectedMembers.length % teamSize !== 0) {
+      return res.status(400).json({
+        success: false,
+        msg: `You must select ${teamSize} players per match (${type})`
+      });
+    }
+
+    // Split selected members into match groups
+    const groups = [];
+    for (let i = 0; i < selectedMembers.length; i += teamSize) {
+      groups.push(selectedMembers.slice(i, i + teamSize));
+    }
+
+    const createdMatches = [];
+
+    for (const group of groups) {
+      // Validate rounds
+      const roundsValues = group.map(p => Number(p.rounds));
+      if (roundsValues.some(r => !Number.isInteger(r))) {
+        return res.status(400).json({ success: false, msg: "Invalid rounds found" });
+      }
+      const roundsSet = new Set(roundsValues);
+      if (roundsSet.size !== 1) {
+        return res.status(400).json({ success: false, msg: "All selected players must have the same rounds" });
+      }
+      const rounds = roundsValues[0];
+
+      // Prize system
+      const prizeSystem = type === "1v1" ? "kill_based" : (group[0].prizeSystem || "kill_based");
+
+      // Build players array
+      const half = group.length / 2;
+      const playersArr = group.map((p, idx) => ({
+        userId: p.userId && mongoose.Types.ObjectId.isValid(p.userId)
+          ? new mongoose.Types.ObjectId(p.userId)
+          : null,
+        uid: p.uid,
+        name: p.name || "Unknown",
+        phone: p.phone || "Unknown",
+        whatsappNumber: p.whatsappNumber || "",
+        team: idx < half ? "LION" : "TIGER",
+        joinedAt: p.joinedAt || new Date(),
+        rounds,
+        freeFireSettings: p.freeFireSettings || {}
+      }));
+
+      // Create new match
+      const newMatch = new QuickMatch({
+        matchNumber: await QuickMatch.countDocuments() + 1,
+        type,
+        game,
+        mode,
+        entryFee,
+        prizeSystem,
+        rounds,
+        players: playersArr,
+        status: "paired", // ✅ Active match
+        createdAt: new Date()
+      });
+
+      await newMatch.save();
+      createdMatches.push(newMatch);
+    }
+
+    res.json({
+      success: true,
+      msg: "Players paired successfully",
+      data: createdMatches
+    });
+
+  } catch (err) {
+    console.error("🔥 PAIR ERROR:", err);
+    res.status(500).json({ success: false, msg: "Server error" });
+  }
+});
 
 
 router.post("/pair", authAdmin, async (req, res) => {
@@ -5957,8 +6057,6 @@ router.delete("/joined/paired/:matchId", async (req, res) => {
   }
 });
 
-
-
 router.post("/joins", auth, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -5979,29 +6077,24 @@ router.post("/joins", auth, async (req, res) => {
       gunAttributes,
       throwableLimit,
       selectedGuns,
-      rounds // <-- NEW: number of rounds
+      rounds
     } = req.body;
 
     // ----------------------------
     // 1️⃣ BASIC VALIDATION
     // ----------------------------
-    if (!type || !game || !uid || !prizeSystem || !fee || !rounds)
+    if (!type || !game || !uid || !prizeSystem || !fee)
       return res.status(400).json({ success: false, msg: "Missing match data" });
+
+    fee = Number(fee);
 
     if (!["kill_based", "team_equal"].includes(prizeSystem))
       return res.status(400).json({ success: false, msg: "Invalid prize system" });
 
-    const user = await User.findById(userId);
-    if (!user)
-      return res.status(400).json({ success: false, msg: "User not found" });
-
-    // ----------------------------
-    // 1️⃣a VALIDATE ROUNDS
-    // ----------------------------
     const allowedRounds = [7, 9, 11, 13, 15];
-    rounds = parseInt(rounds);
-    if (!allowedRounds.includes(rounds))
-      return res.status(400).json({ success: false, msg: "Invalid rounds selection" });
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(400).json({ success: false, msg: "User not found" });
 
     // ----------------------------
     // 2️⃣ WHATSAPP VALIDATION
@@ -6025,7 +6118,6 @@ router.post("/joins", auth, async (req, res) => {
       "players.userId": userId,
       status: { $in: ["waiting", "filled", "ongoing"] }
     });
-
     if (pendingMatch)
       return res.status(400).json({ success: false, msg: "⚠️ Complete your previous match first." });
 
@@ -6051,22 +6143,25 @@ router.post("/joins", auth, async (req, res) => {
         if (!CS_MAPS.includes(map))
           return res.status(400).json({ success: false, msg: "Invalid map" });
       }
-
-      if (mode === "Lone Wolf") {
-        map = "Iron Cage"; // forced
-      }
+      if (mode === "Lone Wolf") map = "Iron Cage"; // forced
     }
 
     // ----------------------------
     // 6️⃣ FIND OR CREATE MATCH
     // ----------------------------
-    let match = await QuickMatch.findOne({
-      game,
-      mode,
-      type,
-      prizeSystem,
-      status: "waiting"
-    });
+    let match = await QuickMatch.findOne({ game, mode, type, prizeSystem, status: "waiting" });
+
+    // 6a. Determine rounds safely
+    let playerRounds;
+    if (match && match.rounds) {
+      playerRounds = match.rounds;
+    } else {
+      if (!rounds) return res.status(400).json({ success: false, msg: "Rounds are required" });
+      rounds = Number(rounds);
+      if (!allowedRounds.includes(rounds))
+        return res.status(400).json({ success: false, msg: `Invalid rounds. Choose from ${allowedRounds.join(", ")}` });
+      playerRounds = rounds;
+    }
 
     if (!match) {
       match = new QuickMatch({
@@ -6076,8 +6171,8 @@ router.post("/joins", auth, async (req, res) => {
         entryFee: fee,
         prizeSystem,
         status: "waiting",
-        players: [],
-        rounds // <-- SAVE rounds at match creation
+        rounds: playerRounds,
+        players: []
       });
     }
 
@@ -6085,18 +6180,12 @@ router.post("/joins", auth, async (req, res) => {
       return res.status(400).json({ success: false, msg: "Match full" });
 
     // ----------------------------
-    // 7️⃣ AUTO TEAM ASSIGN
+    // 7️⃣ TEAM ASSIGNMENT
     // ----------------------------
-    const teamSize = totalSlots / 2;
     const lionCount = match.players.filter(p => p.team === "LION").length;
     const tigerCount = match.players.filter(p => p.team === "TIGER").length;
-
-    let assignedTeam =
-      lionCount < teamSize ? "LION" :
-      tigerCount < teamSize ? "TIGER" : null;
-
-    if (!assignedTeam)
-      return res.status(400).json({ success: false, msg: "Teams full" });
+    const assignedTeam = lionCount < totalSlots / 2 ? "LION" : tigerCount < totalSlots / 2 ? "TIGER" : null;
+    if (!assignedTeam) return res.status(400).json({ success: false, msg: "Teams full" });
 
     // ----------------------------
     // 8️⃣ CATEGORIZE GUNS
@@ -6110,19 +6199,38 @@ router.post("/joins", auth, async (req, res) => {
       LAUNCHERS: ["M79", "RGS50", "MGL140"],
       SPECIAL: ["Plasma Gun", "Laser Gun (CS)", "CG15", "Crossbow", "Flame Bow"]
     };
-
     const categorizedGuns = { AR: [], SMG: [], SNIPER: [], SHOTGUN: [], PISTOLS: [], LAUNCHERS: [], SPECIAL: [] };
-
     (selectedGuns || []).forEach(gun => {
-      for (const cat in gunCategories) {
-        if (gunCategories[cat].includes(gun)) {
-          categorizedGuns[cat].push(gun);
-        }
-      }
+      for (const cat in gunCategories) if (gunCategories[cat].includes(gun)) categorizedGuns[cat].push(gun);
     });
 
     // ----------------------------
-    // 9️⃣ PREPARE PLAYER DATA
+    // 9️⃣ WALLET & DEDUCT ENTRY FEE
+    // ----------------------------
+    let wallet = await Wallet.findOne({ userId });
+    if (!wallet) {
+      wallet = new Wallet({ userId, balance: 0 });
+      await wallet.save();
+    }
+    const currentBalance = Number(wallet.balance);
+    if (currentBalance < fee)
+      return res.status(400).json({ success: false, msg: "Insufficient balance" });
+    wallet.balance = currentBalance - fee;
+    await wallet.save();
+
+    // ----------------------------
+    // 🔟 TRANSACTION LOG
+    // ----------------------------
+    await Transaction.create({
+      userId,
+      type: "debit",
+      amount: fee,
+      description: `Joined ${type} match for ${game} — Team ${assignedTeam}`,
+      createdAt: new Date()
+    });
+
+    // ----------------------------
+    // 1️⃣1️⃣ PUSH PLAYER DATA
     // ----------------------------
     const playerData = {
       userId,
@@ -6131,8 +6239,9 @@ router.post("/joins", auth, async (req, res) => {
       phone: user.phone,
       whatsappNumber: finalWhatsApp,
       team: assignedTeam,
+      rounds: playerRounds,   // ✅ guaranteed
+      entryFee: fee,          // ✅ real fee per player
       joinedAt: new Date(),
-      rounds, // <-- SAVE selected rounds per player
       freeFireSettings: {
         map: map || "Not Selected",
         roomType: roomType || (selectedGuns?.length ? "advance" : "regular"),
@@ -6146,15 +6255,12 @@ router.post("/joins", auth, async (req, res) => {
       }
     };
 
-    // ----------------------------
-    // 🔟 SAVE MATCH
-    // ----------------------------
     match.players.push(playerData);
     await match.save();
 
     res.json({
       success: true,
-      msg: `Joined match — Team ${assignedTeam}`,
+      msg: `Joined match — Team ${assignedTeam} for ${playerRounds} rounds. ₹${fee} deducted.`,
       assignedTeam,
       match
     });
@@ -6630,6 +6736,164 @@ router.get("/admin/refresh-token", (req, res) => {
     res.status(401).json({ success: false, msg: "refresh_failed" });
   }
 });
+
+router.post("/join", auth, async (req, res) => {
+  let wallet;
+
+  try {
+    const userId = req.user.id;
+    const { game, type, mode, entryFee, uid, whatsappNumber } = req.body;
+
+    // ---------------------------- VALIDATION ----------------------------
+    if (!game || !type || !mode || !uid || !entryFee || !whatsappNumber) {
+      return res.status(400).json({ success: false, msg: "Missing match data" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({ success: false, msg: "User not found" });
+    }
+
+    // ---------------------------- GAME RULES ----------------------------
+    const GAME_RULES = {
+      Ludo: {
+        types: ["1v1", "1v2", "1v3", "2v2"],
+        modes: ["classic", "popular", "quick"],
+        slots: { "1v1": 2, "1v2": 3, "1v3": 4, "2v2": 4 }
+      },
+      Carrom: {
+        types: ["1v1", "2v2"],
+        modes: ["classic", "freestyle"],
+        slots: { "1v1": 2, "2v2": 4 }
+      },
+      "8 Ball Pool": {
+        types: ["1v1"],
+        modes: ["classic"],
+        slots: { "1v1": 2 }
+      },
+      Cricket: {
+        types: ["1v1"],
+        modes: ["1 over"],
+        slots: { "1v1": 2 }
+      }
+    };
+
+    const rules = GAME_RULES[game];
+    if (!rules) {
+      return res.status(400).json({ success: false, msg: "Invalid game" });
+    }
+    if (!rules.types.includes(type)) {
+      return res.status(400).json({ success: false, msg: "Invalid match type" });
+    }
+    if (!rules.modes.includes(mode)) {
+      return res.status(400).json({ success: false, msg: "Invalid mode" });
+    }
+
+    const totalSlots = rules.slots[type];
+
+    // ---------------------------- ACTIVE MATCH CHECK ----------------------------
+    const activeMatch = await QuickMatch.findOne({
+      "players.userId": userId,
+      status: { $in: ["waiting", "filled", "ongoing"] }
+    });
+
+    if (activeMatch) {
+      return res.status(400).json({
+        success: false,
+        msg: "⚠️ You already have an active match. Complete it first."
+      });
+    }
+
+    // ---------------------------- WALLET CHECK ----------------------------
+    wallet = await Wallet.findOne({ userId });
+    if (!wallet || wallet.balance < entryFee) {
+      return res.status(400).json({
+        success: false,
+        msg: "❌ Not enough balance"
+      });
+    }
+
+    wallet.balance -= entryFee;
+    await wallet.save();
+
+    await Transaction.create({
+      userId,
+      amount: entryFee,
+      type: "debit",
+      purpose: "Quick Match Join",
+      balanceAfter: wallet.balance,
+      createdAt: new Date()
+    });
+
+    // ---------------------------- FIND OR CREATE MATCH ----------------------------
+    let match = await QuickMatch.findOne({
+      game,
+      type,
+      mode,
+      entryFee,
+      status: "waiting"
+    });
+
+    if (!match || match.players.length >= totalSlots) {
+      match = new QuickMatch({
+        game,
+        type,
+        mode,
+        entryFee,
+        rounds: 7, // ✅ REQUIRED BY SCHEMA (NO GAME LOGIC)
+        status: "waiting",
+        players: [],
+        slots: []
+      });
+    }
+
+    // ---------------------------- ADD USER ----------------------------
+    match.slots.push({
+      uid,
+      userId,
+      phone: user.phone,
+      whatsappNumber,
+      joinedAt: new Date(),
+      team: null
+    });
+
+    match.players.push({
+      userId,
+      uid,
+      name: user.name,
+      phone: user.phone,
+      team: null,
+      joinedAt: new Date()
+    });
+
+    await match.save();
+
+    // ---------------------------- SUCCESS ----------------------------
+    return res.json({
+      success: true,
+      msg: "Joined match successfully",
+      walletBalance: wallet.balance,
+      matchId: match._id,
+      redirectUrl: `user-room.html?matchId=${match._id}`
+    });
+
+  } catch (err) {
+    console.error("Join error:", err);
+
+    // Auto-refund safety
+    if (wallet) {
+      wallet.balance += Number(req.body.entryFee || 0);
+      await wallet.save();
+    }
+
+    return res.status(500).json({
+      success: false,
+      msg: "Internal server error"
+    });
+  }
+});
+
+
 
 router.post("/join", auth, async (req, res) => {
   try {
