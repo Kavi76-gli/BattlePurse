@@ -1654,29 +1654,36 @@ const BACKEND_URL = API_BASE;
   /* ------------- Constants (modes, maps, guns) ------------- */
     /* ------------- Constants (modes, maps, guns) ------------- */
   // UI state
+/* =========================
+   UI STATE
+========================= */
+/* =========================
+   UI STATE
+========================= */
 let selectedType = '';
 let selectedPrizeSystem = null;
 
-// lists
-
+/* =========================
+   CONSTANTS
+========================= */
 const BGMI_MODES = ["TDM", "Gun Game"];
-
 const FF_MODES = ["Clash Squad", "Lone Wolf"];
 const CLASH_SQUAD_MAPS = ["Bermuda", "Alpine", "Kalahari", "Purgatory", "Nexterra"];
 const LONE_WOLF_MAPS = ["Iron Cage"];
+const ALLOWED_ROUNDS = [7, 9, 11, 13, 15];
+const GUN_CATEGORIES = {
+  AR: ["AK","M4A1","SCAR","GROZA","FAMAS","AN94","XM8","M14","PARAFAL","KINGFISHER","AUG","AC80"],
+  SMG: ["MP40","MP5","UMP","VSS","THOMPSON","VECTOR","BIZON","UZI","MAC10"],
+  SNIPER: ["AWM","KAR98K","M82B","M24","SVD","SKS","WOODPECKER"],
+  SHOTGUN: ["M1014","M1887","MAG7","SPAS12","Trogon"],
+  PISTOLS: ["USP","G18","M500","Desert Eagle","Treatment Pistol","Hand Cannon"],
+  LAUNCHERS: ["M79","RGS50","MGL140"],
+  SPECIAL: ["Plasma Gun","Laser Gun (CS)","CG15","Crossbow","Flame Bow"]
+};
 
-// full gun list
-const GUNS_FULL = [
-  "AK","M4A1","SCAR","GROZA","FAMAS","AN94","XM8","M14","PARAFAL","KINGFISHER","AUG","AC80",
-  "MP40","MP5","UMP","VSS","THOMPSON","VECTOR","BIZON","UZI","MAC10",
-  "AWM","KAR98K","M82B","M24","SVD","SKS","WOODPECKER",
-  "M1014","M1887","MAG7","SPAS12","Trogon",
-  "USP","G18","M500","Desert Eagle","Treatment Pistol","Hand Cannon",
-  "M79","RGS50","MGL140",
-  "Plasma Gun","Laser Gun (CS)","CG15","Crossbow","Flame Bow"
-];
-
-// DOM refs
+/* =========================
+   DOM REFERENCES
+========================= */
 const modeSection = document.getElementById('modeSection');
 const prizeSystemSection = document.getElementById('prizeSystemSection');
 const formMessage = document.getElementById('form-message');
@@ -1697,80 +1704,80 @@ const whatsappEl = document.getElementById('whatsappNumber');
 
 const feeEl = document.getElementById('fee');
 const customFeeEl = document.getElementById('customFee');
+const joinBtn = document.getElementById('joinBtn');
 
-// small helpers
+/* =========================
+   HELPER FUNCTIONS
+========================= */
 function show(el){ if(!el) return; el.style.display = 'block'; }
 function hide(el){ if(!el) return; el.style.display = 'none'; }
-function setMessage(txt, danger=true){
+function setMessage(txt, danger = true){
   formMessage.textContent = txt || '';
   if(!txt) return;
-  formMessage.classList.toggle('ok', !danger);
-  formMessage.style.color = danger ? getComputedStyle(document.documentElement).getPropertyValue('--danger') : getComputedStyle(document.documentElement).getPropertyValue('--success');
+  formMessage.style.color = danger ? 'red' : 'green';
 }
 
-// Flow: pick mode -> (if team) pick prize -> fill form
-function openMatchForm(type){
-  selectedType = type;
-  document.getElementById('type').value = type;
-  // hide left selections, show prize if needed
-  hide(modeSection);
-  if(type === '1v1'){
-    selectedPrizeSystem = 'kill_based';
-    document.getElementById('prizeSystem').value = selectedPrizeSystem;
-    showForm();
+function getFinalEntryFee(){
+  let fee = feeEl.value === 'custom' ? Number(customFeeEl.value) : Number(feeEl.value);
+  if(isNaN(fee) || fee < 50){
+    setMessage('Entry fee must be at least ₹50');
+    return null;
+  }
+  return fee;
+}
+
+/* =========================
+   ENTRY FEE LOGIC
+========================= */
+feeEl.addEventListener('change', () => toggleCustomFee(feeEl));
+customFeeEl.addEventListener('input', () => {
+  const val = Number(customFeeEl.value);
+  if(isNaN(val) || val < 50){
+    setMessage('Minimum custom entry fee is ₹50');
+    joinBtn.disabled = true;
+    joinBtn.style.opacity = '0.5';
   } else {
-    show(prizeSystemSection);
+    setMessage('');
+    joinBtn.disabled = false;
+    joinBtn.style.opacity = '1';
+  }
+});
+
+function toggleCustomFee(selectEl) {
+  if (selectEl.value === "custom") {
+    show(customFeeEl);
+    customFeeEl.value = "";
+    customFeeEl.placeholder = "Enter amount (₹50+)";
+    customFeeEl.focus();
+    joinBtn.disabled = true;
+    joinBtn.style.opacity = "0.5";
+  } else {
+    hide(customFeeEl);
+    customFeeEl.value = "";
+    joinBtn.disabled = false;
+    joinBtn.style.opacity = "1";
   }
 }
-function selectPrizeSystem(ps){
-  selectedPrizeSystem = ps;
-  document.getElementById('prizeSystem').value = ps;
-  hide(prizeSystemSection);
-  showForm();
-}
-function backToModes(){
-  hide(prizeSystemSection);
-  show(modeSection);
-}
-function showHome(){
-  selectedType = '';
-  selectedPrizeSystem = null;
-  document.getElementById('type').value = '';
-  document.getElementById('prizeSystem').value = '';
-  hide(document.querySelector('.panel') /* not required but keep */);
-  // reset form UI and navigate client-side:
-  // redirect or just show selection again:
-  show(modeSection);
-  setMessage('');
-  // Make sure form visible (panel isn't hidden in markup)
-  // there's no special hide for the right panel; user can fill again.
-}
-function showForm(){
-  // reveal/upadte form data
-  updateGameOptions();
-  setMessage('');
-  // ensure right panel visible — it's always visible in layout; just remove any stale message
-  // Put a small title update
-  const title = document.getElementById('join-title');
-  title.textContent = selectedType ? `Join ${selectedType} Match` : 'Join Match';
-  // scroll to form on small screens
-  window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
-}
 
-// Game / mode / map logic
+/* =========================
+   GAME / MODE / MAP LOGIC
+========================= */
 function updateGameOptions(){
   const g = gameEl.value;
   modeEl.innerHTML = '';
   mapEl.innerHTML = '';
+
   if(g === 'BGMI' || g === 'PUBG'){
-    BGMI_PUBG_MODES.forEach(m => {
-      const o = document.createElement('option'); o.value = m; o.textContent = m; modeEl.appendChild(o);
+    BGMI_MODES.forEach(m => {
+      const o = document.createElement('option'); o.value = m; o.textContent = m;
+      modeEl.appendChild(o);
     });
     hide(freeFireFields);
     hide(mapSection);
   } else if(g === 'Free Fire'){
     FF_MODES.forEach(m => {
-      const o = document.createElement('option'); o.value = m; o.textContent = m; modeEl.appendChild(o);
+      const o = document.createElement('option'); o.value = m; o.textContent = m;
+      modeEl.appendChild(o);
     });
     show(freeFireFields);
     show(mapSection);
@@ -1778,280 +1785,174 @@ function updateGameOptions(){
     hide(freeFireFields);
     hide(mapSection);
   }
+
   updateMapOptions();
-  toggleGunSelection(); // reset gun UI
+  toggleGunSelection();
 }
 
 function updateMapOptions(){
   const g = gameEl.value;
   const m = modeEl.value;
   mapEl.innerHTML = '';
-  if(g !== 'Free Fire'){
-    hide(mapSection);
-    return;
-  }
+
+  if(g !== 'Free Fire'){ hide(mapSection); return; }
   show(mapSection);
-  let maps = [];
-  if(m === 'Clash Squad') maps = CLASH_SQUAD_MAPS;
-  if(m === 'Lone Wolf') maps = LONE_WOLF_MAPS;
+  let maps = m === 'Clash Squad' ? CLASH_SQUAD_MAPS : LONE_WOLF_MAPS;
   maps.forEach(mp => {
-    const o = document.createElement('option'); o.value = mp; o.textContent = mp; mapEl.appendChild(o);
+    const o = document.createElement('option'); o.value = mp; o.textContent = mp;
+    mapEl.appendChild(o);
   });
 }
 
 function toggleGunSelection(){
   if(roomTypeEl.value === 'Advance'){
     show(gunSelection);
-    // render all guns grouped
     gunsList.innerHTML = '';
-    const grouped = {
-      AR: ["AK","M4A1","SCAR","GROZA","FAMAS","AN94","XM8","M14","PARAFAL","KINGFISHER","AUG","AC80"],
-      SMG: ["MP40","MP5","UMP","VSS","THOMPSON","VECTOR","BIZON","UZI","MAC10"],
-      SNIPER: ["AWM","KAR98K","M82B","M24","SVD","SKS","WOODPECKER"],
-      SHOTGUN: ["M1014","M1887","MAG7","SPAS12","Trogon"],
-      PISTOLS: ["USP","G18","M500","Desert Eagle","Treatment Pistol","Hand Cannon"],
-      LAUNCHERS: ["M79","RGS50","MGL140"],
-      SPECIAL: ["Plasma Gun","Laser Gun (CS)","CG15","Crossbow","Flame Bow"]
-    };
-    for(const cat in grouped){
-      // category label
+    for(const cat in GUN_CATEGORIES){
       const catLabel = document.createElement('div');
-      catLabel.style.width = '100%';
-      catLabel.style.fontSize = '12px';
-      catLabel.style.color = 'var(--muted)';
-      catLabel.style.margin = '8px 0 4px';
-      catLabel.textContent = cat;
+      catLabel.style.fontSize='12px'; catLabel.style.color='#999'; catLabel.textContent = cat;
       gunsList.appendChild(catLabel);
-      grouped[cat].forEach(g => {
+      GUN_CATEGORIES[cat].forEach(g => {
         const id = 'g_' + g.replace(/\s+/g,'_');
         const label = document.createElement('label');
-        label.innerHTML = `<input type="checkbox" id="${id}" name="guns" value="${g}" style="margin-right:6px"> ${g}`;
+        label.innerHTML = `<input type="checkbox" id="${id}" value="${g}" style="margin-right:6px"> ${g}`;
         gunsList.appendChild(label);
       });
     }
-    gunSelection.setAttribute('aria-hidden', 'false');
   } else {
     hide(gunSelection);
     gunsList.innerHTML = '';
-    gunSelection.setAttribute('aria-hidden', 'true');
   }
 }
 
-// DOM
+/* =========================
+   OPEN FORM / PRIZE SYSTEM LOGIC
+========================= */
+function openMatchForm(type){
+  selectedType = type;
+  document.getElementById('type').value = type;
 
-
-// message helper
-function setMessage(msg, danger = true) {
-  formMessage.textContent = msg || "";
-  if (!msg) return;
-  formMessage.style.color = danger ? "red" : "green";
-}
-
-/* ---------- TOGGLE CUSTOM FEE ---------- */
-
-
-function toggleCustomFee(selectEl) {
-  if (selectEl.value === "custom") {
-    customFeeEl.style.display = "block";
-    customFeeEl.value = "";   // ❌ default 50 hata diya
-    customFeeEl.placeholder = "Minimum ₹50";
-    customFeeEl.focus();
+  if(type === '1v1'){
+    selectedPrizeSystem = 'kill_based';
+    document.getElementById('prizeSystem').value = selectedPrizeSystem;
+    hide(prizeSystemSection);
+    showForm();
   } else {
-    customFeeEl.style.display = "none";
-    customFeeEl.value = "";
+    show(prizeSystemSection);
+    hide(modeSection);
   }
 }
 
-
-/* ---------- GET FINAL ENTRY FEE ---------- */
-function getFinalEntryFee() {
-  let fee;
-
-  if (feeEl.value === "custom") {
-    fee = Number(customFeeEl.value);
-    if (isNaN(fee) || fee < 50) {
-      setMessage("Custom entry fee must be at least ₹50");
-      return null;
-    }
-  } else {
-    fee = Number(feeEl.value);
-    if (isNaN(fee) || fee < 50) {
-      setMessage("Please select a valid entry fee");
-      return null;
-    }
-  }
-
-  return fee;
+function selectPrizeSystem(ps){
+  selectedPrizeSystem = ps;
+  document.getElementById('prizeSystem').value = ps;
+  hide(prizeSystemSection);
+  showForm();
 }
 
+function backToModes(){ hide(prizeSystemSection); show(modeSection); }
 
+function showHome(){
+  selectedType = '';
+  selectedPrizeSystem = null;
+  hide(document.querySelector('.panel'));
+  show(modeSection);
+  setMessage('');
+}
 
+function showForm(){
+  updateGameOptions();
+  setMessage('');
+  document.getElementById('join-title').textContent = selectedType ? `Join ${selectedType} Match` : 'Join Match';
+  window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
+}
 
-
-// Join flow: optional deduct -> joins
-async function joinMatch() {
+/* =========================
+   JOIN MATCH
+========================= */
+async function joinMatch(){
   setMessage('');
 
-  // BASIC VALIDATIONS
-  if (!selectedType) {
-    setMessage('Select match type first');
-    return;
-  }
-
-  if (!selectedPrizeSystem) {
-    setMessage('Select prize system');
-    return;
-  }
+  // skip prize system check for 1v1
+  if(!selectedType){ setMessage('Select match type'); return; }
+  if(selectedType !== '1v1' && !selectedPrizeSystem){ setMessage('Select prize system'); return; }
 
   const game = gameEl.value;
   const mode = modeEl.value;
   const map = mapEl.value || undefined;
   const roomType = roomTypeEl.value;
+  const uid = uidEl.value.trim();
+  const countryCode = countryCodeEl.value.trim();
+  const whatsappRaw = whatsappEl.value.replace(/[\s-]/g,'').trim();
+  const rounds = Number(document.getElementById('rounds')?.value);
 
-  const rounds = parseInt(document.getElementById('rounds')?.value, 10);
-  const allowedRounds = [7, 9, 11, 13, 15];
-
-  if (!rounds || !allowedRounds.includes(rounds)) {
-    setMessage('Please select valid rounds (7, 9, 11, 13, 15)');
-    return;
-  }
-
-  if (game === 'BGMI') {
-    setMessage('⚠️ BGMI matches are coming soon');
-    return;
-  }
-
-  const uid = (uidEl.value || '').trim();
-  if (!uid) {
-    setMessage('Enter your Game UID');
-    return;
-  }
-
-  const cc = (countryCodeEl.value || '').trim();
-  if (!cc || !cc.startsWith('+')) {
-    setMessage('Select a valid country code');
-    return;
-  }
-
-  const whatsappRaw = (whatsappEl.value || '').replace(/[\s-]/g, '').trim();
-  if (!/^\d{10,15}$/.test(whatsappRaw)) {
-    setMessage('Enter a valid WhatsApp number');
-    return;
-  }
+  if(!uid){ setMessage('Enter your Game UID'); return; }
+  if(!countryCode.startsWith('+')){ setMessage('Invalid country code'); return; }
+  if(!/^\d{10,15}$/.test(whatsappRaw)){ setMessage('Invalid WhatsApp number'); return; }
+  if(!ALLOWED_ROUNDS.includes(rounds)){ setMessage('Invalid rounds'); return; }
 
   const feeVal = getFinalEntryFee();
-  if (feeVal === null || isNaN(feeVal) || feeVal <= 0) {
-    setMessage('Enter a valid entry fee');
-    return;
-  }
+  if(!feeVal) return;
 
-  // GAME-SPECIFIC VALIDATION
-  if (game === 'Free Fire') {
-    if (!['Clash Squad', 'Lone Wolf'].includes(mode)) {
-      setMessage('Invalid Free Fire mode');
-      return;
-    }
-
-    if (mode === 'Clash Squad' && (!map || !CLASH_SQUAD_MAPS.includes(map))) {
-      setMessage('Select a valid Clash Squad map');
-      return;
-    }
-
-    if (mode === 'Lone Wolf' && map !== 'Iron Cage') {
-      setMessage('Lone Wolf only supports Iron Cage');
-      return;
-    }
-  }
-
-  // ROOM SETTINGS
   const headshot = document.getElementById('headshot')?.value === 'true';
   const characterSkill = document.getElementById('characterSkill')?.value === 'true';
   const gunAttributes = document.getElementById('gunAttributes')?.value === 'true';
   const throwableLimit = Number(document.getElementById('throwableLimit')?.value || 0);
 
-  // SELECTED GUNS (ADVANCE ROOM)
   const selectedGuns = [];
-  if (game === 'Free Fire' && roomType === 'Advance') {
-    document
-      .querySelectorAll('#gunsList input[type=checkbox]:checked')
+  if(game==='Free Fire' && roomType==='Advance'){
+    document.querySelectorAll('#gunsList input[type=checkbox]:checked')
       .forEach(cb => selectedGuns.push(cb.value));
   }
 
-  // FINAL PAYLOAD
   const payload = {
     type: selectedType,
-    game,
-    mode,
-    rounds,
-    fee: feeVal,               // ✅ REAL FEE GOES HERE
-    uid,
+    game, mode, rounds, fee: feeVal, uid,
     prizeSystem: selectedPrizeSystem,
-    countryCode: cc,
-    whatsappNumber: whatsappRaw,
-    map,
-    roomType,
-    headshot,
-    characterSkill,
-    gunAttributes,
-    throwableLimit,
+    countryCode, whatsappNumber: whatsappRaw,
+    map, roomType,
+    headshot, characterSkill, gunAttributes, throwableLimit,
     selectedGuns
   };
 
-  console.log('🔥 JOIN PAYLOAD:', payload);
-
-  try {
+  try{
     setMessage('⏳ Joining match...', false);
-
-    const joinsRes = await fetch(`${API_BASE}/joins`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + TOKEN
-      },
+    const res = await fetch(`${API_BASE}/joins`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+TOKEN},
       body: JSON.stringify(payload)
     });
-
-    const joinData = await joinsRes.json();
-    if (!joinsRes.ok || !joinData.success) {
-      throw new Error(joinData.msg || 'Failed to join');
-    }
+    const data = await res.json();
+    if(!res.ok || !data.success) throw new Error(data.msg||'Failed to join');
 
     setMessage(`🎉 Joined successfully — ₹${feeVal} deducted`, false);
 
-    setTimeout(() => {
-      const matchId = joinData.match?._id || joinData.matchId;
-      if (matchId) {
-        window.location.href = `user-room.html?id=${matchId}`;
-      }
+    setTimeout(()=>{
+      const matchId = data.match?._id || data.matchId;
+      if(matchId) window.location.href = `user-room.html?id=${matchId}`;
     }, 1000);
-
-  } catch (err) {
-    console.error('Join error:', err);
+  } catch(err){
+    console.error(err);
     setMessage('❌ ' + (err.message || 'Join failed'));
   }
 }
 
-
-// initialization
+/* =========================
+   INIT
+========================= */
 (function init(){
-  // default prize system title: none until selection
-  // set up game/mode options and UI state
   updateGameOptions();
   hide(prizeSystemSection);
-  // default: show selection left, allow clicking to open
-  // Note: when user clicks a mode we hide the left column via openMatchForm()
 })();
 
-/* Expose helper for left panel to set prize system from old buttons */
-function selectPrizeSystemFromLeft(ps){
-  selectPrizeSystem(ps);
-}
-
-// ensure UI functions are available to left buttons
+/* =========================
+   EXPOSE FUNCTIONS
+========================= */
 window.openMatchForm = openMatchForm;
 window.selectPrizeSystem = selectPrizeSystem;
 window.backToModes = backToModes;
 window.showHome = showHome;
+window.showForm = showForm;
 window.updateGameOptions = updateGameOptions;
 window.updateMapOptions = updateMapOptions;
 window.toggleGunSelection = toggleGunSelection;
