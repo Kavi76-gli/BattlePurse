@@ -1397,8 +1397,8 @@ select{
 
 <div class="form-row">
   <label>Entry Fee (₹)</label>
-
-  <select onchange="toggleCustomFee(this)">
+  <select id="fee" onchange="toggleCustomFee(this)">
+    <option value="" selected disabled>-- Select Fee --</option>
     <option value="50">₹50</option>
     <option value="100">₹100</option>
     <option value="150">₹150</option>
@@ -1408,12 +1408,15 @@ select{
 
   <input
     type="number"
+    id="customFee"
     class="custom-fee"
     placeholder="Enter custom fee (min ₹50)"
     min="50"
     style="display:none; margin-top:8px;"
   />
 </div>
+
+
 
 
         
@@ -1649,6 +1652,7 @@ const BACKEND_URL = API_BASE;
   };
 
   /* ------------- Constants (modes, maps, guns) ------------- */
+    /* ------------- Constants (modes, maps, guns) ------------- */
   // UI state
 let selectedType = '';
 let selectedPrizeSystem = null;
@@ -1833,103 +1837,159 @@ function toggleGunSelection(){
   }
 }
 
+// DOM
 
+
+// message helper
+function setMessage(msg, danger = true) {
+  formMessage.textContent = msg || "";
+  if (!msg) return;
+  formMessage.style.color = danger ? "red" : "green";
+}
+
+/* ---------- TOGGLE CUSTOM FEE ---------- */
 
 
 function toggleCustomFee(selectEl) {
-  const container = selectEl.closest(".form-row");
-  const input = container.querySelector(".custom-fee");
-
-  if (!input) return;
-
   if (selectEl.value === "custom") {
-    input.style.display = "block";
-    input.required = true;
-    input.min = 50;
-    input.value = 50; // default minimum
-    input.focus();
-
-    // Enforce minimum while typing
-    input.oninput = () => {
-      if (input.value && Number(input.value) < 50) {
-        input.value = 50;
-      }
-    };
-
+    customFeeEl.style.display = "block";
+    customFeeEl.value = "";   // ❌ default 50 hata diya
+    customFeeEl.placeholder = "Minimum ₹50";
+    customFeeEl.focus();
   } else {
-    input.style.display = "none";
-    input.required = false;
-    input.value = "";
-    input.oninput = null;
+    customFeeEl.style.display = "none";
+    customFeeEl.value = "";
   }
 }
 
 
+/* ---------- GET FINAL ENTRY FEE ---------- */
+function getFinalEntryFee() {
+  let fee;
+
+  if (feeEl.value === "custom") {
+    fee = Number(customFeeEl.value);
+    if (isNaN(fee) || fee < 50) {
+      setMessage("Custom entry fee must be at least ₹50");
+      return null;
+    }
+  } else {
+    fee = Number(feeEl.value);
+    if (isNaN(fee) || fee < 50) {
+      setMessage("Please select a valid entry fee");
+      return null;
+    }
+  }
+
+  return fee;
+}
+
+
+
+
 
 // Join flow: optional deduct -> joins
-async function joinMatch(){
+async function joinMatch() {
   setMessage('');
-  // validations
-  if(!selectedType){
-    setMessage('Select match type on the left first');
+
+  // BASIC VALIDATIONS
+  if (!selectedType) {
+    setMessage('Select match type first');
     return;
   }
-  if(!selectedPrizeSystem){
-    setMessage('Select prize system (teams) or pick 1v1 which defaults to kill_based');
+
+  if (!selectedPrizeSystem) {
+    setMessage('Select prize system');
     return;
   }
 
   const game = gameEl.value;
   const mode = modeEl.value;
   const map = mapEl.value || undefined;
-  /* 🔥 ADD THIS */
-const rounds = parseInt(document.getElementById('rounds')?.value, 10);
+  const roomType = roomTypeEl.value;
+
+  const rounds = parseInt(document.getElementById('rounds')?.value, 10);
+  const allowedRounds = [7, 9, 11, 13, 15];
+
+  if (!rounds || !allowedRounds.includes(rounds)) {
+    setMessage('Please select valid rounds (7, 9, 11, 13, 15)');
+    return;
+  }
+
+  if (game === 'BGMI') {
+    setMessage('⚠️ BGMI matches are coming soon');
+    return;
+  }
+
   const uid = (uidEl.value || '').trim();
+  if (!uid) {
+    setMessage('Enter your Game UID');
+    return;
+  }
+
   const cc = (countryCodeEl.value || '').trim();
-  const whatsappRaw = (whatsappEl.value || '').replace(/[\s-]/g,'').trim();
-  const feeVal = feeEl.value === 'custom' ? parseInt((customFeeEl.value||'0'),10) : parseInt(feeEl.value,10);
+  if (!cc || !cc.startsWith('+')) {
+    setMessage('Select a valid country code');
+    return;
+  }
+
+  const whatsappRaw = (whatsappEl.value || '').replace(/[\s-]/g, '').trim();
+  if (!/^\d{10,15}$/.test(whatsappRaw)) {
+    setMessage('Enter a valid WhatsApp number');
+    return;
+  }
+
+  const feeVal = getFinalEntryFee();
+  if (feeVal === null || isNaN(feeVal) || feeVal <= 0) {
+    setMessage('Enter a valid entry fee');
+    return;
+  }
+
+  // GAME-SPECIFIC VALIDATION
+  if (game === 'Free Fire') {
+    if (!['Clash Squad', 'Lone Wolf'].includes(mode)) {
+      setMessage('Invalid Free Fire mode');
+      return;
+    }
+
+    if (mode === 'Clash Squad' && (!map || !CLASH_SQUAD_MAPS.includes(map))) {
+      setMessage('Select a valid Clash Squad map');
+      return;
+    }
+
+    if (mode === 'Lone Wolf' && map !== 'Iron Cage') {
+      setMessage('Lone Wolf only supports Iron Cage');
+      return;
+    }
+  }
+
+  // ROOM SETTINGS
   const headshot = document.getElementById('headshot')?.value === 'true';
   const characterSkill = document.getElementById('characterSkill')?.value === 'true';
   const gunAttributes = document.getElementById('gunAttributes')?.value === 'true';
-  const throwableLimit = document.getElementById('throwableLimit')?.value === 'true';
-  const roomType = roomTypeEl.value;
+  const throwableLimit = Number(document.getElementById('throwableLimit')?.value || 0);
 
-  if(!uid){ setMessage('Enter your Game UID'); return; }
-  if(!cc || !cc.startsWith('+')){ setMessage('Select a valid country code'); return; }
-  if(!/^\d{10,15}$/.test(whatsappRaw)){ setMessage('Enter a valid WhatsApp number (10–15 digits)'); return; }
-  if(isNaN(feeVal) || feeVal < 0){ setMessage('Enter a valid entry fee'); return; }
-
-  // Free Fire mode/map validation
-  if(game === 'Free Fire'){
-    if(!['Clash Squad','Lone Wolf'].includes(mode)){
-      setMessage('Invalid Free Fire mode'); return;
-    }
-    if(mode === 'Clash Squad' && (!map || !CLASH_SQUAD_MAPS.includes(map))){
-      setMessage('Select a valid Clash Squad map'); return;
-    }
-    if(mode === 'Lone Wolf' && map !== 'Iron Cage'){
-      setMessage('Lone Wolf only supports Iron Cage'); return;
-    }
-  }
-
-  // collect selected guns if Advance
+  // SELECTED GUNS (ADVANCE ROOM)
   const selectedGuns = [];
-  if(game === 'Free Fire' && roomType === 'Advance'){
-    document.querySelectorAll('#gunsList input[type=checkbox]:checked').forEach(cb => selectedGuns.push(cb.value));
+  if (game === 'Free Fire' && roomType === 'Advance') {
+    document
+      .querySelectorAll('#gunsList input[type=checkbox]:checked')
+      .forEach(cb => selectedGuns.push(cb.value));
   }
 
-  // build payload
+  // FINAL PAYLOAD
   const payload = {
     type: selectedType,
     game,
     mode,
     rounds,
-    fee: feeVal,
+    fee: feeVal,               // ✅ REAL FEE GOES HERE
     uid,
     prizeSystem: selectedPrizeSystem,
     countryCode: cc,
     whatsappNumber: whatsappRaw,
     map,
+    roomType,
     headshot,
     characterSkill,
     gunAttributes,
@@ -1937,77 +1997,40 @@ const rounds = parseInt(document.getElementById('rounds')?.value, 10);
     selectedGuns
   };
 
-  try{
-    // optional deduct step
-    if(API_BASE && API_BASE.trim() !== ''){
-      setMessage('💰 Deducting entry fee...', false);
-      const deductRes = await fetch(`${API_BASE}/deduct`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(TOKEN ? { Authorization: 'Bearer ' + TOKEN } : {}) },
-        body: JSON.stringify({ fee: feeVal })
-      });
-      const deductData = await deductRes.json().catch(()=>({ success:false, msg:'Deduct parse error' }));
-      if(!deductRes.ok || !deductData.success){
-        throw new Error(deductData.msg || 'Deduction failed');
-      }
-    } else {
-      // if no API_BASE configured, skip deduct step
-      setMessage('Skipping deduct step (API_BASE not set)', false);
-    }
+  console.log('🔥 JOIN PAYLOAD:', payload);
 
-const game = gameEl.value;
-const allowedRounds = [7, 9, 11, 13, 15];
-
-if (!rounds || !allowedRounds.includes(rounds)) {
-  setMessage('Please select valid rounds (7, 9, 11, 13, 15)');
-  return;
-}
-
-if(game === 'BGMI'){
-  setMessage('⚠️ BGMI matches feature are coming soon. You cannot join right now.');
-  return;
-}
-
-
-    // join endpoint
+  try {
     setMessage('⏳ Joining match...', false);
-    // call joins route (wallet/joins under API_BASE)
+
     const joinsRes = await fetch(`${API_BASE}/joins`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...(TOKEN ? { Authorization: 'Bearer ' + TOKEN } : {}) },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + TOKEN
+      },
       body: JSON.stringify(payload)
     });
-    const joinData = await joinsRes.json().catch(()=>({ success:false, msg:'Join parse error' }));
-    if(!joinsRes.ok || !joinData.success){
+
+    const joinData = await joinsRes.json();
+    if (!joinsRes.ok || !joinData.success) {
       throw new Error(joinData.msg || 'Failed to join');
     }
 
+    setMessage(`🎉 Joined successfully — ₹${feeVal} deducted`, false);
 
+    setTimeout(() => {
+      const matchId = joinData.match?._id || joinData.matchId;
+      if (matchId) {
+        window.location.href = `user-room.html?id=${matchId}`;
+      }
+    }, 1000);
 
-    // success
-    setMessage(`🎉 Joined — assigned to ${joinData.assignedTeam || (joinData.match && joinData.match.players && joinData.match.players.slice(-1)[0]?.team) || 'N/A'}`, false);
-
-    // When join is successful
-
-
-// Redirect after 1 second
-setTimeout(() => {
-  const matchId = joinData.match?._id || joinData.match?.id || joinData.matchId;
-  if (matchId) {
-    window.location.href = `user-room.html?id=${matchId}`;
-  } else {
-    console.error("Match ID missing in join response.");
-  }
-}, 1000);
-
-
-    // optional UI updates: reset small fields or route to room
-    // e.g. window.location.href = `user-room.html?matchId=${joinData.match._id}&uid=${encodeURIComponent(uid)}`;
-  } catch(err){
-    console.error('join error', err);
+  } catch (err) {
+    console.error('Join error:', err);
     setMessage('❌ ' + (err.message || 'Join failed'));
   }
 }
+
 
 // initialization
 (function init(){
@@ -2034,6 +2057,8 @@ window.updateMapOptions = updateMapOptions;
 window.toggleGunSelection = toggleGunSelection;
 window.toggleCustomFee = toggleCustomFee;
 window.joinMatch = joinMatch;
+
+
 
 
 
