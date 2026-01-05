@@ -35,7 +35,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 
 const Otp = require("../models/Otp");
-
+const Poster = require("../models/Poster");
 const sendEmail = require("../utils/sendEmail");
 
 
@@ -6250,7 +6250,7 @@ router.post("/joins", auth, async (req, res) => {
           headshot: headshot ?? false,
           characterSkill: characterSkill ?? false,
           gunAttributes: gunAttributes ?? false,
-          throwableLimit: throwableLimit ?? 0
+          throwableLimit: throwableLimit ?? false,
         },
         selectedGuns: categorizedGuns
       }
@@ -7682,6 +7682,76 @@ router.post("/payment-config", authAdmin, upload.single("qrImage"), async (req, 
 
 
 
+// ------------------ ADMIN UPLOAD POSTER ------------------
+router.post(
+  "/admin/poster/upload",
+  authAdmin,
+  upload.single("image"), // <-- MUST be here
+  async (req, res) => {
+    try {
+      const { game } = req.body; // multer fills req.body
+
+      if (!game) return res.status(400).json({ success: false, msg: "Game is required" });
+      if (!req.file) return res.status(400).json({ success: false, msg: "Image is required" });
+
+      const poster = await Poster.create({
+        game,
+        image: `/uploads/${req.file.filename}`,
+        redirectUrl: "/kavi.html"
+      });
+
+      res.json({ success: true, msg: "Poster uploaded successfully", poster });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ success: false, msg: "Server error" });
+    }
+  }
+);
+
+// ------------------ USER GET POSTERS ------------------
+router.get("/posters", async (req, res) => {
+  try {
+    const { game } = req.query;
+    const filter = {};
+    if (game) filter.game = game;
+
+    const posters = await Poster.find(filter)
+      .sort({ createdAt: -1 })
+      .select("image redirectUrl game");
+
+    res.json({ success: true, posters });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, msg: "Failed to load posters" });
+  }
+});
+
+
+
+
+// ------------------ ADMIN DELETE POSTER ------------------
+router.delete("/admin/poster/:id", authAdmin, async (req, res) => {
+  try {
+    const posterId = req.params.id;
+
+    const poster = await Poster.findById(posterId);
+    if (!poster) return res.status(404).json({ success: false, msg: "Poster not found" });
+
+    // Delete the file from uploads folder
+    const filePath = path.join(__dirname, "..", "public", poster.image); // adjust path if needed
+    fs.unlink(filePath, (err) => {
+      if (err) console.warn("Failed to delete poster file:", err.message);
+    });
+
+    // Delete the poster document
+    await poster.deleteOne();
+
+    res.json({ success: true, msg: "Poster deleted successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, msg: "Server error" });
+  }
+});
 
 
 module.exports = router;

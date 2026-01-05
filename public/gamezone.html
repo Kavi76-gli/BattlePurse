@@ -754,141 +754,139 @@ body{
 h1{ font-size:20px; margin:0; }
 p.lead{ margin:6px 0 0; color:var(--muted); font-size:13px; }
 
-/* ===============================
-   MODE SELECTION
-   =============================== */
-.modes{
-  display:grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap:12px;
-  margin-top:16px;
+
+
+ body {
+    font-family: "Segoe UI", sans-serif;
+    background: #050b14;
+    color: #e8f7ff;
+    margin: 0;
+    padding: 20px;
+  }
+
+  h1 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .poster-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 15px;
+  }
+
+  .poster-card {
+    background: #0b1625;
+    border: 1px solid #12314d;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .poster-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px #00cfff;
+  }
+
+  .poster-card img {
+    width: 100%;
+    display: block;
+  }
+
+  .poster-info {
+    padding: 8px;
+    text-align: center;
+    font-size: 14px;
+    color: #a9dfff;
+  }
+
+
+
+
+
+/* Title */
+.poster-title {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  margin: 16px 0;
+  color: #fff;
 }
 
-.mode-tile{
-  background:var(--glass);
-  border-radius:10px;
-  padding:12px;
-  text-align:center;
-  cursor:pointer;
-  transition:0.15s ease;
-  border:1px solid rgba(255,255,255,0.02);
-}
-.mode-tile:hover{
-  transform:translateY(-4px);
-  box-shadow: 0 12px 36px rgba(0,0,0,0.6);
-}
-.mode-tile h3{
-  margin:0;
-  color:var(--accent);
-}
-.mode-tile p{
-  margin:6px 0 0;
-  color:var(--muted);
-  font-size:12px;
+/* Scrollable section */
+.poster-section {
+  max-height: 320px;              /* 👈 own scroll area */
+  overflow-y: auto;
+  padding: 10px;
+  margin: 0 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(6px);
 }
 
-/* ===============================
-   FORM
-   =============================== */
-.panel h2{
-  margin:0 0 6px;
-  font-size:16px;
-  color:var(--accent);
+/* Custom scrollbar (optional but pro) */
+.poster-section::-webkit-scrollbar {
+  width: 6px;
 }
-.panel p.desc{
-  margin:0 0 14px;
-  color:var(--muted);
-  font-size:13px;
+.poster-section::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.25);
+  border-radius: 10px;
 }
 
-label{
-  display:block;
-  font-size:13px;
-  color:var(--muted);
-  margin-top:12px;
+/* Grid */
+.poster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 14px;
 }
 
-input[type=text], 
-input[type=number], 
-select{
-  width:100%;
-  padding:10px;
-  border-radius:8px;
-  border:1px solid rgba(255,255,255,0.04);
-  background:var(--input);
-  color:#dfeefc;
-  font-size:14px;
-  margin-top:6px;
+/* Poster card */
+.poster-card {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  background: #111;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
-.inline{
-  display:flex;
-  gap:8px;
-}
-.inline input, .inline select{ flex:1; }
-
-/* ===============================
-   FREE FIRE SETTINGS SECTION
-   =============================== */
-.ff-settings{
-  margin-top:10px;
-  padding:12px;
-  border-radius:10px;
-  background:rgba(255,255,255,0.02);
-  border:1px solid rgba(255,255,255,0.01);
-  display:none;
+.poster-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.6);
 }
 
-.guns{
-  max-height:220px;
-  overflow:auto;
-  padding:8px;
-  display:none;
-  border-radius:8px;
-  background:rgba(255,255,255,0.01);
-  border:1px solid rgba(255,255,255,0.02);
-  margin-top:8px;
+/* Poster image */
+.poster-card img {
+  width: 100%;
+  height: 170px;
+  object-fit: cover;
+  display: block;
 }
 
-.gun-row{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-}
-.gun-row label{
-  font-size:13px;
-  padding:6px 10px;
-  border-radius:8px;
-  color:#cfe9ff;
-  border:1px solid rgba(255,255,255,0.03);
-  cursor:pointer;
+/* Bottom overlay */
+.poster-info {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  text-align: center;
+  background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
 }
 
-/* ===============================
-   BUTTONS
-   =============================== */
-.controls{
-  display:flex;
-  gap:12px;
-  margin-top:16px;
+/* Update note */
+.update-note {
+  text-align: center;
+  margin: 14px 0;
+  font-size: 13px;
+  opacity: 0.75;
 }
-.btn{
-  padding:10px 14px;
-  border-radius:10px;
-  border:none;
-  cursor:pointer;
-  font-weight:700;
-}
-.btn-primary{
-  background: linear-gradient(90deg,var(--accent),var(--accent-2));
-  color:#022026;
-  box-shadow: 0 8px 30px rgba(0,213,255,0.06);
-}
-.btn-ghost{
-  background:transparent;
-  color:var(--muted);
-  border:1px solid rgba(255,255,255,0.04);
-}
+
+
+
 
 /* ===============================
    MESSAGES
@@ -1270,150 +1268,13 @@ select{
 
 
 
-<div class="container">
-  <!-- Left: selection -->
-  <div class="card">
-    <div class="brand">
-      <h1>BGMI & Free Fire Match War</h1>
-      <p class="lead">Pick match size, choose winning system for team matches, then configure settings and join.</p>
-    </div>
+<h1 class="poster-title war-title">
+  ⚔️ Free Fire × BGMI Match War ⚔️
+</h1>
 
-    <div class="modes" id="modeSection">
-      <div class="mode-tile" onclick="openMatchForm('1v1')"><h3>1v1</h3><p>Solo vs Solo</p></div>
-      <div class="mode-tile" onclick="openMatchForm('2v2')"><h3>2v2</h3><p>Duo Battles</p></div>
-      <div class="mode-tile" onclick="openMatchForm('3v3')"><h3>3v3</h3><p>Triple Team War</p></div>
-      <div class="mode-tile" onclick="openMatchForm('4v4')"><h3>4v4</h3><p>Squad Fight</p></div>
-    </div>
-
-    <div id="prizeSystemSection" style="display:none;text-align:center">
-      <h3>Select Winning System</h3>
-      <div class="modes" style="grid-template-columns:repeat(2,1fr);">
-        <div class="mode-tile" onclick="selectPrizeSystem('kill_based')"><h3>Kill-Based</h3></div>
-        <div class="mode-tile" onclick="selectPrizeSystem('team_equal')"><h3>Team Equal</h3></div>
-      </div>
-      <button class="btn btn-ghost" onclick="backToModes()">⬅ Back</button>
-    </div>
-
-    <div class="small-note">More updates coming soon.</div>
-  </div>
-
-  <!-- Right: form -->
-  <div class="panel" role="region" aria-labelledby="join-title">
-    <h2 id="join-title">Join Match</h2>
-    <p id="form-message"></p>
-
-    <form id="matchForm" onsubmit="return false;">
-      <input type="hidden" id="type" />
-      <input type="hidden" id="prizeSystem" />
-
-      <label>Game</label>
-      <select id="game" onchange="updateGameOptions()">
-        <option value="">Select Game</option>
-        <option value="Free Fire">Free Fire</option>
-        <option value="BGMI">BGMI (Coming Soon)</option>
-      </select>
-
-      <label>Mode</label>
-      <select id="mode" onchange="updateMapOptions()"></select>
-
-      <div id="mapSection" style="display:none">
-        <label>Map</label>
-        <select id="map"></select>
-      </div>
-
-      <div class="field">
-        <label for="rounds">Rounds</label>
-        <select id="rounds">
-          <option value="">Select rounds</option>
-          <option value="7">7</option>
-          <option value="9">9</option>
-          <option value="11">11</option>
-          <option value="13">13</option>
-          <option value="15">15</option>
-        </select>
-      </div>
-
-      <div id="freeFireFields">
-        <label>Headshot</label>
-        <select id="headshot">
-          <option value="true">Yes</option>
-          <option value="false">No</option>
-        </select>
-
-        <label>Character Skill</label>
-        <select id="characterSkill">
-          <option value="true">Yes</option>
-          <option value="false">No</option>
-        </select>
-
-        <label>Gun Attributes</label>
-        <select id="gunAttributes">
-          <option value="true">Yes</option>
-          <option value="false">No</option>
-        </select>
-
-        <label>Throwable Limit</label>
-        <select id="throwableLimit">
-          <option value="true">Yes</option>
-          <option value="false">No</option>
-        </select>
-
-        <label>Room Type</label>
-        <select id="roomType" onchange="toggleGunSelection()">
-          <option value="Regular">Regular</option>
-          <option value="Advance">Advance</option>
-        </select>
-
-        <div id="gunSelection">
-          <div id="gunsList" class="gun-row"></div>
-        </div>
-      </div>
-
-      <label>Game UID</label>
-      <input id="uid" type="text" placeholder="Enter your game UID" />
-
-      <label>WhatsApp number</label>
-      <div class="inline">
-        <select id="countryCode">
-          <option value="+91">+91 (India)</option>
-          <option value="+1">+1 (USA)</option>
-          <option value="+44">+44 (UK)</option>
-          <option value="+61">+61 (AUS)</option>
-        </select>
-        <input id="whatsappNumber" type="text" placeholder="e.g. 9876543210" />
-      </div>
-
-      <select id="fee">
-  <option value="">Select Fee</option>
-  <option value="50">₹50</option>
-  <option value="100">₹100</option>
-  <option value="150">₹150</option>
-  <option value="200">₹200</option>
-  <option value="custom">Custom</option>
-</select>
-
-<input
-  type="number"
-  id="entryFee"
-  placeholder="Enter amount above ₹200"
-  min="201"
-  style="display:none;margin-top:8px"
-/>
-
-
-      <div class="controls">
-        <button id="joinBtn" class="btn btn-primary" onclick="joinMatch()">Join Match</button>
-        <button type="button" class="btn btn-ghost" onclick="showHome()">Cancel</button>
-      </div>
-    </form>
-  </div>
+<div class="poster-section">
+  <div class="poster-grid" id="posterGrid"></div>
 </div>
-        <div id="form-message" class="message" role="status" aria-live="polite"></div>
-        <div id="form-help" class="small-note" style="margin-top:10px;color:var(--muted)">Prize system is selected in the left panel for team matches.</div>
-      </form>
-    </div>
-  </div>
-
 
 <div class="update-note">
   More updates coming soon. Thank you for being with us.
@@ -1421,8 +1282,11 @@ select{
 
 
 
+
+
 <script>
-const API_BASE = "https://battlepurse-88.onrender.com/api/wallet";
+  const API_BASE = "http://localhost:5000/api/wallet";
+
 const token = localStorage.getItem('token');
 const UPLOADS_BASE = "https://battlepurse-88.onrender.com/uploads";
 const BACKEND_URL = API_BASE;
@@ -1443,6 +1307,11 @@ const BACKEND_URL = API_BASE;
   /* ------------- Config ------------- */
   const API_BASE = (typeof BACKEND_URL !== 'undefined' && BACKEND_URL) ? BACKEND_URL : "https://battlepurse-88.onrender.com/api/wallet";
   const TOKEN = localStorage.getItem('token') || "";
+
+
+ 
+
+
 
   /* ------------- Simple helpers ------------- */
   const $ = id => document.getElementById(id);
@@ -1635,265 +1504,59 @@ const BACKEND_URL = API_BASE;
 
   /* ------------- Constants (modes, maps, guns) ------------- */
     /* ------------- Constants (modes, maps, guns) ------------- */
-  // UI state
-/* =========================
-   UI STATE
-/* =========================
-   JS CODE (functions + logic)
-========================= */
-/* =========================
-   CONSTANTS
-========================= */
-/* =========================
-   CONSTANTS
-========================= */
-const BGMI_MODES = ["TDM", "Gun Game"];
-const FF_MODES = ["Clash Squad", "Lone Wolf"];
-const CLASH_SQUAD_MAPS = ["Bermuda", "Alpine", "Kalahari", "Purgatory", "Nexterra"];
-const LONE_WOLF_MAPS = ["Iron Cage"];
-const ALLOWED_ROUNDS = [7, 9, 11, 13, 15];
+ 
 
-const GUN_CATEGORIES = {
-  AR: ["AK","M4A1","SCAR","GROZA","FAMAS","AN94","XM8","M14","PARAFAL","KINGFISHER","AUG","AC80"],
-  SMG: ["MP40","MP5","UMP","VSS","THOMPSON","VECTOR","BIZON","UZI","MAC10"],
-  SNIPER: ["AWM","KAR98K","M82B","M24","SVD","SKS","WOODPECKER"],
-  SHOTGUN: ["M1014","M1887","MAG7","SPAS12","Trogon"],
-  PISTOLS: ["USP","G18","M500","Desert Eagle","Treatment Pistol","Hand Cannon"],
-  LAUNCHERS: ["M79","RGS50","MGL140"],
-  SPECIAL: ["Plasma Gun","Laser Gun (CS)","CG15","Crossbow","Flame Bow"]
-};
 
-/* =========================
-   DOM REFERENCES
-========================= */
-const gameEl = document.getElementById("game");
-const modeEl = document.getElementById("mode");
-const mapEl = document.getElementById("map");
-const mapSection = document.getElementById("mapSection");
+const posterGrid = document.getElementById("posterGrid");
 
-const roomTypeEl = document.getElementById("roomType");
-const freeFireFields = document.getElementById("freeFireFields");
-const gunSelection = document.getElementById("gunSelection");
-const gunsList = document.getElementById("gunsList");
-
-const uidEl = document.getElementById("uid");
-const countryCodeEl = document.getElementById("countryCode");
-const whatsappEl = document.getElementById("whatsappNumber");
-
-const feeEl = document.getElementById("fee");
-const customFeeEl = document.getElementById("entryFee");
-const joinBtn = document.querySelector(".btn-primary");
-const formMessage = document.getElementById("form-message");
-
-let selectedType = "";
-let selectedPrizeSystem = null;
-
-/* =========================
-   HELPERS
-========================= */
-function show(el){ el && (el.style.display = "block"); }
-function hide(el){ el && (el.style.display = "none"); }
-
-function setMessage(msg = "", error = true){
-  formMessage.textContent = msg;
-  formMessage.style.color = error ? "red" : "#00ff99";
-}
-
-/* =========================
-   ENTRY FEE (FIXED)
-========================= */
-function toggleCustomFee(){
-  if(feeEl.value === "custom"){
-    show(customFeeEl);
-    customFeeEl.value = "";
-    joinBtn.disabled = true;
-    joinBtn.style.opacity = "0.6";
-    setMessage("Custom entry fee must be more than ₹200");
-  } else {
-    hide(customFeeEl);
-    joinBtn.disabled = false;
-    joinBtn.style.opacity = "1";
-    setMessage("");
-  }
-}
-
-function getFinalEntryFee(){
-  const selected = feeEl.value;
-
-  if(["50","100","150","200"].includes(selected)){
-    return Number(selected);
-  }
-
-  if(selected === "custom"){
-    const val = Number(customFeeEl.value);
-    if(!val || val <= 200){
-      joinBtn.disabled = true;
-      joinBtn.style.opacity = "0.6";
-      setMessage("Custom entry fee must be more than ₹200");
-      return null;
-    }
-    joinBtn.disabled = false;
-    joinBtn.style.opacity = "1";
-    setMessage("");
-    return val;
-  }
-
-  setMessage("Please select entry fee");
-  return null;
-}
-
-/* =========================
-   GAME / MODE / MAP
-========================= */
-function updateGameOptions(){
-  modeEl.innerHTML = "";
-  mapEl.innerHTML = "";
-
-  if(gameEl.value === "BGMI" || gameEl.value === "PUBG"){
-    BGMI_MODES.forEach(m => modeEl.add(new Option(m,m)));
-    hide(freeFireFields);
-    hide(mapSection);
-  }
-  else if(gameEl.value === "Free Fire"){
-    FF_MODES.forEach(m => modeEl.add(new Option(m,m)));
-    show(freeFireFields);
-    show(mapSection);
-  }
-
-  updateMapOptions();
-  toggleGunSelection();
-}
-
-function updateMapOptions(){
-  if(gameEl.value !== "Free Fire"){
-    hide(mapSection);
-    return;
-  }
-
-  show(mapSection);
-  mapEl.innerHTML = "";
-  const maps = modeEl.value === "Clash Squad" ? CLASH_SQUAD_MAPS : LONE_WOLF_MAPS;
-  maps.forEach(m => mapEl.add(new Option(m,m)));
-}
-
-/* =========================
-   GUN SELECTION
-========================= */
-function toggleGunSelection(){
-  gunsList.innerHTML = "";
-
-  if(roomTypeEl.value !== "Advance"){
-    hide(gunSelection);
-    return;
-  }
-
-  show(gunSelection);
-  for(const cat in GUN_CATEGORIES){
-    const label = document.createElement("div");
-    label.textContent = cat;
-    label.style.color = "#aaa";
-    label.style.fontSize = "12px";
-    gunsList.appendChild(label);
-
-    GUN_CATEGORIES[cat].forEach(g => {
-      const el = document.createElement("label");
-      el.innerHTML = `<input type="checkbox" value="${g}"> ${g}`;
-      gunsList.appendChild(el);
-    });
-  }
-}
-
-/* =========================
-   MATCH TYPE
-========================= */
-function openMatchForm(type){
-  selectedType = type;
-  document.getElementById("type").value = type;
-
-  if(type === "1v1"){
-    selectedPrizeSystem = "kill_based";
-    document.getElementById("prizeSystem").value = selectedPrizeSystem;
-    hide(document.getElementById("prizeSystemSection"));
-  } else {
-    show(document.getElementById("prizeSystemSection"));
-  }
-
-  showForm();
-}
-
-function selectPrizeSystem(ps){
-  selectedPrizeSystem = ps;
-  document.getElementById("prizeSystem").value = ps;
-  hide(document.getElementById("prizeSystemSection"));
-  showForm();
-}
-
-function showForm(){
-  updateGameOptions();
-  show(document.querySelector(".panel"));
-}
-
-/* =========================
-   JOIN MATCH (FINAL FIX)
-========================= */
-async function joinMatch(){
-  const finalFee = getFinalEntryFee();
-  if(finalFee === null) return;
-
-  const payload = {
-    type: selectedType,
-    game: gameEl.value,
-    mode: modeEl.value,
-    rounds: Number(document.getElementById("rounds").value),
-    uid: uidEl.value.trim(),
-    fee: finalFee,
-    prizeSystem: selectedPrizeSystem || "kill_based",
-    countryCode: countryCodeEl.value,
-    whatsappNumber: whatsappEl.value.replace(/\D/g,""),
-    map: mapEl.value || null,
-    roomType: roomTypeEl.value,
-    selectedGuns: [...document.querySelectorAll("#gunsList input:checked")].map(i=>i.value)
-  };
-
-  try{
-    setMessage("Joining match...", false);
-
-    const res = await fetch(`${API_BASE}/joins`,{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        "Authorization":"Bearer "+TOKEN
-      },
-      body:JSON.stringify(payload)
-    });
-
+async function loadPosters() {
+  try {
+    const res = await fetch(API_BASE + "/posters");
     const data = await res.json();
-    if(res.ok && data.success){
-      setMessage(`Joined successfully. ₹${finalFee} deducted`, false);
-      window.location.href = `user-room.html?matchId=${data.match._id}`;
-    } else {
-      setMessage(data.msg || "Join failed");
+
+    if (!data.success) throw new Error("Failed to load posters");
+
+    posterGrid.innerHTML = "";
+
+    if (data.posters.length === 0) {
+      posterGrid.innerHTML =
+        "<p style='grid-column:1/-1;text-align:center;'>No posters available</p>";
+      return;
     }
-  }catch(err){
-    setMessage("Network error");
+
+    data.posters.forEach(poster => {
+      const card = document.createElement("div");
+      card.className = "poster-card";
+
+      card.innerHTML = `
+       
+        <img src="${API_BASE}${poster.image}" alt="${poster.game}">
+        <div class="poster-info">${poster.game}</div>
+      `;
+
+      // ✅ ALWAYS GO TO kavi.html
+      card.onclick = () => {
+        window.location.href = "kavi.html";
+      };
+
+      posterGrid.appendChild(card);
+    });
+
+  } catch (err) {
+    console.error(err);
+    posterGrid.innerHTML =
+      "<p style='grid-column:1/-1;color:red;text-align:center;'>Error loading posters</p>";
   }
 }
 
-/* =========================
-   EVENTS
-========================= */
-gameEl.addEventListener("change", updateGameOptions);
-modeEl.addEventListener("change", updateMapOptions);
-roomTypeEl.addEventListener("change", toggleGunSelection);
-feeEl.addEventListener("change", toggleCustomFee);
-customFeeEl.addEventListener("input", getFinalEntryFee);
+loadPosters();
 
-/* =========================
-   EXPORT
-========================= */
-window.openMatchForm = openMatchForm;
-window.selectPrizeSystem = selectPrizeSystem;
-window.joinMatch = joinMatch;
+
+
+
+
+
+
 
 
 /* ------------- Attach listeners & init UI ------------- */

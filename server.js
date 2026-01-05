@@ -1,8 +1,6 @@
-
-
-
 require("dotenv").config();
 console.log("RUNNING SERVER FROM:", __filename);
+
 if (process.env.EMAIL_HOST === "127.0.0.1" || process.env.EMAIL_HOST === "localhost") {
   throw new Error("❌ Local SMTP is forbidden in production");
 }
@@ -19,7 +17,6 @@ process.setMaxListeners(20);
    ENV DEBUG (SAFE LOGS)
 ====================== */
 console.log("APP PORT =", process.env.PORT);
-
 
 /* ======================
    REQUIRED ENV CHECK
@@ -43,17 +40,16 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 console.log("JWT SECRET EXISTS:", !!process.env.JWT_SECRET);
 
-
 /* ======================
    STATIC FILES
 ====================== */
-app.use(express.static(path.join(__dirname, "public")));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use(express.static(path.join(__dirname, "public"))); // for HTML/CSS/JS
+app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // for poster images
 
 /* ======================
    API ROUTES
 ====================== */
-app.use("/api/wallet", require("./routes/wallet"));
+app.use("/api/wallet", require("./routes/wallet")); // your wallet & poster routes
 
 /* ======================
    FRONTEND ENTRY
@@ -77,9 +73,7 @@ mongoose
     maxPoolSize: 10,
     serverSelectionTimeoutMS: 5000,
   })
-  .then(() => {
-    console.log("✅ MongoDB Atlas connected");
-  })
+  .then(() => console.log("✅ MongoDB Atlas connected"))
   .catch((err) => {
     console.error("❌ MongoDB connection failed:", err.message);
     process.exit(1);
@@ -88,8 +82,9 @@ mongoose
 /* ======================
    START SERVER
 ====================== */
-const PORT = Number(process.env.PORT);
+const PORT = Number(process.env.PORT || 5000);
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+
+
