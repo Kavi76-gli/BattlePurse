@@ -782,7 +782,7 @@ async function joinMatch(){
   const headshot=document.getElementById('headshot')?.value==='true';
   const characterSkill=document.getElementById('characterSkill')?.value==='true';
   const gunAttributes=document.getElementById('gunAttributes')?.value==='true';
-  const throwableLimit=Number(document.getElementById('throwableLimit')?.value||0);
+  const throwableLimit=document.getElementById('throwableLimit')?.value==='true';
 
   const feeVal=getFinalEntryFee(); if(feeVal===null) return;
 

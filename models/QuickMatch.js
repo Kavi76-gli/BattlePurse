@@ -57,7 +57,7 @@ const PlayerSchema = new mongoose.Schema(
         headshot: { type: Boolean, default: false },
         characterSkill: { type: Boolean, default: false },
         gunAttributes: { type: Boolean, default: false },
-        throwableLimit: { type: Number, default: 0 }
+        throwableLimit: { type: Boolean, default: false },
       },
 
       selectedGuns: {

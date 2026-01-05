@@ -1289,6 +1289,7 @@ p.lead{ margin:6px 0 0; color:var(--muted); font-size:13px; }
 
 const token = localStorage.getItem('token');
 const UPLOADS_BASE = "https://battlepurse-88.onrender.com/uploads";
+const BACKENDS_URL = "https://battlepurse-88.onrender.com";
 const BACKEND_URL = API_BASE;
 
 
@@ -1511,16 +1512,19 @@ const posterGrid = document.getElementById("posterGrid");
 
 async function loadPosters() {
   try {
-    const res = await fetch(API_BASE + "/posters");
+    const res = await fetch(`${API_BASE}/posters`);
     const data = await res.json();
 
     if (!data.success) throw new Error("Failed to load posters");
 
     posterGrid.innerHTML = "";
 
-    if (data.posters.length === 0) {
-      posterGrid.innerHTML =
-        "<p style='grid-column:1/-1;text-align:center;'>No posters available</p>";
+    if (!data.posters || data.posters.length === 0) {
+      posterGrid.innerHTML = `
+        <p style="grid-column:1/-1;text-align:center;opacity:0.7;">
+          No posters available
+        </p>
+      `;
       return;
     }
 
@@ -1528,27 +1532,33 @@ async function loadPosters() {
       const card = document.createElement("div");
       card.className = "poster-card";
 
+      // ✅ Correct image URL (VERY IMPORTANT)
+      const imageUrl = BACKENDS_URL + poster.image;
+
       card.innerHTML = `
-       
-        <img src="${API_BASE}${poster.image}" alt="${poster.game}">
+        <img src="${imageUrl}" alt="${poster.game} Poster" loading="lazy">
         <div class="poster-info">${poster.game}</div>
       `;
 
-      // ✅ ALWAYS GO TO kavi.html
-      card.onclick = () => {
+      // 👉 Always go to kavi.html
+      card.addEventListener("click", () => {
         window.location.href = "kavi.html";
-      };
+      });
 
       posterGrid.appendChild(card);
     });
 
   } catch (err) {
-    console.error(err);
-    posterGrid.innerHTML =
-      "<p style='grid-column:1/-1;color:red;text-align:center;'>Error loading posters</p>";
+    console.error("Poster load error:", err);
+    posterGrid.innerHTML = `
+      <p style="grid-column:1/-1;color:#ff6b6b;text-align:center;">
+        Error loading posters
+      </p>
+    `;
   }
 }
 
+// 🚀 Initial load
 loadPosters();
 
 

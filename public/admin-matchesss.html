@@ -352,7 +352,7 @@ async function loadJoined(){
     tr.appendChild(tdBoolean(p.gameSettings.headshot));
     tr.appendChild(tdBoolean(p.gameSettings.characterSkill));
     tr.appendChild(tdBoolean(p.gameSettings.gunAttributes));
-    tr.appendChild(tdText(p.gameSettings.throwableLimit));
+    tr.appendChild(tdBoolean(p.gameSettings.throwableLimit));
     tr.appendChild(tdGuns(p.selectedGuns));
 
     const actionTd = document.createElement('td');
@@ -407,7 +407,7 @@ async function loadUnpaired(){
     tr.appendChild(tdBoolean(p.gameSettings.headshot));
     tr.appendChild(tdBoolean(p.gameSettings.characterSkill));
     tr.appendChild(tdBoolean(p.gameSettings.gunAttributes));
-    tr.appendChild(tdText(p.gameSettings.throwableLimit));
+     tr.appendChild(tdBoolean(p.gameSettings.throwableLimit));
     tr.appendChild(tdGuns(p.selectedGuns));
 
     const actionTd = document.createElement('td');
@@ -454,7 +454,7 @@ async function loadPaired(){
     tr.appendChild(tdBoolean(p.gameSettings.headshot));
     tr.appendChild(tdBoolean(p.gameSettings.characterSkill));
     tr.appendChild(tdBoolean(p.gameSettings.gunAttributes));
-    tr.appendChild(tdText(p.gameSettings.throwableLimit));
+   tr.appendChild(tdBoolean(p.gameSettings.throwableLimit));
     tr.appendChild(tdGuns(p.selectedGuns));
 
     const actionTd = document.createElement('td');
