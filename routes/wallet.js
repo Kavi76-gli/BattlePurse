@@ -2882,7 +2882,7 @@ const rounds =
             headshot: !!ff.gameSettings?.headshot,
             characterSkill: !!ff.gameSettings?.characterSkill,
             gunAttributes: !!ff.gameSettings?.gunAttributes,
-            throwableLimit: ff.gameSettings?.throwableLimit || 0
+            throwableLimit: ff.gameSettings?.throwableLimit ,
           },
 
           selectedGuns: {
