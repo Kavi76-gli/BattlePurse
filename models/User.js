@@ -78,7 +78,16 @@ const UserSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-
+passkeys: [
+  {
+    credentialId: String,
+    publicKey: String,
+    counter: Number,
+    deviceName: String,
+    createdAt: { type: Date, default: Date.now }
+  }
+]
+,
     // =========================
     // 🔐 K-CODE (DEVICE UNLOCK)
     // =========================

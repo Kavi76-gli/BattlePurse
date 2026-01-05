@@ -316,6 +316,134 @@ router.post("/resend-otp", async (req, res) => {
 });
 
 
+router.post("/passkey/register/start", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ msg: "User not found" });
+
+    const options = generateRegistrationOptions({
+      rpName: "BattlePurse",
+      rpID: "battlepurse-88.onrender.com", // ✅ REAL DOMAIN
+      userID: user._id.toString(),
+      userName: user.email,
+      timeout: 60000,
+      authenticatorSelection: {
+        userVerification: "required",
+        residentKey: "preferred"
+      }
+    });
+
+    user.currentChallenge = options.challenge;
+    await user.save();
+
+    res.json(options);
+
+  } catch (err) {
+    console.error("Passkey start error:", err);
+    res.status(500).json({ msg: "Failed to start passkey registration" });
+  }
+});
+
+
+router.post("/passkey/register/verify", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user || !user.currentChallenge)
+      return res.status(400).json({ msg: "Invalid session" });
+
+    const verification = await verifyRegistrationResponse({
+      response: req.body,
+      expectedChallenge: user.currentChallenge,
+      expectedOrigin: "https://battlepurse-88.onrender.com",
+      expectedRPID: "battlepurse-88.onrender.com",
+      requireUserVerification: true
+    });
+
+    if (!verification.verified)
+      return res.status(400).json({ msg: "Passkey verification failed" });
+
+    const { credentialID, credentialPublicKey, counter } =
+      verification.registrationInfo;
+
+    const credId = credentialID.toString("base64");
+
+    // ❌ Prevent duplicate device
+    if (user.passkeys.some(p => p.credentialId === credId))
+      return res.status(400).json({ msg: "Device already registered" });
+
+    user.passkeys.push({
+      credentialId: credId,
+      publicKey: credentialPublicKey.toString("base64"),
+      counter,
+      deviceName: req.headers["user-agent"]
+    });
+
+    user.currentChallenge = undefined;
+    await user.save();
+
+    res.json({ success: true, msg: "Passkey enabled successfully" });
+
+  } catch (err) {
+    console.error("Passkey verify error:", err);
+    res.status(400).json({ msg: "Invalid passkey response" });
+  }
+});
+
+router.post("/passkey/login/start", async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+
+  if (!user || !user.passkeys.length)
+    return res.status(400).json({ msg: "No passkey found" });
+
+  const options = generateAuthenticationOptions({
+    allowCredentials: user.passkeys.map(k => ({
+      id: Buffer.from(k.credentialId, "base64"),
+      type: "public-key"
+    })),
+    userVerification: "required"
+  });
+
+  user.currentChallenge = options.challenge;
+  await user.save();
+
+  res.json(options);
+});
+
+router.post("/passkey/login/verify", async (req, res) => {
+  const { email, response } = req.body;
+  const user = await User.findOne({ email });
+
+  const passkey = user.passkeys.find(
+    k => k.credentialId === response.id
+  );
+
+  const verification = verifyAuthenticationResponse({
+    response,
+    expectedChallenge: user.currentChallenge,
+    expectedOrigin: "https://yourdomain.com",
+    expectedRPID: "yourdomain.com",
+    authenticator: {
+      credentialPublicKey: Buffer.from(passkey.publicKey, "base64"),
+      counter: passkey.counter
+    }
+  });
+
+  if (!verification.verified)
+    return res.status(400).json({ msg: "Biometric failed" });
+
+  passkey.counter = verification.authenticationInfo.newCounter;
+  user.currentChallenge = undefined;
+  await user.save();
+
+  const token = jwt.sign(
+    { id: user._id, isAdmin: user.isAdmin },
+    process.env.JWT_SECRET,
+    { expiresIn: "365d" }
+  );
+
+  res.json({ success: true, token });
+});
 
 
 
@@ -3319,6 +3447,11 @@ router.get("/pairss/:matchId", authAdmin, async (req, res) => {
 
 // POST /pair — Admin pairs players for a match
 // POST /pair — Admin pairs players for a match
+
+
+const NON_ROUND_GAMES = ["Ludo", "Carrom", "Cricket", "8 Ball Pool"];
+
+// POST /pair — Admin pairs players for a match
 router.post("/pair", authAdmin, async (req, res) => {
   try {
     const { selectedMembers, game, mode, type, entryFee } = req.body;
@@ -3327,7 +3460,7 @@ router.post("/pair", authAdmin, async (req, res) => {
       return res.status(400).json({ success: false, msg: "No members selected" });
     }
 
-    // ❌ Prevent players from joining multiple active matches
+    // ❌ Prevent multiple active matches
     const activeExists = await QuickMatch.findOne({
       status: { $in: ["paired", "room_created", "ongoing"] },
       "players.userId": { $in: selectedMembers.map(p => p.userId) }
@@ -3340,7 +3473,6 @@ router.post("/pair", authAdmin, async (req, res) => {
       });
     }
 
-    // Determine team size
     const n = parseInt(type.split("v")[0], 10);
     const teamSize = n * 2;
 
@@ -3351,7 +3483,7 @@ router.post("/pair", authAdmin, async (req, res) => {
       });
     }
 
-    // Split into groups
+    // Split groups
     const groups = [];
     for (let i = 0; i < selectedMembers.length; i += teamSize) {
       groups.push(selectedMembers.slice(i, i + teamSize));
@@ -3362,7 +3494,6 @@ router.post("/pair", authAdmin, async (req, res) => {
 
     for (const group of groups) {
 
-      // 🎯 ROUND LOGIC (ONLY FOR ROUND GAMES)
       let rounds = null;
 
       if (!isNonRoundGame) {
@@ -3375,40 +3506,38 @@ router.post("/pair", authAdmin, async (req, res) => {
           });
         }
 
-        const roundsSet = new Set(roundsValues);
-        if (roundsSet.size !== 1) {
+        if (new Set(roundsValues).size !== 1) {
           return res.status(400).json({
             success: false,
-            msg: "All selected players must have the same rounds"
+            msg: "All selected players must have same rounds"
           });
         }
 
         rounds = roundsValues[0];
       }
 
-      // Prize system
       const prizeSystem =
         type === "1v1"
           ? "kill_based"
-          : (group[0].prizeSystem || "kill_based");
+          : (group[0]?.prizeSystem || "kill_based");
 
-      // Build players array
       const half = group.length / 2;
+
       const playersArr = group.map((p, idx) => ({
-        userId: p.userId && mongoose.Types.ObjectId.isValid(p.userId)
-          ? new mongoose.Types.ObjectId(p.userId)
-          : null,
+        userId:
+          p.userId && mongoose.Types.ObjectId.isValid(p.userId)
+            ? new mongoose.Types.ObjectId(p.userId)
+            : null,
         uid: p.uid,
         name: p.name || "Unknown",
         phone: p.phone || "Unknown",
         whatsappNumber: p.whatsappNumber || "",
         team: idx < half ? "LION" : "TIGER",
         joinedAt: p.joinedAt || new Date(),
-        rounds, // ✅ null for non-round games
+        rounds,
         freeFireSettings: p.freeFireSettings || {}
       }));
 
-      // Create match
       const newMatch = new QuickMatch({
         matchNumber: await QuickMatch.countDocuments() + 1,
         type,
@@ -3416,7 +3545,7 @@ router.post("/pair", authAdmin, async (req, res) => {
         mode,
         entryFee,
         prizeSystem,
-        rounds, // ✅ null allowed
+        rounds,
         players: playersArr,
         status: "paired",
         createdAt: new Date()
@@ -3433,10 +3562,11 @@ router.post("/pair", authAdmin, async (req, res) => {
     });
 
   } catch (err) {
-    console.error("🔥 PAIR ERROR:", err);
+    console.error("🔥 PAIR ROUTE ERROR:", err);
     res.status(500).json({ success: false, msg: "Server error" });
   }
 });
+
 
 router.post("/pair", authAdmin, async (req, res) => {
   try {
