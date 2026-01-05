@@ -1269,163 +1269,145 @@ select{
 </div>
 
 
- <div class="container">
-    <!-- Left: selection -->
-    <div class="card">
-      <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
-        <div>
-          <h1>BGMI & Free Fire Match War</h1>
-          <p class="lead">Pick match size, choose winning system for team matches, then configure settings and join.</p>
-        </div>
-      </div>
 
-      <div class="modes" id="modeSection" aria-label="Match types">
-        <div class="mode-tile" onclick="openMatchForm('1v1')"><h3>1v1</h3><p>Solo vs Solo</p></div>
-        <div class="mode-tile" onclick="openMatchForm('2v2')"><h3>2v2</h3><p>Duo Battles</p></div>
-        <div class="mode-tile" onclick="openMatchForm('3v3')"><h3>3v3</h3><p>Triple Team War</p></div>
-        <div class="mode-tile" onclick="openMatchForm('4v4')"><h3>4v4</h3><p>Squad Fight</p></div>
-      </div>
-
-      <div style="margin-top:14px">
-        <div id="prizeSystemSection" style="display:none;text-align:center">
-          <h3 style="margin:0 0 8px;color:var(--muted)">Select Winning System</h3>
-          <div class="modes" style="grid-template-columns:repeat(2,1fr);">
-            <div class="mode-tile" onclick="selectPrizeSystem('kill_based')"><h3>Kill-Based</h3><p>Prize by kills</p></div>
-            <div class="mode-tile" onclick="selectPrizeSystem('team_equal')"><h3>Team Equal</h3><p>Split equally</p></div>
-          </div>
-          <div style="margin-top:10px;text-align:center;">
-            <button class="btn btn-ghost" onclick="backToModes()">⬅ Back</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="small-note">More updates coming soon.</div>
+<div class="container">
+  <!-- Left: selection -->
+  <div class="card">
+    <div class="brand">
+      <h1>BGMI & Free Fire Match War</h1>
+      <p class="lead">Pick match size, choose winning system for team matches, then configure settings and join.</p>
     </div>
 
-    <!-- Right: form -->
-    <div class="panel" role="region" aria-labelledby="join-title">
-      <h2 id="join-title">Join Match</h2>
-      <p class="desc">When you pick Free Fire you'll see additional game settings and a full gun selection for advanced rooms.</p>
+    <div class="modes" id="modeSection">
+      <div class="mode-tile" onclick="openMatchForm('1v1')"><h3>1v1</h3><p>Solo vs Solo</p></div>
+      <div class="mode-tile" onclick="openMatchForm('2v2')"><h3>2v2</h3><p>Duo Battles</p></div>
+      <div class="mode-tile" onclick="openMatchForm('3v3')"><h3>3v3</h3><p>Triple Team War</p></div>
+      <div class="mode-tile" onclick="openMatchForm('4v4')"><h3>4v4</h3><p>Squad Fight</p></div>
+    </div>
 
-      <form id="matchForm" onsubmit="return false;" aria-describedby="form-help">
-        <input type="hidden" id="type" />
-        <input type="hidden" id="prizeSystem" />
+    <div id="prizeSystemSection" style="display:none;text-align:center">
+      <h3>Select Winning System</h3>
+      <div class="modes" style="grid-template-columns:repeat(2,1fr);">
+        <div class="mode-tile" onclick="selectPrizeSystem('kill_based')"><h3>Kill-Based</h3></div>
+        <div class="mode-tile" onclick="selectPrizeSystem('team_equal')"><h3>Team Equal</h3></div>
+      </div>
+      <button class="btn btn-ghost" onclick="backToModes()">⬅ Back</button>
+    </div>
 
+    <div class="small-note">More updates coming soon.</div>
+  </div>
 
+  <!-- Right: form -->
+  <div class="panel" role="region" aria-labelledby="join-title">
+    <h2 id="join-title">Join Match</h2>
+    <p id="form-message"></p>
 
-<label>Game</label>
-<select id="game" onchange="updateGameOptions()">
-  <option value="">Select Game</option>
-  
-  <option value="Free Fire">Free Fire</option>
-  <option value="BGMI">BGMI (Coming Soon)</option>
+    <form id="matchForm" onsubmit="return false;">
+      <input type="hidden" id="type" />
+      <input type="hidden" id="prizeSystem" />
+
+      <label>Game</label>
+      <select id="game" onchange="updateGameOptions()">
+        <option value="">Select Game</option>
+        <option value="Free Fire">Free Fire</option>
+        <option value="BGMI">BGMI (Coming Soon)</option>
+      </select>
+
+      <label>Mode</label>
+      <select id="mode" onchange="updateMapOptions()"></select>
+
+      <div id="mapSection" style="display:none">
+        <label>Map</label>
+        <select id="map"></select>
+      </div>
+
+      <div class="field">
+        <label for="rounds">Rounds</label>
+        <select id="rounds">
+          <option value="">Select rounds</option>
+          <option value="7">7</option>
+          <option value="9">9</option>
+          <option value="11">11</option>
+          <option value="13">13</option>
+          <option value="15">15</option>
+        </select>
+      </div>
+
+      <div id="freeFireFields">
+        <label>Headshot</label>
+        <select id="headshot">
+          <option value="true">Yes</option>
+          <option value="false">No</option>
+        </select>
+
+        <label>Character Skill</label>
+        <select id="characterSkill">
+          <option value="true">Yes</option>
+          <option value="false">No</option>
+        </select>
+
+        <label>Gun Attributes</label>
+        <select id="gunAttributes">
+          <option value="true">Yes</option>
+          <option value="false">No</option>
+        </select>
+
+        <label>Throwable Limit</label>
+        <select id="throwableLimit">
+          <option value="true">Yes</option>
+          <option value="false">No</option>
+        </select>
+
+        <label>Room Type</label>
+        <select id="roomType" onchange="toggleGunSelection()">
+          <option value="Regular">Regular</option>
+          <option value="Advance">Advance</option>
+        </select>
+
+        <div id="gunSelection">
+          <div id="gunsList" class="gun-row"></div>
+        </div>
+      </div>
+
+      <label>Game UID</label>
+      <input id="uid" type="text" placeholder="Enter your game UID" />
+
+      <label>WhatsApp number</label>
+      <div class="inline">
+        <select id="countryCode">
+          <option value="+91">+91 (India)</option>
+          <option value="+1">+1 (USA)</option>
+          <option value="+44">+44 (UK)</option>
+          <option value="+61">+61 (AUS)</option>
+        </select>
+        <input id="whatsappNumber" type="text" placeholder="e.g. 9876543210" />
+      </div>
+
+      <select id="fee">
+  <option value="">Select Fee</option>
+  <option value="50">₹50</option>
+  <option value="100">₹100</option>
+  <option value="150">₹150</option>
+  <option value="200">₹200</option>
+  <option value="custom">Custom</option>
 </select>
 
-        
+<input
+  type="number"
+  id="entryFee"
+  placeholder="Enter amount above ₹200"
+  min="201"
+  style="display:none;margin-top:8px"
+/>
 
-        <label>Mode</label>
-        <select id="mode" onchange="updateMapOptions()"></select>
 
-        <div id="mapSection" style="display:none">
-          <label>Map</label>
-          <select id="map"></select>
-        </div>
-
-        <div class="field">
-  <label for="rounds">Rounds</label>
-  <select id="rounds">
-    <option value="">Select rounds</option>
-    <option value="7">7</option>
-    <option value="9">9</option>
-    <option value="11">11</option>
-    <option value="13">13</option>
-    <option value="15">15</option>
-  </select>
+      <div class="controls">
+        <button id="joinBtn" class="btn btn-primary" onclick="joinMatch()">Join Match</button>
+        <button type="button" class="btn btn-ghost" onclick="showHome()">Cancel</button>
+      </div>
+    </form>
+  </div>
 </div>
-
-
-        <div id="freeFireFields" class="ff-settings" aria-hidden="true">
-          <label>Headshot</label>
-          <select id="headshot">
-            <option value="true">Yes</option>
-            <option value="false">No</option>
-          </select>
-
-          <label>Character Skill</label>
-          <select id="characterSkill">
-            <option value="true">Yes</option>
-            <option value="false">No</option>
-          </select>
-
-          <label>Gun Attributes</label>
-          <select id="gunAttributes">
-            <option value="true">Yes</option>
-            <option value="false">No</option>
-          </select>
-
-          <label>Throwable Limit</label>
-          <select id="throwableLimit">
-            <option value="true">Yes</option>
-            <option value="false">No</option>
-          </select>
-
-          <label>Room Type</label>
-          <select id="roomType" onchange="toggleGunSelection()">
-            <option value="Regular">Regular</option>
-            <option value="Advance">Advance</option>
-          </select>
-
-          <div id="gunSelection" class="guns" aria-hidden="true" aria-label="Gun selection (Advance)">
-            <div id="gunsList" class="gun-row" role="list"></div>
-          </div>
-        </div>
-
-        <label>Game UID</label>
-        <input id="uid" type="text" placeholder="Enter your game UID" />
-
-        <label>WhatsApp number</label>
-        <div class="inline">
-          <select id="countryCode">
-            <option value="+91">+91 (India)</option>
-            <option value="+1">+1 (USA)</option>
-            <option value="+44">+44 (UK)</option>
-            <option value="+61">+61 (AUS)</option>
-          </select>
-          <input id="whatsappNumber" type="text" placeholder="e.g. 9876543210" />
-        </div>
-
-<div class="form-row">
-  <label>Entry Fee (₹)</label>
-  <select id="fee" onchange="toggleCustomFee(this)">
-    <option value="" selected disabled>-- Select Fee --</option>
-    <option value="50">₹50</option>
-    <option value="100">₹100</option>
-    <option value="150">₹150</option>
-    <option value="200">₹200</option>
-    <option value="custom">Custom</option>
-  </select>
-
-  <input
-    type="number"
-    id="customFee"
-    class="custom-fee"
-    placeholder="Enter custom fee (min ₹50)"
-    min="50"
-    style="display:none; margin-top:8px;"
-  />
-</div>
-
-
-
-
-        
-
-        <div class="controls">
-          <button class="btn btn-primary" onclick="joinMatch()">Join Match</button>
-          <button type="button" class="btn btn-ghost" onclick="showHome()">Cancel</button>
-        </div>
-
         <div id="form-message" class="message" role="status" aria-live="polite"></div>
         <div id="form-help" class="small-note" style="margin-top:10px;color:var(--muted)">Prize system is selected in the left panel for team matches.</div>
       </form>
@@ -1656,13 +1638,12 @@ const BACKEND_URL = API_BASE;
   // UI state
 /* =========================
    UI STATE
+/* =========================
+   JS CODE (functions + logic)
 ========================= */
 /* =========================
-   UI STATE
+   CONSTANTS
 ========================= */
-let selectedType = '';
-let selectedPrizeSystem = null;
-
 /* =========================
    CONSTANTS
 ========================= */
@@ -1671,6 +1652,7 @@ const FF_MODES = ["Clash Squad", "Lone Wolf"];
 const CLASH_SQUAD_MAPS = ["Bermuda", "Alpine", "Kalahari", "Purgatory", "Nexterra"];
 const LONE_WOLF_MAPS = ["Iron Cage"];
 const ALLOWED_ROUNDS = [7, 9, 11, 13, 15];
+
 const GUN_CATEGORIES = {
   AR: ["AK","M4A1","SCAR","GROZA","FAMAS","AN94","XM8","M14","PARAFAL","KINGFISHER","AUG","AC80"],
   SMG: ["MP40","MP5","UMP","VSS","THOMPSON","VECTOR","BIZON","UZI","MAC10"],
@@ -1684,106 +1666,98 @@ const GUN_CATEGORIES = {
 /* =========================
    DOM REFERENCES
 ========================= */
-const modeSection = document.getElementById('modeSection');
-const prizeSystemSection = document.getElementById('prizeSystemSection');
-const formMessage = document.getElementById('form-message');
+const gameEl = document.getElementById("game");
+const modeEl = document.getElementById("mode");
+const mapEl = document.getElementById("map");
+const mapSection = document.getElementById("mapSection");
 
-const gameEl = document.getElementById('game');
-const modeEl = document.getElementById('mode');
-const mapSection = document.getElementById('mapSection');
-const mapEl = document.getElementById('map');
+const roomTypeEl = document.getElementById("roomType");
+const freeFireFields = document.getElementById("freeFireFields");
+const gunSelection = document.getElementById("gunSelection");
+const gunsList = document.getElementById("gunsList");
 
-const freeFireFields = document.getElementById('freeFireFields');
-const roomTypeEl = document.getElementById('roomType');
-const gunSelection = document.getElementById('gunSelection');
-const gunsList = document.getElementById('gunsList');
+const uidEl = document.getElementById("uid");
+const countryCodeEl = document.getElementById("countryCode");
+const whatsappEl = document.getElementById("whatsappNumber");
 
-const uidEl = document.getElementById('uid');
-const countryCodeEl = document.getElementById('countryCode');
-const whatsappEl = document.getElementById('whatsappNumber');
+const feeEl = document.getElementById("fee");
+const customFeeEl = document.getElementById("entryFee");
+const joinBtn = document.querySelector(".btn-primary");
+const formMessage = document.getElementById("form-message");
 
-const feeEl = document.getElementById('fee');
-const customFeeEl = document.getElementById('customFee');
-const joinBtn = document.getElementById('joinBtn');
+let selectedType = "";
+let selectedPrizeSystem = null;
 
 /* =========================
-   HELPER FUNCTIONS
+   HELPERS
 ========================= */
-function show(el){ if(!el) return; el.style.display = 'block'; }
-function hide(el){ if(!el) return; el.style.display = 'none'; }
-function setMessage(txt, danger = true){
-  formMessage.textContent = txt || '';
-  if(!txt) return;
-  formMessage.style.color = danger ? 'red' : 'green';
+function show(el){ el && (el.style.display = "block"); }
+function hide(el){ el && (el.style.display = "none"); }
+
+function setMessage(msg = "", error = true){
+  formMessage.textContent = msg;
+  formMessage.style.color = error ? "red" : "#00ff99";
+}
+
+/* =========================
+   ENTRY FEE (FIXED)
+========================= */
+function toggleCustomFee(){
+  if(feeEl.value === "custom"){
+    show(customFeeEl);
+    customFeeEl.value = "";
+    joinBtn.disabled = true;
+    joinBtn.style.opacity = "0.6";
+    setMessage("Custom entry fee must be more than ₹200");
+  } else {
+    hide(customFeeEl);
+    joinBtn.disabled = false;
+    joinBtn.style.opacity = "1";
+    setMessage("");
+  }
 }
 
 function getFinalEntryFee(){
-  let fee = feeEl.value === 'custom' ? Number(customFeeEl.value) : Number(feeEl.value);
-  if(isNaN(fee) || fee < 50){
-    setMessage('Entry fee must be at least ₹50');
-    return null;
-  }
-  return fee;
-}
+  const selected = feeEl.value;
 
-/* =========================
-   ENTRY FEE LOGIC
-========================= */
-feeEl.addEventListener('change', () => toggleCustomFee(feeEl));
-customFeeEl.addEventListener('input', () => {
-  const val = Number(customFeeEl.value);
-  if(isNaN(val) || val < 50){
-    setMessage('Minimum custom entry fee is ₹50');
-    joinBtn.disabled = true;
-    joinBtn.style.opacity = '0.5';
-  } else {
-    setMessage('');
-    joinBtn.disabled = false;
-    joinBtn.style.opacity = '1';
+  if(["50","100","150","200"].includes(selected)){
+    return Number(selected);
   }
-});
 
-function toggleCustomFee(selectEl) {
-  if (selectEl.value === "custom") {
-    show(customFeeEl);
-    customFeeEl.value = "";
-    customFeeEl.placeholder = "Enter amount (₹50+)";
-    customFeeEl.focus();
-    joinBtn.disabled = true;
-    joinBtn.style.opacity = "0.5";
-  } else {
-    hide(customFeeEl);
-    customFeeEl.value = "";
+  if(selected === "custom"){
+    const val = Number(customFeeEl.value);
+    if(!val || val <= 200){
+      joinBtn.disabled = true;
+      joinBtn.style.opacity = "0.6";
+      setMessage("Custom entry fee must be more than ₹200");
+      return null;
+    }
     joinBtn.disabled = false;
     joinBtn.style.opacity = "1";
+    setMessage("");
+    return val;
   }
+
+  setMessage("Please select entry fee");
+  return null;
 }
 
 /* =========================
-   GAME / MODE / MAP LOGIC
+   GAME / MODE / MAP
 ========================= */
 function updateGameOptions(){
-  const g = gameEl.value;
-  modeEl.innerHTML = '';
-  mapEl.innerHTML = '';
+  modeEl.innerHTML = "";
+  mapEl.innerHTML = "";
 
-  if(g === 'BGMI' || g === 'PUBG'){
-    BGMI_MODES.forEach(m => {
-      const o = document.createElement('option'); o.value = m; o.textContent = m;
-      modeEl.appendChild(o);
-    });
+  if(gameEl.value === "BGMI" || gameEl.value === "PUBG"){
+    BGMI_MODES.forEach(m => modeEl.add(new Option(m,m)));
     hide(freeFireFields);
     hide(mapSection);
-  } else if(g === 'Free Fire'){
-    FF_MODES.forEach(m => {
-      const o = document.createElement('option'); o.value = m; o.textContent = m;
-      modeEl.appendChild(o);
-    });
+  }
+  else if(gameEl.value === "Free Fire"){
+    FF_MODES.forEach(m => modeEl.add(new Option(m,m)));
     show(freeFireFields);
     show(mapSection);
-  } else {
-    hide(freeFireFields);
-    hide(mapSection);
   }
 
   updateMapOptions();
@@ -1791,177 +1765,135 @@ function updateGameOptions(){
 }
 
 function updateMapOptions(){
-  const g = gameEl.value;
-  const m = modeEl.value;
-  mapEl.innerHTML = '';
+  if(gameEl.value !== "Free Fire"){
+    hide(mapSection);
+    return;
+  }
 
-  if(g !== 'Free Fire'){ hide(mapSection); return; }
   show(mapSection);
-  let maps = m === 'Clash Squad' ? CLASH_SQUAD_MAPS : LONE_WOLF_MAPS;
-  maps.forEach(mp => {
-    const o = document.createElement('option'); o.value = mp; o.textContent = mp;
-    mapEl.appendChild(o);
-  });
+  mapEl.innerHTML = "";
+  const maps = modeEl.value === "Clash Squad" ? CLASH_SQUAD_MAPS : LONE_WOLF_MAPS;
+  maps.forEach(m => mapEl.add(new Option(m,m)));
 }
 
+/* =========================
+   GUN SELECTION
+========================= */
 function toggleGunSelection(){
-  if(roomTypeEl.value === 'Advance'){
-    show(gunSelection);
-    gunsList.innerHTML = '';
-    for(const cat in GUN_CATEGORIES){
-      const catLabel = document.createElement('div');
-      catLabel.style.fontSize='12px'; catLabel.style.color='#999'; catLabel.textContent = cat;
-      gunsList.appendChild(catLabel);
-      GUN_CATEGORIES[cat].forEach(g => {
-        const id = 'g_' + g.replace(/\s+/g,'_');
-        const label = document.createElement('label');
-        label.innerHTML = `<input type="checkbox" id="${id}" value="${g}" style="margin-right:6px"> ${g}`;
-        gunsList.appendChild(label);
-      });
-    }
-  } else {
+  gunsList.innerHTML = "";
+
+  if(roomTypeEl.value !== "Advance"){
     hide(gunSelection);
-    gunsList.innerHTML = '';
+    return;
+  }
+
+  show(gunSelection);
+  for(const cat in GUN_CATEGORIES){
+    const label = document.createElement("div");
+    label.textContent = cat;
+    label.style.color = "#aaa";
+    label.style.fontSize = "12px";
+    gunsList.appendChild(label);
+
+    GUN_CATEGORIES[cat].forEach(g => {
+      const el = document.createElement("label");
+      el.innerHTML = `<input type="checkbox" value="${g}"> ${g}`;
+      gunsList.appendChild(el);
+    });
   }
 }
 
 /* =========================
-   OPEN FORM / PRIZE SYSTEM LOGIC
+   MATCH TYPE
 ========================= */
 function openMatchForm(type){
   selectedType = type;
-  document.getElementById('type').value = type;
+  document.getElementById("type").value = type;
 
-  if(type === '1v1'){
-    selectedPrizeSystem = 'kill_based';
-    document.getElementById('prizeSystem').value = selectedPrizeSystem;
-    hide(prizeSystemSection);
-    showForm();
+  if(type === "1v1"){
+    selectedPrizeSystem = "kill_based";
+    document.getElementById("prizeSystem").value = selectedPrizeSystem;
+    hide(document.getElementById("prizeSystemSection"));
   } else {
-    show(prizeSystemSection);
-    hide(modeSection);
+    show(document.getElementById("prizeSystemSection"));
   }
+
+  showForm();
 }
 
 function selectPrizeSystem(ps){
   selectedPrizeSystem = ps;
-  document.getElementById('prizeSystem').value = ps;
-  hide(prizeSystemSection);
+  document.getElementById("prizeSystem").value = ps;
+  hide(document.getElementById("prizeSystemSection"));
   showForm();
-}
-
-function backToModes(){ hide(prizeSystemSection); show(modeSection); }
-
-function showHome(){
-  selectedType = '';
-  selectedPrizeSystem = null;
-  hide(document.querySelector('.panel'));
-  show(modeSection);
-  setMessage('');
 }
 
 function showForm(){
   updateGameOptions();
-  setMessage('');
-  document.getElementById('join-title').textContent = selectedType ? `Join ${selectedType} Match` : 'Join Match';
-  window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
+  show(document.querySelector(".panel"));
 }
 
 /* =========================
-   JOIN MATCH
+   JOIN MATCH (FINAL FIX)
 ========================= */
 async function joinMatch(){
-  setMessage('');
-
-  // skip prize system check for 1v1
-  if(!selectedType){ setMessage('Select match type'); return; }
-  if(selectedType !== '1v1' && !selectedPrizeSystem){ setMessage('Select prize system'); return; }
-
-  const game = gameEl.value;
-  const mode = modeEl.value;
-  const map = mapEl.value || undefined;
-  const roomType = roomTypeEl.value;
-  const uid = uidEl.value.trim();
-  const countryCode = countryCodeEl.value.trim();
-  const whatsappRaw = whatsappEl.value.replace(/[\s-]/g,'').trim();
-  const rounds = Number(document.getElementById('rounds')?.value);
-
-  if(!uid){ setMessage('Enter your Game UID'); return; }
-  if(!countryCode.startsWith('+')){ setMessage('Invalid country code'); return; }
-  if(!/^\d{10,15}$/.test(whatsappRaw)){ setMessage('Invalid WhatsApp number'); return; }
-  if(!ALLOWED_ROUNDS.includes(rounds)){ setMessage('Invalid rounds'); return; }
-
-  const feeVal = getFinalEntryFee();
-  if(!feeVal) return;
-
-  const headshot = document.getElementById('headshot')?.value === 'true';
-  const characterSkill = document.getElementById('characterSkill')?.value === 'true';
-  const gunAttributes = document.getElementById('gunAttributes')?.value === 'true';
-  const throwableLimit = Number(document.getElementById('throwableLimit')?.value || 0);
-
-  const selectedGuns = [];
-  if(game==='Free Fire' && roomType==='Advance'){
-    document.querySelectorAll('#gunsList input[type=checkbox]:checked')
-      .forEach(cb => selectedGuns.push(cb.value));
-  }
+  const finalFee = getFinalEntryFee();
+  if(finalFee === null) return;
 
   const payload = {
     type: selectedType,
-    game, mode, rounds, fee: feeVal, uid,
-    prizeSystem: selectedPrizeSystem,
-    countryCode, whatsappNumber: whatsappRaw,
-    map, roomType,
-    headshot, characterSkill, gunAttributes, throwableLimit,
-    selectedGuns
+    game: gameEl.value,
+    mode: modeEl.value,
+    rounds: Number(document.getElementById("rounds").value),
+    uid: uidEl.value.trim(),
+    fee: finalFee,
+    prizeSystem: selectedPrizeSystem || "kill_based",
+    countryCode: countryCodeEl.value,
+    whatsappNumber: whatsappEl.value.replace(/\D/g,""),
+    map: mapEl.value || null,
+    roomType: roomTypeEl.value,
+    selectedGuns: [...document.querySelectorAll("#gunsList input:checked")].map(i=>i.value)
   };
 
   try{
-    setMessage('⏳ Joining match...', false);
-    const res = await fetch(`${API_BASE}/joins`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+TOKEN},
-      body: JSON.stringify(payload)
+    setMessage("Joining match...", false);
+
+    const res = await fetch(`${API_BASE}/joins`,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":"Bearer "+TOKEN
+      },
+      body:JSON.stringify(payload)
     });
+
     const data = await res.json();
-    if(!res.ok || !data.success) throw new Error(data.msg||'Failed to join');
-
-    setMessage(`🎉 Joined successfully — ₹${feeVal} deducted`, false);
-
-    setTimeout(()=>{
-      const matchId = data.match?._id || data.matchId;
-      if(matchId) window.location.href = `user-room.html?id=${matchId}`;
-    }, 1000);
-  } catch(err){
-    console.error(err);
-    setMessage('❌ ' + (err.message || 'Join failed'));
+    if(res.ok && data.success){
+      setMessage(`Joined successfully. ₹${finalFee} deducted`, false);
+      window.location.href = `user-room.html?matchId=${data.match._id}`;
+    } else {
+      setMessage(data.msg || "Join failed");
+    }
+  }catch(err){
+    setMessage("Network error");
   }
 }
 
 /* =========================
-   INIT
+   EVENTS
 ========================= */
-(function init(){
-  updateGameOptions();
-  hide(prizeSystemSection);
-})();
+gameEl.addEventListener("change", updateGameOptions);
+modeEl.addEventListener("change", updateMapOptions);
+roomTypeEl.addEventListener("change", toggleGunSelection);
+feeEl.addEventListener("change", toggleCustomFee);
+customFeeEl.addEventListener("input", getFinalEntryFee);
 
 /* =========================
-   EXPOSE FUNCTIONS
+   EXPORT
 ========================= */
 window.openMatchForm = openMatchForm;
 window.selectPrizeSystem = selectPrizeSystem;
-window.backToModes = backToModes;
-window.showHome = showHome;
-window.showForm = showForm;
-window.updateGameOptions = updateGameOptions;
-window.updateMapOptions = updateMapOptions;
-window.toggleGunSelection = toggleGunSelection;
-window.toggleCustomFee = toggleCustomFee;
 window.joinMatch = joinMatch;
-
-
-
-
 
 
 /* ------------- Attach listeners & init UI ------------- */
@@ -2435,22 +2367,10 @@ document.addEventListener("DOMContentLoaded", () => {
         GAME CONFIG
   -----------------------------------*/
   const GAME_CONFIG = { 
-    "Ludo": {
-      types: ["1v1","1v2","1v3","2v2"],
-      modes: ["classic","popular","quick"],
-    },
-    "Carrom": {
-      types: ["1v1","2v2"],
-      modes: ["classic","freestyle"],
-    },
-    "8 Ball Pool": {
-      types: ["1v1"],
-      modes: ["classic"]
-    },
-    "Cricket": {
-      types: ["1v1"],
-      modes: ["1 over"]
-    }
+    "Ludo": { types: ["1v1","1v2","1v3","2v2"], modes: ["classic","popular","quick"] },
+    "Carrom": { types: ["1v1","2v2"], modes: ["classic","freestyle"] },
+    "8 Ball Pool": { types: ["1v1"], modes: ["classic"] },
+    "Cricket": { types: ["1v1"], modes: ["1 over"] }
   };
 
   /* ----------------------------------
@@ -2471,10 +2391,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const matchType = document.getElementById('matchType');
   const matchMode = document.getElementById('matchMode');
 
-  // ⭐ New Entry Fee Elements
-  const feeSelect = document.getElementById('fee');
-  const entryFee = document.getElementById('entryFee');
-
+  const feeSelect = document.getElementById('fee');      // Dropdown
+  const entryFee = document.getElementById('entryFee');  // Custom input
   const gameUID = document.getElementById('gameUID');
   const whatsapp = document.getElementById('whatsapp');
   const joinBtn = document.getElementById('joinBtn');
@@ -2489,6 +2407,9 @@ document.addEventListener("DOMContentLoaded", () => {
     message.textContent = text;
   }
 
+  /* ----------------------------------
+        UPDATE UID LABEL / PLACEHOLDER
+  -----------------------------------*/
   function updateUIDLabel(game) {
     let label = "Game UID:";
     if (game === "Ludo") label = "Ludo King ID:";
@@ -2506,41 +2427,37 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* ----------------------------------
-       ENTRY FEE DROPDOWN + CUSTOM
+        ENTRY FEE HANDLING
   -----------------------------------*/
-feeSelect.addEventListener("change", () => {
+  feeSelect.addEventListener("change", () => {
     if (feeSelect.value === "custom") {
       entryFee.style.display = "block";
       entryFee.value = "";
     } else {
       entryFee.style.display = "none";
-      entryFee.value = feeSelect.value; // auto-fill
+      entryFee.value = feeSelect.value;
     }
   });
 
   entryFee.addEventListener("input", () => {
-    if (Number(entryFee.value) < 50) {
+    const val = Number(entryFee.value);
+    if (val < 50) {
       setMessage("Minimum custom entry fee is ₹50", "salmon");
       joinBtn.disabled = true;
       joinBtn.style.opacity = "0.5";
     } else {
-      message.textContent = "";
+      setMessage("");
       joinBtn.disabled = false;
       joinBtn.style.opacity = "1";
     }
   });
 
-
-  
-
   /* ----------------------------------
-       GAME CARD CLICK
+        GAME CARD CLICK
   -----------------------------------*/
   document.querySelectorAll('.game-card').forEach(card => {
     card.addEventListener('click', () => {
-
-      document.querySelectorAll('.game-card')
-        .forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.game-card').forEach(c => c.classList.remove('active'));
       card.classList.add('active');
 
       selectedGame = card.dataset.game;
@@ -2549,11 +2466,7 @@ feeSelect.addEventListener("change", () => {
 
       populateTypeMode(selectedGame);
 
-      if (selectedGame === "Cricket") {
-        cricketNote.style.display = "block";
-      } else {
-        cricketNote.style.display = "none";
-      }
+      cricketNote.style.display = selectedGame === "Cricket" ? "block" : "none";
 
       updateUIDLabel(selectedGame);
       updateUIDPlaceholder(selectedGame);
@@ -2593,38 +2506,34 @@ feeSelect.addEventListener("change", () => {
         JOIN BUTTON
   -----------------------------------*/
   joinBtn.addEventListener("click", async () => {
-
     setMessage("");
 
-    // ⭐ Get correct Entry Fee
-    const finalEntryFee =
-      feeSelect.value === "custom"
-        ? Number(entryFee.value)
-        : Number(feeSelect.value);
+    if (!selectedGame) return setMessage("Select a game!", "salmon");
+    if (!gameUID.value.trim()) return setMessage("Enter your UID", "salmon");
+    if (!whatsapp.value.trim()) return setMessage("Enter WhatsApp Number", "salmon");
 
-    if (finalEntryFee < 50) {
-      return setMessage("Minimum entry fee is ₹50", "salmon");
-    }
+    // ✅ FINAL ENTRY FEE
+    const finalEntryFee = feeSelect.value === "custom" ? Number(entryFee.value) : Number(feeSelect.value);
+    if (finalEntryFee < 50) return setMessage("Minimum entry fee is ₹50", "salmon");
+
+    // Clean WhatsApp number
+    const cleanWhatsApp = whatsapp.value.replace(/[\s-]/g, "");
+    if (!/^\d{10,15}$/.test(cleanWhatsApp)) return setMessage("Invalid WhatsApp number", "salmon");
 
     const payload = {
       game: selectedGame,
       type: matchType.value,
       mode: matchMode.value,
-      entryFee: finalEntryFee,
+      entryFee: finalEntryFee, // MUST match backend
       uid: gameUID.value.trim(),
-      whatsappNumber: whatsapp.value.trim()
+      whatsappNumber: cleanWhatsApp
     };
-
-    if (!payload.game) return setMessage("Select a game!", "salmon");
-    if (!payload.uid) return setMessage("Enter your UID", "salmon");
-    if (!payload.whatsappNumber) return setMessage("Enter WhatsApp Number", "salmon");
 
     const API = "https://battlepurse-88.onrender.com/api/wallet/join";
     const token = localStorage.getItem("token");
 
     try {
       setMessage("Joining...");
-
       const res = await fetch(API, {
         method: "POST",
         headers: {
@@ -2637,20 +2546,20 @@ feeSelect.addEventListener("change", () => {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        setMessage("Joined successfully!");
-        window.location.href = data.redirectUrl ||
-          `user-room.html?matchId=${data.matchId}`;
+        setMessage(`Joined successfully! ₹${finalEntryFee} deducted.`);
+        // Redirect to room
+        window.location.href = data.redirectUrl || `user-room.html?matchId=${data.matchId}`;
       } else {
         setMessage("❌ " + data.msg, "salmon");
       }
 
     } catch (err) {
       setMessage("Network error", "salmon");
+      console.error(err);
     }
   });
 
-}); // DOMContentLoaded
-
+});
 
 
 

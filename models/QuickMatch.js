@@ -128,11 +128,10 @@ const QuickMatchSchema = new mongoose.Schema(
       required: true
     },
 
-    entryFee: {
+     entryFee: {
       type: Number,
       required: true
     },
-
    
 
 

@@ -6057,6 +6057,7 @@ router.delete("/joined/paired/:matchId", async (req, res) => {
   }
 });
 
+
 router.post("/joins", auth, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -6149,7 +6150,7 @@ router.post("/joins", auth, async (req, res) => {
     // ----------------------------
     // 6️⃣ FIND OR CREATE MATCH
     // ----------------------------
-    let match = await QuickMatch.findOne({ game, mode, type, prizeSystem, status: "waiting" });
+    let match = await QuickMatch.findOne({ game, mode, type, prizeSystem, entryFee: fee, status: "waiting" });
 
     // 6a. Determine rounds safely
     let playerRounds;
@@ -6270,6 +6271,9 @@ router.post("/joins", auth, async (req, res) => {
     res.status(500).json({ success: false, msg: "Internal server error" });
   }
 });
+
+
+
 
 
 
