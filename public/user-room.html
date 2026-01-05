@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Player Room</title>
-
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Player Room - Esports Match Hub</title>
 <style>
 :root{
   --bg:#0b0b0b;
@@ -126,132 +125,261 @@ th{
 }
 </style>
 </head>
-
 <body>
+<div id="backBtn" class="back-btn">⬅ Back</div>
+<h1 style="margin-top:10px">Player Match Room</h1>
 
-<!-- Swipe Back Edge -->
-<div class="swipe-area"></div>
+<div id="room-box" class="card">Loading...</div>
 
-<!-- App Bar -->
-<div class="app-bar">
-  <button onclick="goBack()">←</button>
-  <div class="title">Player Room</div>
+<input id="killsInput" type="number" placeholder="Enter Kills" style="display:none" />
+
+<div style="max-width:420px;margin:8px auto;text-align:center">
+  <button class="refresh" onclick="loadRoom()">🔄 Refresh</button>
+  <button onclick="confirmJoin()">✅ Confirm Join</button>
 </div>
 
-<!-- Main -->
-<div class="container" id="page">
-
-  <div id="room-box" class="card">Loading...</div>
-
-  <input id="killsInput" type="number" placeholder="Enter Kills" style="display:none">
-
-  <div style="text-align:center;margin-top:12px">
-    <button class="btn-refresh" onclick="loadRoom()">🔄 Refresh</button>
-    <button class="btn-primary" onclick="confirmJoin()">✅ Confirm</button>
-  </div>
-
-  <div id="teamTable"></div>
-
-</div>
+<div id="teamTable"></div>
 
 <script>
-const matchId=new URLSearchParams(location.search).get("matchId");
-let currentPrizeSystem=null;
-let currentGame="";
-const NON_PRIZE_GAMES=["Ludo","Carrom","8 Ball Pool","Cricket"];
+const matchId = new URLSearchParams(window.location.search).get("matchId");
+let currentPrizeSystem = null;
+let currentGame = "";
+
+const NON_PRIZE_GAMES = ["Ludo", "Carrom", "8 Ball Pool", "Cricket"];
 
 function normalizePrize(raw){
   if(!raw) return null;
-  const r=String(raw).toLowerCase();
+  const r = String(raw).trim().toLowerCase();
   if(r.includes("kill")) return "kill_based";
   if(r.includes("team")) return "team_equal";
   return null;
 }
-function prizeLabel(c){
-  return c==="kill_based"?"Kill Based":c==="team_equal"?"Team Equal":"";
+
+function prizeLabel(code){
+  return code === "kill_based" ? "Kill Based" :
+         code === "team_equal" ? "Team Equal" : "";
 }
 
 async function loadRoom(){
-  const box=document.getElementById("room-box");
-  const table=document.getElementById("teamTable");
-  const kills=document.getElementById("killsInput");
-  box.innerHTML="Loading...";
-  table.innerHTML="";
+  const box = document.getElementById("room-box");
+  const teamTable = document.getElementById("teamTable");
+  const killsInput = document.getElementById("killsInput");
+
+  box.innerHTML = "Loading...";
+  teamTable.innerHTML = "";
 
   try{
-    const room=await fetch(`https://battlepurse-88.onrender.com/api/wallet/quickmatch/room/${matchId}`).then(r=>r.json());
-    const pair=await fetch(`https://battlepurse-88.onrender.com/api/wallet/pairs/${matchId}`).then(r=>r.json());
+    const roomRes = await fetch(`https://battlepurse-88.onrender.com/api/wallet/quickmatch/room/${matchId}`).then(r=>r.json());
+    const pairsRes = await fetch(`https://battlepurse-88.onrender.com/api/wallet/pairs/${matchId}`).then(r=>r.json());
 
-    if(!room.success){
-      box.innerHTML="<h3>Room not published yet</h3><p class='muted'>Please wait for admin</p>";
-      kills.style.display="none";
+    if(!roomRes.success){
+      box.innerHTML = "<h3>Room Not Published Yet</h3><p class='note'>⏳ Please wait for admin.</p>";
+      killsInput.style.display="none";
       return;
     }
 
-    currentGame=pair.game||room.room.game;
-    currentPrizeSystem=normalizePrize(pair.prizeSystem||room.room.prizeSystem);
+    currentGame = pairsRes.game || roomRes.room.game;
 
-    if(NON_PRIZE_GAMES.includes(currentGame)){
-      currentPrizeSystem=null;
-      kills.style.display="none";
-    }else{
-      kills.style.display=currentPrizeSystem==="kill_based"?"block":"none";
+    currentPrizeSystem = normalizePrize(
+      pairsRes.prizeSystem || roomRes.room.prizeSystem
+    );
+
+    if (NON_PRIZE_GAMES.includes(currentGame)) {
+      currentPrizeSystem = null;
+      killsInput.style.display = "none";
+    } else {
+      killsInput.style.display = currentPrizeSystem === "kill_based" ? "block" : "none";
     }
 
-    const r=room.room;
-    box.innerHTML=`
-      <h3>Room Published</h3>
-      ${r.roomId?`<p><b>Room ID:</b> ${r.roomId}</p>`:""}
-      ${r.roomPassword?`<p><b>Password:</b> ${r.roomPassword}</p>`:""}
-      ${currentPrizeSystem?`<p><b>Prize:</b> ${prizeLabel(currentPrizeSystem)}</p>`:""}
-      ${r.message?`<p><b>Note:</b> ${r.message}</p>`:""}
-      <button style="margin-top:18px;background:var(--success)" onclick="uploadResult()">📤 Upload Result</button>
+    const r = roomRes.room;
+
+    let prizeHTML = "";
+    if (!NON_PRIZE_GAMES.includes(currentGame) && currentPrizeSystem) {
+      prizeHTML = `<p><strong>Prize System:</strong> ${prizeLabel(currentPrizeSystem)}</p>`;
+    }
+
+    let roomHTML = `<h3>Room Published</h3>`;
+
+    if (currentGame === "Ludo") {
+      roomHTML += `<p><strong>Private Code:</strong> ${r.roomId}</p>`;
+    }
+    else if (currentGame === "Carrom") {
+      roomHTML += `<p><strong>Room Code:</strong> ${r.roomId}</p>`;
+    }
+    else if (currentGame === "8 Ball Pool" || currentGame === "Cricket") {
+      roomHTML += `
+        ${
+          r.message
+            ? `<p><strong>Note:</strong> ${r.message}</p>`
+            : `<p>No special note from admin.</p>`
+        }
+      `;
+    }
+    else {
+      roomHTML += `
+        <p><strong>Room ID:</strong> ${r.roomId}</p>
+        <p><strong>Password:</strong> ${r.roomPassword}</p>
+      `;
+    }
+
+    /* ❌ Start Time removed here */
+
+    roomHTML += prizeHTML;
+
+    if (currentGame !== "8 Ball Pool" && currentGame !== "Cricket") {
+      if (r.message) {
+        roomHTML += `<p><strong>Note:</strong> ${r.message}</p>`;
+      }
+    }
+
+    roomHTML += `
+      <button onclick="uploadResult()"
+      style="
+        margin-top:25px;
+        background:#28c76f;
+        padding:10px 20px;
+        border-radius:10px;
+        font-weight:600;
+        cursor:pointer;
+      ">
+        📤 Upload Result Screenshot
+      </button>
     `;
 
-    renderTeamTable(pair.players||[]);
+    box.innerHTML = roomHTML;
 
-  }catch{
-    box.innerHTML="<h3>Error loading room</h3>";
+    renderTeamTable(pairsRes.players || []);
+
+  }catch(err){
+    console.error(err);
+    box.innerHTML = "<h3>Error Loading Room</h3>";
   }
 }
+
+
 
 function renderTeamTable(players){
-  const el=document.getElementById("teamTable");
-  if(!players.length){
-    el.innerHTML="<p class='muted'>No players joined yet</p>";
+  const table = document.getElementById("teamTable");
+
+  if(!Array.isArray(players) || players.length === 0){
+    table.innerHTML = "<p class='muted'>No players joined yet</p>";
     return;
   }
-  let h=`<table><tr><th>UID</th><th>Name</th><th>Team</th></tr>`;
-  const half=Math.ceil(players.length/2);
+
+  let html = `<table>
+    <tr>
+      <th>UID</th>
+      <th>Name</th>
+      <th>Team</th>
+    </tr>
+  `;
+
+  const half = Math.ceil(players.length / 2);
+
   players.forEach((p,i)=>{
-    const team=p.team||(i<half?"LION":"TIGER");
-    const color=team==="LION"?"#facc15":"#00eaff";
-    h+=`<tr>
-      <td>${p.uid||"-"}</td>
-      <td>${p.name||"Unknown"}</td>
-      <td style="color:${color}">${team}</td>
-    </tr>`;
+    const uid = p.uid || p.userId?._id || "-";
+    const name = p.name || p.userId?.name || "Unknown";
+
+    const team = p.team || (i < half ? "LION" : "TIGER");
+    const color = team === "LION" ? "#ffcc00" : "#00eaff";
+
+    // 🔗 Facebook link (player-specific)
+    const fbLink =
+  p.uid ||                // player already sent FB link as UID
+  p.facebook ||
+  p.facebookLink ||
+  p.userId?.uid ||
+  null;
+
+let uidDisplay = uid;
+
+// 🏏 Cricket → show clickable Facebook profile
+if (currentGame?.toLowerCase() === "cricket" && fbLink && fbLink.includes("facebook.com")) {
+  uidDisplay = `
+    <a 
+      href="${fbLink}" 
+      target="_blank"
+      rel="noopener"
+      style="color:#00d5ff;text-decoration:underline;font-weight:500"
+    >
+      Open Profile
+    </a>
+  `;
+}
+
+    html += `
+      <tr>
+        <td>${uidDisplay}</td>
+        <td>${name}</td>
+        <td style="color:${color}">${team}</td>
+      </tr>
+    `;
   });
-  h+="</table>";
-  el.innerHTML=h;
+
+  html += "</table>";
+  table.innerHTML = html;
 }
 
-function uploadResult(){ alert("Upload logic unchanged"); }
-function confirmJoin(){ alert("Participation confirmed"); }
 
-/* Back + Swipe */
-function goBack(){
-  const page=document.getElementById("page");
-  page.style.animation="slideOut .3s forwards";
-  setTimeout(()=>history.back(),300);
+
+
+
+
+async function uploadResult(){
+  const killsInput = document.getElementById("killsInput");
+  let kills = 0;
+
+  if(currentPrizeSystem === "kill_based"){
+    if(!killsInput.value) return alert("Enter kills first");
+    kills = Number(killsInput.value);
+  }
+
+  const fileInput = document.createElement("input");
+  fileInput.type="file";
+  fileInput.accept="image/*";
+
+  fileInput.onchange = async ()=>{
+    const file = fileInput.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async ()=>{
+      const token = localStorage.getItem("token");
+      if(!token) return alert("Login required");
+
+      await fetch("https://battlepurse-88.onrender.com/api/wallet/upload-result",{
+        method:"POST",
+        headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+token },
+        body: JSON.stringify({ matchId, kills, screenshotUrl: reader.result })
+      }).then(r=>r.json()).then(d=> alert(d.msg));
+    };
+
+    reader.readAsDataURL(file);
+  };
+
+  fileInput.click();
 }
-let sx=0;
-document.addEventListener("touchstart",e=>sx=e.touches[0].clientX);
-document.addEventListener("touchend",e=>{
-  if(sx<40 && e.changedTouches[0].clientX-sx>90) goBack();
-});
+
+function confirmJoin(){
+  alert("You confirmed your participation");
+}
 
 loadRoom();
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("backBtn")?.addEventListener("click", () => {
+    window.location.href = "gamezone.html";
+  });
+});
 </script>
+
 </body>
-</html>
+</html>  
+
+
+
+
+
+
+
+
