@@ -155,6 +155,15 @@ th {
   font-size: 12px;
   cursor: pointer;
 }
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--primary);
+  background: #222;
+}
+
 
 .nav-btn i {
   display: block;
@@ -214,15 +223,15 @@ th {
 <div class="table-container">
   <table>
     <thead>
-      <tr>
-        <th>Rank</th>
-        <th>Player</th>
-        <th>Game</th>
-        <th>Winnings</th>
-        <th>Spent</th>
-        <th>Net</th>
-      </tr>
-    </thead>
+  <tr>
+    <th>Rank</th>
+    <th>Avatar</th>
+    <th>Player</th>
+    <th>Game</th>
+    <th>Net Win</th>
+  </tr>
+</thead>
+
     <tbody id="leaderboardBody">
       <tr><td colspan="6">Loading leaderboard...</td></tr>
     </tbody>
@@ -293,18 +302,24 @@ async function loadLeaderboard() {
     }
 
     data.leaderboard.slice(0, 50).forEach((p, i) => {
-      const cls = i === 0 ? "gold" : i === 1 ? "silver" : i === 2 ? "bronze" : "";
-      const icon = i === 0 ? "🏆" : i === 1 ? "🥈" : i === 2 ? "🥉" : "";
-      leaderboardBody.innerHTML += `
-        <tr>
-          <td class="rank ${cls}">${icon} #${i+1}</td>
-          <td>${p.name}</td>
-          <td>${p.game || "All"}</td>
-          <td class="earnings">₹${p.totalWinnings}</td>
-          <td class="spent">₹${p.totalSpent}</td>
-          <td class="netWin">₹${p.netWin}</td>
-        </tr>`;
-    });
+  const cls = i === 0 ? "gold" : i === 1 ? "silver" : i === 2 ? "bronze" : "";
+  const icon = i === 0 ? "🏆" : i === 1 ? "🥈" : i === 2 ? "🥉" : "";
+
+  const avatar =
+    p.avatarUrl
+      ? `<img src="${p.avatarUrl}" class="avatar">`
+      : `<img src="https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=0eaff&color=000" class="avatar">`;
+
+  leaderboardBody.innerHTML += `
+    <tr>
+      <td class="rank ${cls}">${icon} #${i + 1}</td>
+      <td>${avatar}</td>
+      <td>${p.name}</td>
+      <td>${p.game || "All"}</td>
+      <td class="netWin">₹${p.netWin}</td>
+    </tr>`;
+});
+
 
   } catch {
     leaderboardBody.innerHTML = "<tr><td colspan='6'>Server error.</td></tr>";

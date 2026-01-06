@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unlock BattlePurse</title>
+
+<style>
+* { box-sizing:border-box; font-family:Poppins, sans-serif; }
+body {
+  margin:0;
+  height:100vh;
+  background:radial-gradient(circle at top, #1a002b, #000);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+.container {
+  width:100%;
+  max-width:380px;
+  background:rgba(0,0,0,0.75);
+  padding:25px;
+  border-radius:18px;
+  box-shadow:0 0 30px #ae00ff99;
+  text-align:center;
+}
+h2 { color:#ae00ff; margin-bottom:10px; }
+p { color:#aaa; font-size:14px; }
+
+input {
+  width:100%;
+  padding:14px;
+  margin-top:15px;
+  border-radius:12px;
+  border:none;
+  background:#111;
+  color:#ae00ff;
+  font-size:18px;
+  text-align:center;
+  letter-spacing:4px;
+}
+
+button {
+  width:100%;
+  padding:14px;
+  margin-top:15px;
+  border:none;
+  border-radius:12px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.unlock-btn {
+  background:linear-gradient(135deg,#ae00ff,#ff00cc);
+}
+
+.bio-btn {
+  background:#111;
+  border:2px solid #ae00ff;
+  color:#ae00ff;
+}
+
+.error {
+  color:#ff4d4d;
+  margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+  <h2>🔐 App Locked</h2>
+  <p>Enter your PIN or use fingerprint</p>
+
+  <input id="pinInput" type="password" maxlength="6" placeholder="••••">
+
+  <button class="unlock-btn" onclick="unlockWithPin()">Unlock</button>
+
+  <button class="bio-btn" onclick="unlockWithFingerprint()">
+    🔐 Use Fingerprint
+  </button>
+
+  <div id="error" class="error"></div>
+</div>
+
+<script>
+const API = "https://battlepurse-88.onrender.com/api/wallet";
+
+/* =============================
+   BASIC SECURITY CHECK
+============================= */
+const userId = localStorage.getItem("userId");
+if (!userId) {
+  location.href = "auth.html";
+}
+
+/* =============================
+   PIN UNLOCK
+============================= */
+async function unlockWithPin() {
+  const pin = document.getElementById("pinInput").value;
+  if (!pin) return showError("Enter PIN");
+
+  try {
+    const res = await fetch(API + "/applock/unlock", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, pin })
+    });
+
+    const d = await res.json();
+    if (!res.ok) return showError(d.msg || "Wrong PIN");
+
+    localStorage.setItem("token", d.token);
+    location.href = "gamezone.html";
+
+  } catch (err) {
+    showError("Unlock failed");
+  }
+}
+
+/* =============================
+   FINGERPRINT UNLOCK
+============================= */
+async function unlockWithFingerprint() {
+  try {
+    // 🔐 Use device biometric as local gate
+    await navigator.credentials.get({
+      publicKey: {
+        challenge: new Uint8Array(32),
+        userVerification: "required"
+      }
+    });
+
+    // If fingerprint success → session unlock
+    location.href = "gamezone.html";
+
+  } catch (err) {
+    showError("Fingerprint failed");
+  }
+}
+
+/* =============================
+   ERROR UI
+============================= */
+function showError(msg) {
+  document.getElementById("error").innerText = msg;
+}
+</script>
+</body>
+</html>

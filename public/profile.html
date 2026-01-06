@@ -338,31 +338,40 @@ async function uploadAvatar() {
     return;
   }
 
-  avatarImg.src = URL.createObjectURL(file);
-
   const fd = new FormData();
   fd.append("avatar", file);
 
   try {
-    const res = await fetch("https://battlepurse-28.onrender.com/api/wallet/upload-avatar", {
-      method: "POST",
-      headers: { Authorization: "Bearer " + token },
-      body: fd
-    });
+    const res = await fetch(
+      "https://battlepurse-28.onrender.com/api/wallet/upload-avatar",
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + token
+        },
+        body: fd
+      }
+    );
+
     const d = await res.json();
 
-    if (!res.ok || !d.success) {
+    // ✅ SAFE CHECK
+    if (!res.ok || d.success !== true) {
       throw new Error(d.msg || "Upload failed");
     }
 
+    // ✅ ALWAYS USE SERVER URL
     avatarImg.src = d.url;
+
     alert("Avatar updated successfully");
 
   } catch (err) {
     console.error("Avatar upload error:", err);
-    alert("Avatar upload failed");
+    alert(err.message || "Avatar upload failed");
   }
 }
+
+
 
 window.onload = loadProfile;
 </script>

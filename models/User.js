@@ -88,6 +88,11 @@ passkeys: [
   }
 ]
 ,
+
+pinHash: { type: String },
+appLockEnabled: { type: Boolean, default: false },
+biometricEnabled: { type: Boolean, default: false },
+
     // =========================
     // 🔐 K-CODE (DEVICE UNLOCK)
     // =========================

@@ -428,8 +428,11 @@ async function loadTournaments() {
 
     tournaments.forEach(t => {
       container.innerHTML += `
-        <div style="border:1px solid #ccc; padding:10px; margin:10px;">
+      
+
+<div style="border:1px solid #ccc; padding:10px; margin:10px;">
           ${t.poster ? `<img src="${UPLOADS_BASE}/${t.poster}" alt="Poster" width="150">` : ""}
+        
           <strong>${t.name}</strong><br>
           Game: ${t.gameId?.name || 'N/A'} <br>
           Entry Fee: ₹${t.entryFee}<br>

@@ -316,135 +316,6 @@ router.post("/resend-otp", async (req, res) => {
 });
 
 
-router.post("/passkey/register/start", auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id);
-    if (!user) return res.status(404).json({ msg: "User not found" });
-
-    const options = generateRegistrationOptions({
-      rpName: "BattlePurse",
-      rpID: "battlepurse-88.onrender.com", // ✅ REAL DOMAIN
-      userID: user._id.toString(),
-      userName: user.email,
-      timeout: 60000,
-      authenticatorSelection: {
-        userVerification: "required",
-        residentKey: "preferred"
-      }
-    });
-
-    user.currentChallenge = options.challenge;
-    await user.save();
-
-    res.json(options);
-
-  } catch (err) {
-    console.error("Passkey start error:", err);
-    res.status(500).json({ msg: "Failed to start passkey registration" });
-  }
-});
-
-
-router.post("/passkey/register/verify", auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id);
-    if (!user || !user.currentChallenge)
-      return res.status(400).json({ msg: "Invalid session" });
-
-    const verification = await verifyRegistrationResponse({
-      response: req.body,
-      expectedChallenge: user.currentChallenge,
-      expectedOrigin: "https://battlepurse-88.onrender.com",
-      expectedRPID: "battlepurse-88.onrender.com",
-      requireUserVerification: true
-    });
-
-    if (!verification.verified)
-      return res.status(400).json({ msg: "Passkey verification failed" });
-
-    const { credentialID, credentialPublicKey, counter } =
-      verification.registrationInfo;
-
-    const credId = credentialID.toString("base64");
-
-    // ❌ Prevent duplicate device
-    if (user.passkeys.some(p => p.credentialId === credId))
-      return res.status(400).json({ msg: "Device already registered" });
-
-    user.passkeys.push({
-      credentialId: credId,
-      publicKey: credentialPublicKey.toString("base64"),
-      counter,
-      deviceName: req.headers["user-agent"]
-    });
-
-    user.currentChallenge = undefined;
-    await user.save();
-
-    res.json({ success: true, msg: "Passkey enabled successfully" });
-
-  } catch (err) {
-    console.error("Passkey verify error:", err);
-    res.status(400).json({ msg: "Invalid passkey response" });
-  }
-});
-
-router.post("/passkey/login/start", async (req, res) => {
-  const { email } = req.body;
-  const user = await User.findOne({ email });
-
-  if (!user || !user.passkeys.length)
-    return res.status(400).json({ msg: "No passkey found" });
-
-  const options = generateAuthenticationOptions({
-    allowCredentials: user.passkeys.map(k => ({
-      id: Buffer.from(k.credentialId, "base64"),
-      type: "public-key"
-    })),
-    userVerification: "required"
-  });
-
-  user.currentChallenge = options.challenge;
-  await user.save();
-
-  res.json(options);
-});
-
-router.post("/passkey/login/verify", async (req, res) => {
-  const { email, response } = req.body;
-  const user = await User.findOne({ email });
-
-  const passkey = user.passkeys.find(
-    k => k.credentialId === response.id
-  );
-
-  const verification = verifyAuthenticationResponse({
-    response,
-    expectedChallenge: user.currentChallenge,
-    expectedOrigin: "https://yourdomain.com",
-    expectedRPID: "yourdomain.com",
-    authenticator: {
-      credentialPublicKey: Buffer.from(passkey.publicKey, "base64"),
-      counter: passkey.counter
-    }
-  });
-
-  if (!verification.verified)
-    return res.status(400).json({ msg: "Biometric failed" });
-
-  passkey.counter = verification.authenticationInfo.newCounter;
-  user.currentChallenge = undefined;
-  await user.save();
-
-  const token = jwt.sign(
-    { id: user._id, isAdmin: user.isAdmin },
-    process.env.JWT_SECRET,
-    { expiresIn: "365d" }
-  );
-
-  res.json({ success: true, token });
-});
-
 
 
     
@@ -1244,6 +1115,24 @@ const Tournament = require('../models/Tournament');
 // ✅ GET all tournaments
 router.get("/tournaments", async (req, res) => {
   try {
+    const tournaments = await Tournament.find().lean();
+
+    const result = tournaments.map(t => ({
+      ...t,
+      posterUrl: t.poster
+        ? `https://battlepurse-88.onrender.com/uploads/${t.poster}`
+        : null
+    }));
+
+    res.json(result);
+  } catch (err) {
+    console.error("Tournament list error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+
+router.get("/tournaments", async (req, res) => {
+  try {
     const tournaments = await Tournament.find().sort({ createdAt: -1 })
     .limit(100);
     res.json(tournaments);
@@ -1345,6 +1234,7 @@ router.delete("/leave/:tournamentId", auth, async (req, res) => {
 });
 
 // List all tournaments
+
 router.get("/tournaments", auth, async (req, res) => {
   try {
     const tournaments = await Tournament.find()
@@ -1368,6 +1258,45 @@ router.get('/tournaments', async (req, res) => {
 
 // Get specific tournament
 // Get tournament details by ID
+router.get("/tournaments/:id", auth, async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+
+  try {
+    const tournament = await Tournament.findById(id).lean();
+    if (!tournament)
+      return res.status(404).json({ msg: "Tournament not found" });
+
+    const joinedUser = tournament.joinedUsers?.find(
+      u => u.userId.toString() === userId
+    );
+
+    res.json({
+      name: tournament.name,
+      game: tournament.game,
+      date: tournament.date,
+      time: tournament.time,
+      mode: tournament.mode,
+      entryFee: tournament.entryFee,
+      prizePool: tournament.prizePool,
+      maxPlayers: tournament.maxPlayers,
+
+      // ✅ unified image field
+      posterUrl: tournament.poster
+        ? `https://battlepurse-88.onrender.com/uploads/${tournament.poster}`
+        : null,
+
+      roomId: joinedUser ? tournament.roomId : null,
+      roomPassword: joinedUser ? tournament.roomPassword : null,
+      joined: Boolean(joinedUser)
+    });
+
+  } catch (err) {
+    console.error("Tournament detail error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+
 router.get("/tournaments/:id", auth, async (req, res) => {
   const { id } = req.params;
   const userId = req.user.id;
@@ -5669,6 +5598,121 @@ router.get("/history", auth, async (req, res) => {
 });
 
 
+router.get("/leaderboard", auth, async (req, res) => {
+  try {
+    const { date, game } = req.query;
+
+    let start = date ? new Date(date) : new Date("2000-01-01");
+    let end = date ? new Date(date) : new Date();
+    if (date) {
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+    }
+
+    const userMap = new Map();
+
+    const matches = await QuickMatch.find({
+      status: "completed",
+      createdAt: { $gte: start, $lte: end },
+      ...(game ? { game } : {})
+    })
+      .limit(200)
+      .lean();
+
+    for (const m of matches) {
+      const entryFee = Number(m.entryFee || 0);
+      const totalPlayers = (m.players || []).length || 1;
+      const totalCollected = entryFee * totalPlayers;
+      const prizePool = Math.max(0, totalCollected - Math.round(totalCollected * 0.08));
+
+      const winnerIds = (m.winnerIds || []).map(id => String(id));
+      const userResults = Array.isArray(m.userResults) ? m.userResults : [];
+
+      const allPlayers = (m.players || [])
+        .map(p => p?.userId ? String(p.userId._id || p.userId) : null)
+        .filter(Boolean);
+
+      for (const uid of allPlayers) {
+        if (!userMap.has(uid)) {
+          userMap.set(uid, {
+            userId: uid,
+            totalWinnings: 0,
+            totalSpent: 0,
+            games: new Set()
+          });
+        }
+        userMap.get(uid).totalSpent += entryFee;
+        userMap.get(uid).games.add(m.game);
+      }
+
+      // ADMIN SELECTED WINNERS
+      if (winnerIds.length > 0) {
+        const winners = userResults.filter(r => winnerIds.includes(String(r.userId)));
+
+        const prizeToSplit = m.prizeGiven || prizePool;
+
+        if (m.prizeSystem === "team_equal") {
+          const share = Math.round(prizeToSplit / (winners.length || 1));
+          winners.forEach(p => {
+            const uid = String(p.userId);
+            userMap.get(uid).totalWinnings += share;
+          });
+        } else {
+          const totalKills = winners.reduce((s, x) => s + (Number(x.kills || 0)), 0);
+          winners.forEach(p => {
+            const uid = String(p.userId);
+            const share = totalKills
+              ? Math.round((p.kills / totalKills) * prizeToSplit)
+              : Math.round(prizeToSplit / winners.length);
+            userMap.get(uid).totalWinnings += share;
+          });
+        }
+        continue;
+      }
+
+      // AUTO RESULT
+      if (m.type === "1v1") {
+        const top = [...userResults].sort((a, b) => b.kills - a.kills)[0];
+        if (top) {
+          userMap.get(String(top.userId)).totalWinnings += (top.prize || prizePool);
+        }
+      }
+    }
+
+    // FETCH USER DETAILS (NAME + AVATAR)
+    const userIds = [...userMap.keys()];
+    const users = await User.find(
+      { _id: { $in: userIds } },
+      { name: 1, avatarUrl: 1 }
+    ).lean();
+
+    const userInfo = new Map(
+      users.map(u => [String(u._id), u])
+    );
+
+    const leaderboard = [...userMap.entries()]
+      .map(([uid, data]) => {
+        const user = userInfo.get(uid) || {};
+        const netWin = (data.totalWinnings || 0) - (data.totalSpent || 0);
+
+        return {
+          userId: uid,
+          player: user.name || "Unknown",
+          avatar: user.avatarUrl || "",
+          game: [...data.games].join(", "),
+          netWin
+        };
+      })
+      .sort((a, b) => b.netWin - a.netWin)
+      .map((u, i) => ({ ...u, rank: i + 1 }));
+
+    res.json({ success: true, leaderboard });
+
+  } catch (err) {
+    console.error("Leaderboard Error:", err);
+    res.status(500).json({ success: false, msg: "Server Error" });
+  }
+});
 
 
 
