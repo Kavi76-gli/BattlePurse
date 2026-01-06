@@ -1120,7 +1120,7 @@ router.get("/tournaments", async (req, res) => {
     const result = tournaments.map(t => ({
       ...t,
       posterUrl: t.poster
-        ? `https://battlepurse-90.onrender.com/uploads/${t.poster}`
+        ? `https://battlepurse-98.onrender.com/uploads/${t.poster}`
         : null
     }));
 
@@ -1283,7 +1283,7 @@ router.get("/tournaments/:id", auth, async (req, res) => {
 
       // ✅ unified image field
       posterUrl: tournament.poster
-        ? `https://battlepurse-90.onrender.com/uploads/${tournament.poster}`
+        ? `https://battlepurse-98.onrender.com/uploads/${tournament.poster}`
         : null,
 
       roomId: joinedUser ? tournament.roomId : null,
@@ -1319,7 +1319,7 @@ router.get("/tournaments/:id", auth, async (req, res) => {
       prizePool: tournament.prizePool,
       maxPlayers: tournament.maxPlayers,
       poster: tournament.poster 
-        ? `https://battlepurse-90.onrender.com/uploads/${tournament.poster}` // ✅ return full image URL
+        ? `https://battlepurse-98.onrender.com/uploads/${tournament.poster}` // ✅ return full image URL
         : null,
       roomId: joinedUser ? tournament.roomId : null,
       roomPassword: joinedUser ? tournament.roomPassword : null,
@@ -1928,7 +1928,7 @@ router.get("/results/:tournamentId", authAdmin, async (req, res) => {
       results: (tournament.results || []).map(r => ({
         id: r._id,
         screenshot: r.screenshot
-          ? `https://battlepurse-90.onrender.com/uploads/${r.screenshot}` // ✅ Correct: serve actual file
+          ? `https://battlepurse-98.onrender.com/uploads/${r.screenshot}` // ✅ Correct: serve actual file
           : null,
         uploadedAt: r.uploadedAt,
         user: r.userId
