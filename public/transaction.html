@@ -117,7 +117,7 @@ async function loadTransactions() {
     const token = localStorage.getItem("token");
     if (!token) { alert("Login required!"); return; }
 
-    const res = await fetch("https://battlepurse-88.onrender.com/api/wallet/transactions", {
+    const res = await fetch("https://battlepurse-98-8d98.onrender.com/api/wallet/transactions", {
       headers: { "Authorization": "Bearer " + token }
     });
 

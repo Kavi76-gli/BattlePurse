@@ -232,7 +232,7 @@ async function changePassword() {
   if (!oldPassword || !newPassword) return alert("Please enter both current and new passwords.");
 
   try {
-    const res = await fetch("https://battlepurse-88.onrender.com/api/wallet/change-password", {
+    const res = await fetch("https://battlepurse-98-8d98.onrender.com/api/wallet/change-password", {
       method: "POST",
       headers: { "Content-Type":"application/json", "Authorization": `Bearer ${token}` },
       body: JSON.stringify({ oldPassword, newPassword })
@@ -256,7 +256,7 @@ async function saveUIDs() {
   };
 
   try {
-    const res = await fetch("https://battlepurse-88.onrender.com/api/wallet/save-uids", {
+    const res = await fetch("https://battlepurse-98-8d98.onrender.com/api/wallet/save-uids", {
       method: "POST",
       headers: { "Content-Type":"application/json", "Authorization": `Bearer ${token}` },
       body: JSON.stringify(uids)
@@ -272,7 +272,7 @@ async function saveUIDs() {
 /* ================= LOAD EXISTING UIDS ================= */
 async function loadExistingUIDs() {
   try {
-    const res = await fetch("https://battlepurse-88.onrender.com/api/wallet/profile", {
+    const res = await fetch("https://battlepurse-98-8d98.onrender.com/api/wallet/profile", {
       headers: { "Authorization": `Bearer ${token}` }
     });
     const data = await res.json();

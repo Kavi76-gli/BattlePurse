@@ -148,7 +148,7 @@ body{
   async function fetchDeposits() {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("https://battlepurse-88.onrender.com/api/wallet/admin/pending-deposits", {
+      const res = await fetch("https://battlepurse-98-8d98.onrender.com/api/wallet/admin/pending-deposits", {
         headers: {
           "Authorization": `Bearer ${token}`
         }
@@ -183,7 +183,7 @@ body{
 
   async function approveDeposit(id) {
     const token = localStorage.getItem("token");
-    const res = await fetch("https://battlepurse-88.onrender.com/api/wallet/admin/approve-deposit", {
+    const res = await fetch("https://battlepurse-98-8d98.onrender.com/api/wallet/admin/approve-deposit", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -199,7 +199,7 @@ body{
 
   async function rejectDeposit(id) {
     const token = localStorage.getItem("token");
-    const res = await fetch("https://battlepurse-88.onrender.com/api/wallet/admin/reject-deposit", {
+    const res = await fetch("https://battlepurse-98-8d98.onrender.com/api/wallet/admin/reject-deposit", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -108,7 +108,7 @@
 
 <script>
 (function(){
-  const API_BASE = "https://battlepurse-88.onrender.com/api/wallet";
+  const API_BASE = "https://battlepurse-98-8d98.onrender.com/api/wallet";
   const params = new URLSearchParams(window.location.search);
   const matchId = params.get('matchId');
 
@@ -145,7 +145,7 @@
   async function loadMatch(){
     try{
       el.loading.style.display = ''; el.matchContent.style.display = 'none';
-      const res = await fetch(`https://battlepurse-88.onrender.com/api/wallet/pairs/${matchId}`);
+      const res = await fetch(`https://battlepurse-98-8d98.onrender.com/api/wallet/pairs/${matchId}`);
 
         
           const json = await res.json();

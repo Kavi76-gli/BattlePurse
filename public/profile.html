@@ -288,7 +288,7 @@ const avatarInput = document.getElementById("avatarInput");
 /* ================= LOAD PROFILE ================= */
 async function loadProfile() {
   try {
-    const res = await fetch("https://battlepurse-28.onrender.com/api/wallet/profile", {
+    const res = await fetch("https://battlepurse-98-8d98.onrender.com/api/wallet/profile", {
       headers: { Authorization: "Bearer " + token }
     });
     const data = await res.json();
@@ -311,7 +311,7 @@ async function loadProfile() {
       adminSection.style.display = "block";
     }
 
-    const wbRes = await fetch("https://battlepurse-28.onrender.com/api/wallet/balance", {
+    const wbRes = await fetch("https://battlepurse-98-8d98.onrender.com/api/wallet/balance", {
       headers: { Authorization: "Bearer " + token }
     });
     const wb = await wbRes.json();
@@ -343,7 +343,7 @@ async function uploadAvatar() {
 
   try {
     const res = await fetch(
-      "https://battlepurse-28.onrender.com/api/wallet/upload-avatar",
+      "https://battlepurse-98-8d98.onrender.com/api/wallet/upload-avatar",
       {
         method: "POST",
         headers: {

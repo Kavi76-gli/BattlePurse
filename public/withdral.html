@@ -261,7 +261,7 @@ async function submitWithdrawal() {
   }
 
   try {
-    const res = await fetch("https://battlepurse-88.onrender.com/api/wallet/request-withdrawal", {
+    const res = await fetch("https://battlepurse-98-8d98.onrender.com/api/wallet/request-withdrawal", {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": "Bearer "+token },
       body: JSON.stringify(body)
@@ -283,7 +283,7 @@ async function loadWalletBalance() {
   const token = localStorage.getItem("token");
   if (!token) return;
   try {
-    const res = await fetch("https://battlepurse-88.onrender.com/api/wallet/balance", { headers: { Authorization:"Bearer "+token }});
+    const res = await fetch("https://battlepurse-98-8d98.onrender.com/api/wallet/balance", { headers: { Authorization:"Bearer "+token }});
     const data = await res.json();
     document.getElementById("walletBalance").innerText = "Wallet Balance: ₹" + (data.balance||0);
   } catch(err){ console.error(err); }

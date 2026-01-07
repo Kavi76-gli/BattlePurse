@@ -174,7 +174,7 @@ let allUsers = [];
 
 /* LOAD USERS */
 async function loadUsers() {
-  const res = await fetch("https://battlepurse-88.onrender.com/api/wallet/admin/users", {
+  const res = await fetch("https://battlepurse-98-8d98.onrender.com/api/wallet/admin/users", {
     headers: { Authorization: "Bearer " + token }
   });
   const data = await res.json();
@@ -219,7 +219,7 @@ function filterUsers() {
 /* ACTIONS */
 async function toggleBan(id, banned) {
   const ep = banned ? 'unban' : 'ban';
-  await fetch(`https://battlepurse-88.onrender.com/api/wallet/admin/${ep}/${id}`, {
+  await fetch(`https://battlepurse-98-8d98.onrender.com/api/wallet/admin/${ep}/${id}`, {
     method: "PUT",
     headers: { Authorization: "Bearer " + token }
   });
@@ -233,7 +233,7 @@ function viewProfile(id) {
 async function resetPassword(id) {
   const p = prompt("Enter new password");
   if (!p || p.length < 4) return alert("Min 4 chars");
-  await fetch(`https://battlepurse-88.onrender.com/api/wallet/admin/reset-password/${id}`, {
+  await fetch(`https://battlepurse-98-8d98.onrender.com/api/wallet/admin/reset-password/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",

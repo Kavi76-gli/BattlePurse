@@ -178,7 +178,7 @@ const amount = parseInt(urlParams.get("amount")) || 0;
 document.getElementById("amountDisplay").innerText = amount;
 
 /* ================= LOAD PAYMENT CONFIG ================= */
-const API_CONFIG = "https://battlepurse-88.onrender.com/api/wallet/payment-config";
+const API_CONFIG = "https://battlepurse-98-8d98.onrender.com/api/wallet/payment-config";
 
 async function loadPaymentConfig() {
   try {
@@ -188,7 +188,7 @@ async function loadPaymentConfig() {
       const cfg = data.config;
       document.getElementById("upiId").innerText = cfg.upiId || "yourupi@upi";
       if (cfg.qrImage) {
-        document.getElementById("qrImage").src = "https://battlepurse-88.onrender.com/uploads/" + cfg.qrImage;
+        document.getElementById("qrImage").src = "https://battlepurse-98-8d98.onrender.com/uploads/" + cfg.qrImage;
       }
     }
   } catch(err) {
@@ -208,7 +208,7 @@ async function submitPayment() {
   if (!token) return alert("❗ You're not logged in. Please log in first.");
 
   try {
-    const res = await fetch("https://battlepurse-88.onrender.com/api/wallet/submit-utr", {
+    const res = await fetch("https://battlepurse-98-8d98.onrender.com/api/wallet/submit-utr", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

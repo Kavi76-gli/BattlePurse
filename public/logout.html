@@ -165,7 +165,7 @@ async function logoutUser() {
   const token = localStorage.getItem("token");
   try {
     if(token){
-      await fetch("https://battlepurse-88.onrender.com/api/auth/logout", {
+      await fetch("https://battlepurse-98-8d98.onrender.com/api/auth/logout", {
         method: "POST",
         headers: { "Authorization": "Bearer " + token }
       });
