@@ -497,23 +497,30 @@ router.get('/transactions', auth, async (req, res) => {
 // Get user profile
 router.get("/profile", auth, async (req, res) => {
   try {
-    // 🔍 Find user (exclude password)
     const user = await User.findById(req.user.id).select("-password");
     if (!user) {
-      return res.status(404).json({ success: false, msg: "User not found" });
+      return res.status(404).json({
+        success: false,
+        msg: "User not found"
+      });
     }
 
-    // 💰 Wallet balance
     const wallet = await Wallet.findOne({ userId: req.user.id });
     const balance = wallet ? wallet.balance : 0;
 
-    // 🖼️ Build avatar URL ONLY if avatar exists
     let avatarUrl = null;
+
     if (user.avatar) {
-      avatarUrl = `${req.protocol}://${req.get("host")}/uploads/avatars/${user.avatar}`;
+      // 🔁 OLD DATA (already full URL)
+      if (user.avatar.startsWith("http")) {
+        avatarUrl = user.avatar;
+      }
+      // ✅ NEW DATA (filename only)
+      else {
+        avatarUrl = `${req.protocol}://${req.get("host")}/uploads/avatars/${user.avatar}`;
+      }
     }
 
-    // 📦 Response
     res.json({
       success: true,
       user: {
@@ -521,16 +528,18 @@ router.get("/profile", auth, async (req, res) => {
         name: user.name || "Player",
         phone: user.phone,
         email: user.email,
-        avatarUrl,          // ✅ always correct
+        avatarUrl,
         uids: user.uids,
         isAdmin: user.isAdmin
       },
       balance
     });
-
   } catch (err) {
     console.error("Profile error:", err);
-    res.status(500).json({ success: false, msg: "Server error" });
+    res.status(500).json({
+      success: false,
+      msg: "Server error"
+    });
   }
 });
 
@@ -697,13 +706,18 @@ router.post(
   uploadAvatar.single("avatar"),
   async (req, res) => {
     if (!req.file) {
-      return res.status(400).json({ success: false, msg: "No file uploaded" });
+      return res.status(400).json({
+        success: false,
+        msg: "No file uploaded"
+      });
     }
 
-    // ✅ Save ONLY filename
-    await User.findByIdAndUpdate(req.user.id, {
-      avatar: req.file.filename
-    });
+    // ✅ SAVE ONLY filename
+    await User.findByIdAndUpdate(
+      req.user.id,
+      { avatar: req.file.filename },
+      { new: true }
+    );
 
     const avatarUrl = `${req.protocol}://${req.get("host")}/uploads/avatars/${req.file.filename}`;
 
