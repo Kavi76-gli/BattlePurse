@@ -709,21 +709,33 @@ router.post("/uploads-avatars", auth, upload.single("avatar"), async (req, res) 
   }
 });
 
-router.post("/upload-avatar", auth, upload.single("avatar"), async (req, res) => {
-  if (!req.file) return res.status(400).json({ msg: "No file uploaded" });
-
-  const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
-
+// GET avatar image
+router.get("/uploads/avatars/:filename", (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(
-      req.user.id,
-      { avatarUrl: fileUrl },
-      { new: true }
+    const { filename } = req.params;
+
+    const filePath = path.resolve(
+      __dirname,
+      "../uploads/avatars",
+      filename
     );
-    res.json({ msg: "Avatar uploaded successfully", url: fileUrl });
+
+    // Check file exists
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        success: false,
+        msg: "Avatar image not found"
+      });
+    }
+
+    // Send image
+    res.sendFile(filePath);
   } catch (err) {
-    console.error("Avatar Upload Error:", err);
-    res.status(500).json({ msg: "Server error" });
+    console.error("Avatar GET error:", err);
+    res.status(500).json({
+      success: false,
+      msg: "Server error"
+    });
   }
 });
 
@@ -1175,6 +1187,32 @@ router.get("/tournaments", async (req, res) => {
 });
 
 
+router.get("/uploads/poster/:filename", (req, res) => {
+  try {
+    const { filename } = req.params;
+
+    const filePath = path.resolve(
+      __dirname,
+      "../uploads/poster",
+      filename
+    );
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        success: false,
+        msg: "Poster image not found"
+      });
+    }
+
+    res.sendFile(filePath);
+  } catch (err) {
+    console.error("Poster GET error:", err);
+    res.status(500).json({
+      success: false,
+      msg: "Server error"
+    });
+  }
+});
 
 
 
@@ -8020,7 +8058,33 @@ router.get("/payment-config", async (req, res) => {
   }
 });
 
+// GET QR image
+router.get("/uploads/qr/:filename", (req, res) => {
+  try {
+    const { filename } = req.params;
 
+    const filePath = path.resolve(
+      __dirname,
+      "../uploads/qr",
+      filename
+    );
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        success: false,
+        msg: "QR image not found"
+      });
+    }
+
+    res.sendFile(filePath);
+  } catch (err) {
+    console.error("QR GET error:", err);
+    res.status(500).json({
+      success: false,
+      msg: "Server error"
+    });
+  }
+});
 
 // ----------------------
 // POST Payment Config
