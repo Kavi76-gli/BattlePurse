@@ -502,6 +502,39 @@ router.get("/profile", auth, async (req, res) => {
     const wallet = await Wallet.findOne({ userId: req.user.id });
     const balance = wallet ? wallet.balance : 0;
 
+    const avatarUrl = user.avatar
+      ? `${req.protocol}://${req.get("host")}/uploads/avatars/${user.avatar}`
+      : null;
+
+    res.json({
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name || "Player",
+        phone: user.phone,
+        email: user.email,
+        avatarUrl,
+        uids: user.uids,
+        isAdmin: user.isAdmin
+      },
+      balance
+    });
+  } catch (err) {
+    console.error("Profile error:", err);
+    res.status(500).json({ success: false, msg: "Server error" });
+  }
+});
+
+router.get("/profile", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) {
+      return res.status(404).json({ success: false, msg: "User not found" });
+    }
+
+    const wallet = await Wallet.findOne({ userId: req.user.id });
+    const balance = wallet ? wallet.balance : 0;
+
     const avatarUrl = user.avatarUrl
       ? `${req.protocol}://${req.get("host")}/uploads/avatars/${user.avatarUrl}`
       : null;
@@ -675,6 +708,36 @@ const upload = multer({ storage });
 /* ======================
    Upload Avatar Route
 ====================== */
+router.post("/uploads-avatars", auth, upload.single("avatar"), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ success: false, msg: "No file uploaded" });
+  }
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { avatar: req.file.filename }, // ✅ ONLY filename
+      { new: true }
+    );
+
+    const avatarUrl = `${req.protocol}://${req.get("host")}/uploads/avatars/${req.file.filename}`;
+
+    res.json({
+      success: true,
+      msg: "Avatar uploaded successfully",
+      url: avatarUrl,
+      user: {
+        id: user._id,
+        name: user.name || "Player",
+        avatarUrl
+      }
+    });
+  } catch (err) {
+    console.error("Avatar Upload Error:", err);
+    res.status(500).json({ success: false, msg: "Server error" });
+  }
+});
+
 router.post("/uploads-avatars", auth, upload.single("avatar"), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ success: false, msg: "No file uploaded" });
