@@ -54,10 +54,11 @@ const UserSchema = new mongoose.Schema(
       default: 0,
     },
 
-    avatarUrl: {
-      type: String,
-      default: "",
-    },
+    avatar: {
+  type: String,
+  default: null
+},
+
 
     // =========================
     // 🎮 GAME UIDs
