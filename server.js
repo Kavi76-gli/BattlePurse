@@ -1,7 +1,10 @@
 require("dotenv").config();
 console.log("RUNNING SERVER FROM:", __filename);
 
-if (process.env.EMAIL_HOST === "127.0.0.1" || process.env.EMAIL_HOST === "localhost") {
+if (
+  process.env.EMAIL_HOST === "127.0.0.1" ||
+  process.env.EMAIL_HOST === "localhost"
+) {
   throw new Error("❌ Local SMTP is forbidden in production");
 }
 
@@ -41,30 +44,37 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 /* ======================
-   STATIC FILES
+   STATIC FRONTEND
 ====================== */
 const publicPath = path.resolve(__dirname, "public");
 app.use(express.static(publicPath));
 
-// ✅ Ensure all upload folders exist
-const uploadFolders = ["avatars", "qr", "poster"];
-uploadFolders.forEach(folder => {
-  const dirPath = path.resolve(__dirname, "uploads", folder);
-  if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath, { recursive: true });
-    console.log(`📁 Created uploads/${folder} directory`);
+/* ======================
+   ENSURE UPLOAD FOLDERS
+====================== */
+const uploadBase = path.resolve(__dirname, "uploads");
+const uploadDirs = ["avatars", "poster", "qr"];
+
+uploadDirs.forEach(dir => {
+  const fullPath = path.join(uploadBase, dir);
+  if (!fs.existsSync(fullPath)) {
+    fs.mkdirSync(fullPath, { recursive: true });
+    console.log(`📁 Created uploads/${dir}`);
   }
 });
 
-// Serve uploads
-app.use("/uploads", express.static(path.resolve(__dirname, "uploads")));
-console.log("📂 Uploads folder served at /uploads");
+/* ======================
+   STATIC UPLOAD FILES
+====================== */
+app.use("/uploads", express.static(uploadBase));
+console.log("📂 Uploads served at /uploads");
 
 /* ======================
    API ROUTES
 ====================== */
-app.use("/api/wallet", require("./routes/wallet")); // Wallet & poster routes
-// TODO: Add other route imports like user, tournaments, payment-config etc.
+app.use("/api/wallet", require("./routes/wallet"));
+// app.use("/api/user", require("./routes/user"));
+// app.use("/api/tournament", require("./routes/tournament"));
 
 /* ======================
    FRONTEND ENTRY
@@ -74,10 +84,13 @@ app.get("/", (req, res) => {
 });
 
 /* ======================
-   404 HANDLER
+   404 HANDLER (ALWAYS LAST)
 ====================== */
 app.use((req, res) => {
-  res.status(404).json({ success: false, msg: "Route not found" });
+  res.status(404).json({
+    success: false,
+    msg: "Route not found"
+  });
 });
 
 /* ======================
@@ -86,10 +99,10 @@ app.use((req, res) => {
 mongoose
   .connect(process.env.MONGO_URI, {
     maxPoolSize: 10,
-    serverSelectionTimeoutMS: 5000,
+    serverSelectionTimeoutMS: 5000
   })
   .then(() => console.log("✅ MongoDB Atlas connected"))
-  .catch((err) => {
+  .catch(err => {
     console.error("❌ MongoDB connection failed:", err.message);
     process.exit(1);
   });
@@ -98,4 +111,6 @@ mongoose
    START SERVER
 ====================== */
 const PORT = Number(process.env.PORT || 5000);
-app.listen(PORT, "0.0.0.0", () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});

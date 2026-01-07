@@ -492,25 +492,20 @@ router.get('/transactions', auth, async (req, res) => {
 // Get user profile
 // ✅ Get user profile (with name, phone, wallet balance, etc.)
 // Get user profile
-router.get('/profile', auth, async (req, res) => {
+router.get("/profile", auth, async (req, res) => {
   try {
-    // 🔍 Find user & exclude password
-    const user = await User.findById(req.user.id).select('-password');
+    const user = await User.findById(req.user.id).select("-password");
     if (!user) {
-      return res.status(404).json({ success: false, msg: 'User not found' });
+      return res.status(404).json({ success: false, msg: "User not found" });
     }
 
-    // 💰 Get wallet balance
     const wallet = await Wallet.findOne({ userId: req.user.id });
     const balance = wallet ? wallet.balance : 0;
 
-    // ✅ Ensure avatarUrl has full URL
-    const avatarUrl =
-      user.avatarUrl && !user.avatarUrl.startsWith('http')
-        ? `${req.protocol}://${req.get('host')}/uploads/avatars/${user.avatarUrl}`
-        : user.avatarUrl || null;
+    const avatarUrl = user.avatarUrl
+      ? `${req.protocol}://${req.get("host")}/uploads/avatars/${user.avatarUrl}`
+      : null;
 
-    // 📦 Send profile data
     res.json({
       success: true,
       user: {
@@ -518,18 +513,18 @@ router.get('/profile', auth, async (req, res) => {
         name: user.name || "Player",
         phone: user.phone,
         email: user.email,
-        avatarUrl: avatarUrl,
+        avatarUrl,
         uids: user.uids,
         isAdmin: user.isAdmin
       },
       balance
     });
-
   } catch (err) {
     console.error("Profile error:", err);
-    res.status(500).json({ success: false, msg: 'Server error', error: err.message });
+    res.status(500).json({ success: false, msg: "Server error" });
   }
 });
+
 
 
 
@@ -681,33 +676,36 @@ const upload = multer({ storage });
    Upload Avatar Route
 ====================== */
 router.post("/uploads-avatars", auth, upload.single("avatar"), async (req, res) => {
-  if (!req.file) return res.status(400).json({ msg: "No file uploaded" });
-
-  // ✅ Build the public URL for the avatar
-  const fileUrl = `${req.protocol}://${req.get("host")}/uploads/avatars/${req.file.filename}`;
+  if (!req.file) {
+    return res.status(400).json({ success: false, msg: "No file uploaded" });
+  }
 
   try {
     const user = await User.findByIdAndUpdate(
       req.user.id,
-      { avatarUrl: fileUrl },
+      { avatarUrl: req.file.filename }, // ✅ ONLY filename
       { new: true }
     );
+
+    const fullAvatarUrl = `${req.protocol}://${req.get("host")}/uploads/avatars/${req.file.filename}`;
 
     res.json({
       success: true,
       msg: "Avatar uploaded successfully",
-      url: fileUrl,
+      avatarUrl: fullAvatarUrl,
       user: {
         id: user._id,
         name: user.name || "Player",
-        avatarUrl: user.avatarUrl
+        avatarUrl: fullAvatarUrl
       }
     });
   } catch (err) {
     console.error("Avatar Upload Error:", err);
-    res.status(500).json({ msg: "Server error" });
+    res.status(500).json({ success: false, msg: "Server error" });
   }
 });
+
+
 
 // GET avatar image
 router.get("/uploads/avatars/:filename", (req, res) => {
