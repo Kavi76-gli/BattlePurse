@@ -532,39 +532,6 @@ router.get('/profile', auth, async (req, res) => {
 });
 
 
-router.get('/profile', auth, async (req, res) => {
-  try {
-    // 🔍 Find user & exclude password
-    const user = await User.findById(req.user.id).select('-password');
-    if (!user) {
-      return res.status(404).json({ msg: 'User not found' });
-    }
-
-    // 💰 Get wallet balance
-    const wallet = await Wallet.findOne({ userId: req.user.id });
-    const balance = wallet ? wallet.balance : 0;
-
-    // 📦 Send profile data
-    res.json({
-      success: true,
-      user: {
-        id: user._id,
-        name: user.name || "Player",
-        phone: user.phone,
-        email: user.email,          // ✅ ADDED
-        avatarUrl: user.avatarUrl,
-        uids: user.uids,
-        isAdmin: user.isAdmin
-      },
-      balance
-    });
-
-  } catch (err) {
-    console.error("Profile error:", err);
-    res.status(500).json({ msg: 'Server error' });
-  }
-});
-
 
 
 // Logout (client should just delete token)
@@ -713,7 +680,7 @@ const upload = multer({ storage });
 /* ======================
    Upload Avatar Route
 ====================== */
-router.post("/upload-avatar", auth, upload.single("avatar"), async (req, res) => {
+router.post("/uploads-avatars", auth, upload.single("avatar"), async (req, res) => {
   if (!req.file) return res.status(400).json({ msg: "No file uploaded" });
 
   // ✅ Build the public URL for the avatar
