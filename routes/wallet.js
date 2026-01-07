@@ -492,75 +492,56 @@ router.get('/transactions', auth, async (req, res) => {
 // Get user profile
 // ✅ Get user profile (with name, phone, wallet balance, etc.)
 // Get user profile
-router.get("/profile", auth, async (req, res) => {
+router.get('/profile', auth, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("-password");
+    // 🔍 Find user & exclude password
+    const user = await User.findById(req.user.id).select('-password');
     if (!user) {
-      return res.status(404).json({ success: false, msg: "User not found" });
+      return res.status(404).json({ msg: 'User not found' });
     }
 
+    // 💰 Get wallet balance
     const wallet = await Wallet.findOne({ userId: req.user.id });
     const balance = wallet ? wallet.balance : 0;
 
-    const avatarUrl = user.avatar
-      ? `${req.protocol}://${req.get("host")}/uploads/avatars/${user.avatar}`
-      : null;
-
+    // 📦 Send profile data
     res.json({
       success: true,
       user: {
         id: user._id,
         name: user.name || "Player",
         phone: user.phone,
-        email: user.email,
-        avatarUrl,
+        email: user.email,          // ✅ ADDED
+        avatarUrl: user.avatarUrl,
         uids: user.uids,
         isAdmin: user.isAdmin
       },
       balance
     });
+
   } catch (err) {
     console.error("Profile error:", err);
-    res.status(500).json({ success: false, msg: "Server error" });
+    res.status(500).json({ msg: 'Server error' });
   }
 });
 
-router.get("/profile", auth, async (req, res) => {
+router.post("/upload-avatar", auth, upload.single("avatar"), async (req, res) => {
+  if (!req.file) return res.status(400).json({ msg: "No file uploaded" });
+
+  const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+
   try {
-    const user = await User.findById(req.user.id).select("-password");
-    if (!user) {
-      return res.status(404).json({ success: false, msg: "User not found" });
-    }
-
-    const wallet = await Wallet.findOne({ userId: req.user.id });
-    const balance = wallet ? wallet.balance : 0;
-
-    const avatarUrl = user.avatarUrl
-      ? `${req.protocol}://${req.get("host")}/uploads/avatars/${user.avatarUrl}`
-      : null;
-
-    res.json({
-      success: true,
-      user: {
-        id: user._id,
-        name: user.name || "Player",
-        phone: user.phone,
-        email: user.email,
-        avatarUrl,
-        uids: user.uids,
-        isAdmin: user.isAdmin
-      },
-      balance
-    });
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { avatarUrl: fileUrl },
+      { new: true }
+    );
+    res.json({ msg: "Avatar uploaded successfully", url: fileUrl });
   } catch (err) {
-    console.error("Profile error:", err);
-    res.status(500).json({ success: false, msg: "Server error" });
+    console.error("Avatar Upload Error:", err);
+    res.status(500).json({ msg: "Server error" });
   }
 });
-
-
-
-
 
 // Logout (client should just delete token)
 // ====================== LOGOUT ======================
@@ -708,65 +689,6 @@ const upload = multer({ storage });
 /* ======================
    Upload Avatar Route
 ====================== */
-router.post("/uploads-avatars", auth, upload.single("avatar"), async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ success: false, msg: "No file uploaded" });
-  }
-
-  try {
-    const user = await User.findByIdAndUpdate(
-      req.user.id,
-      { avatar: req.file.filename }, // ✅ ONLY filename
-      { new: true }
-    );
-
-    const avatarUrl = `${req.protocol}://${req.get("host")}/uploads/avatars/${req.file.filename}`;
-
-    res.json({
-      success: true,
-      msg: "Avatar uploaded successfully",
-      url: avatarUrl,
-      user: {
-        id: user._id,
-        name: user.name || "Player",
-        avatarUrl
-      }
-    });
-  } catch (err) {
-    console.error("Avatar Upload Error:", err);
-    res.status(500).json({ success: false, msg: "Server error" });
-  }
-});
-
-router.post("/uploads-avatars", auth, upload.single("avatar"), async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ success: false, msg: "No file uploaded" });
-  }
-
-  try {
-    const user = await User.findByIdAndUpdate(
-      req.user.id,
-      { avatarUrl: req.file.filename }, // ✅ ONLY filename
-      { new: true }
-    );
-
-    const fullAvatarUrl = `${req.protocol}://${req.get("host")}/uploads/avatars/${req.file.filename}`;
-
-    res.json({
-      success: true,
-      msg: "Avatar uploaded successfully",
-      avatarUrl: fullAvatarUrl,
-      user: {
-        id: user._id,
-        name: user.name || "Player",
-        avatarUrl: fullAvatarUrl
-      }
-    });
-  } catch (err) {
-    console.error("Avatar Upload Error:", err);
-    res.status(500).json({ success: false, msg: "Server error" });
-  }
-});
 
 
 
@@ -1220,33 +1142,6 @@ router.get("/tournaments", async (req, res) => {
   }
 });
 
-
-router.get("/uploads/poster/:filename", (req, res) => {
-  try {
-    const { filename } = req.params;
-
-    const filePath = path.resolve(
-      __dirname,
-      "../uploads/poster",
-      filename
-    );
-
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({
-        success: false,
-        msg: "Poster image not found"
-      });
-    }
-
-    res.sendFile(filePath);
-  } catch (err) {
-    console.error("Poster GET error:", err);
-    res.status(500).json({
-      success: false,
-      msg: "Server error"
-    });
-  }
-});
 
 
 
@@ -8056,76 +7951,6 @@ router.delete("/match/player/:matchId/:userId", authAdmin, async (req, res) => {
 
 
 // POST - make public
-// GET - Public Payment Config
-router.get("/payment-config", async (req, res) => {
-  try {
-    let config = await PaymentConfig.findOne();
-
-    // If no config, provide default
-    if (!config) {
-      config = {
-        upiId: "yourupi@upi",
-        qrImage: "default.png"
-      };
-    }
-
-    // Build full URL for qrImage if not already full URL
-    const qrImageUrl =
-      config.qrImage && !config.qrImage.startsWith("http")
-        ? `${req.protocol}://${req.get("host")}/uploads/qr/${config.qrImage}`
-        : config.qrImage;
-
-    res.json({
-      success: true,
-      config: {
-        upiId: config.upiId,
-        qrImage: qrImageUrl
-      }
-    });
-  } catch (err) {
-    console.error("Payment config fetch error:", err);
-    res.status(500).json({
-      success: false,
-      msg: "Server error",
-      error: err.message
-    });
-  }
-});
-
-// GET QR image
-router.get("/uploads/qr/:filename", (req, res) => {
-  try {
-    const { filename } = req.params;
-
-    const filePath = path.resolve(
-      __dirname,
-      "../uploads/qr",
-      filename
-    );
-
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({
-        success: false,
-        msg: "QR image not found"
-      });
-    }
-
-    res.sendFile(filePath);
-  } catch (err) {
-    console.error("QR GET error:", err);
-    res.status(500).json({
-      success: false,
-      msg: "Server error"
-    });
-  }
-});
-
-// ----------------------
-// POST Payment Config
-// ----------------------
-/* ======================
-   Payment Config Route
-====================== */
 router.post("/payment-config", authAdmin, upload.single("qrImage"), async (req, res) => {
   try {
     const { upiId } = req.body;
@@ -8159,6 +7984,44 @@ router.post("/payment-config", authAdmin, upload.single("qrImage"), async (req, 
     });
   }
 });
+router.post("/payment-config", authAdmin, upload.single("qrImage"), async (req, res) => {
+  try {
+    const { upiId } = req.body;
+    const qrImage = req.file ? req.file.filename : null;
+
+    let config = await PaymentConfig.findOne();
+    if (!config) config = new PaymentConfig({});
+
+    if (upiId) config.upiId = upiId;
+    if (qrImage) config.qrImage = qrImage;
+
+    await config.save();
+
+    res.json({
+      success: true,
+      msg: "Payment config updated successfully",
+      config,
+    });
+  } catch (err) {
+    console.error("Payment config update error:", err);
+    res.status(500).json({ success: false, msg: "Server error", error: err.message });
+  }
+});
+
+
+router.get("/payment-config", async (req, res) => {
+  try {
+    const config = await PaymentConfig.findOne();
+    res.json({
+      success: true,
+      config: config || { upiId: "yourupi@upi", qrImage: "default.png" },
+    });
+  } catch (err) {
+    console.error("Payment config fetch error:", err);
+    res.status(500).json({ success: false, msg: "Server error", error: err.message });
+  }
+});
+
 
 
 // ------------------ ADMIN UPLOAD POSTER ------------------
@@ -8236,4 +8099,107 @@ router.delete("/admin/poster/:id", authAdmin, async (req, res) => {
 module.exports = router;
 
 
+router.get('/profile', auth, async (req, res) => {
+  try {
+    // 🔍 Find user & exclude password
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
 
+    // 💰 Get wallet balance
+    const wallet = await Wallet.findOne({ userId: req.user.id });
+    const balance = wallet ? wallet.balance : 0;
+
+    // 📦 Send profile data
+    res.json({
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name || "Player",
+        phone: user.phone,
+        email: user.email,          // ✅ ADDED
+        avatarUrl: user.avatarUrl,
+        uids: user.uids,
+        isAdmin: user.isAdmin
+      },
+      balance
+    });
+
+  } catch (err) {
+    console.error("Profile error:", err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
+
+router.post("/upload-avatar", auth, upload.single("avatar"), async (req, res) => {
+  if (!req.file) return res.status(400).json({ msg: "No file uploaded" });
+
+  const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { avatarUrl: fileUrl },
+      { new: true }
+    );
+    res.json({ msg: "Avatar uploaded successfully", url: fileUrl });
+  } catch (err) {
+    console.error("Avatar Upload Error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+router.post('/tournaments', adminAuth, upload.single('poster'), async (req, res) => {
+  try {
+    const {
+      name,
+      game,
+      gameId,
+      mode,
+      date,
+      time,
+      entryFee,
+      prizePool,
+      maxPlayers,
+      description
+    } = req.body;
+
+    const tournament = new Tournament({
+      name,
+      game,
+      gameId,
+      mode,
+      date,
+      time,
+      entryFee,
+      prizePool,
+      maxPlayers,
+      description,
+      poster: req.file ? req.file.filename : null,
+      posterUrl: req.file ? `/uploads/${req.file.filename}` : null,
+      players: []
+    });
+
+    await tournament.save();
+    res.json({ msg: 'Tournament created successfully', tournament });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Error creating tournament' });
+  }
+});  router.get("/tournaments", async (req, res) => {
+  try {
+    const tournaments = await Tournament.find().lean();
+
+    const result = tournaments.map(t => ({
+      ...t,
+      posterUrl: t.poster
+        ? `https://battlepurse-98-8d98.onrender.com/uploads/${t.poster}`
+        : null
+    }));
+
+    res.json(result);
+  } catch (err) {
+    console.error("Tournament list error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
