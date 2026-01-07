@@ -301,23 +301,23 @@ async function loadLeaderboard() {
       return;
     }
 
-    data.leaderboard.slice(0, 50).forEach((p, i) => {
+   data.leaderboard.slice(0, 50).forEach((p, i) => {
   const cls = i === 0 ? "gold" : i === 1 ? "silver" : i === 2 ? "bronze" : "";
   const icon = i === 0 ? "🏆" : i === 1 ? "🥈" : i === 2 ? "🥉" : "";
 
-  const avatar =
-    p.avatarUrl
-      ? `<img src="${p.avatarUrl}" class="avatar">`
-      : `<img src="https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=0eaff&color=000" class="avatar">`;
+  const avatar = p.avatar
+    ? `<img src="${p.avatar}" class="avatar">`
+    : `<img src="https://ui-avatars.com/api/?name=${encodeURIComponent(p.player)}&background=0eaff&color=000" class="avatar">`;
 
   leaderboardBody.innerHTML += `
     <tr>
       <td class="rank ${cls}">${icon} #${i + 1}</td>
       <td>${avatar}</td>
-      <td>${p.name}</td>
+      <td>${p.player}</td>
       <td>${p.game || "All"}</td>
       <td class="netWin">₹${p.netWin}</td>
-    </tr>`;
+    </tr>
+  `;
 });
 
 

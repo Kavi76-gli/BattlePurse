@@ -491,6 +491,47 @@ router.get('/transactions', auth, async (req, res) => {
 
 // Get user profile
 // ✅ Get user profile (with name, phone, wallet balance, etc.)
+// Get user profile
+router.get('/profile', auth, async (req, res) => {
+  try {
+    // 🔍 Find user & exclude password
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ success: false, msg: 'User not found' });
+    }
+
+    // 💰 Get wallet balance
+    const wallet = await Wallet.findOne({ userId: req.user.id });
+    const balance = wallet ? wallet.balance : 0;
+
+    // ✅ Ensure avatarUrl has full URL
+    const avatarUrl =
+      user.avatarUrl && !user.avatarUrl.startsWith('http')
+        ? `${req.protocol}://${req.get('host')}/uploads/avatars/${user.avatarUrl}`
+        : user.avatarUrl || null;
+
+    // 📦 Send profile data
+    res.json({
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name || "Player",
+        phone: user.phone,
+        email: user.email,
+        avatarUrl: avatarUrl,
+        uids: user.uids,
+        isAdmin: user.isAdmin
+      },
+      balance
+    });
+
+  } catch (err) {
+    console.error("Profile error:", err);
+    res.status(500).json({ success: false, msg: 'Server error', error: err.message });
+  }
+});
+
+
 router.get('/profile', auth, async (req, res) => {
   try {
     // 🔍 Find user & exclude password
@@ -669,6 +710,38 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Upload avatar route
+/* ======================
+   Upload Avatar Route
+====================== */
+router.post("/upload-avatar", auth, upload.single("avatar"), async (req, res) => {
+  if (!req.file) return res.status(400).json({ msg: "No file uploaded" });
+
+  // ✅ Build the public URL for the avatar
+  const fileUrl = `${req.protocol}://${req.get("host")}/uploads/avatars/${req.file.filename}`;
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { avatarUrl: fileUrl },
+      { new: true }
+    );
+
+    res.json({
+      success: true,
+      msg: "Avatar uploaded successfully",
+      url: fileUrl,
+      user: {
+        id: user._id,
+        name: user.name || "Player",
+        avatarUrl: user.avatarUrl
+      }
+    });
+  } catch (err) {
+    console.error("Avatar Upload Error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+
 router.post("/upload-avatar", auth, upload.single("avatar"), async (req, res) => {
   if (!req.file) return res.status(400).json({ msg: "No file uploaded" });
 
@@ -1120,26 +1193,23 @@ router.get("/tournaments", async (req, res) => {
     const result = tournaments.map(t => ({
       ...t,
       posterUrl: t.poster
-        ? `https://battlepurse-98-8d98.onrender.com/uploads/${t.poster}`
+        ? `https://battlepurse-98-8d98.onrender.com/uploads/poster/${t.poster}`
         : null
     }));
 
-    res.json(result);
+    res.json({
+      success: true,
+      tournaments: result
+    });
   } catch (err) {
     console.error("Tournament list error:", err);
-    res.status(500).json({ msg: "Server error" });
+    res.status(500).json({ success: false, msg: "Server error" });
   }
 });
 
-router.get("/tournaments", async (req, res) => {
-  try {
-    const tournaments = await Tournament.find().sort({ createdAt: -1 })
-    .limit(100);
-    res.json(tournaments);
-  } catch (err) {
-    res.status(500).json({ msg: "Server error" });
-  }
-});
+
+
+
 
 // ✅ ADMIN uploads room details
 router.post("/tournaments/:tournamentId/room", auth, async (req, res) => {
@@ -1698,8 +1768,9 @@ router.get("/tournaments/:id/players", /* authAdmin, */ async (req, res) => {
 
 
 // Route 2: Authenticated users creating tournaments (if allowed)
-
-
+/* ======================
+   Create Tournament Route
+====================== */
 router.post('/tournaments', adminAuth, upload.single('poster'), async (req, res) => {
   try {
     const {
@@ -1715,6 +1786,11 @@ router.post('/tournaments', adminAuth, upload.single('poster'), async (req, res)
       description
     } = req.body;
 
+    const posterFileName = req.file ? req.file.filename : null;
+    const posterUrl = posterFileName
+      ? `${req.protocol}://${req.get("host")}/uploads/poster/${posterFileName}`
+      : null;
+
     const tournament = new Tournament({
       name,
       game,
@@ -1726,18 +1802,24 @@ router.post('/tournaments', adminAuth, upload.single('poster'), async (req, res)
       prizePool,
       maxPlayers,
       description,
-      poster: req.file ? req.file.filename : null,
-      posterUrl: req.file ? `/uploads/${req.file.filename}` : null,
+      poster: posterFileName,
+      posterUrl: posterUrl,
       players: []
     });
 
     await tournament.save();
-    res.json({ msg: 'Tournament created successfully', tournament });
+
+    res.json({
+      success: true,
+      msg: 'Tournament created successfully',
+      tournament
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: 'Error creating tournament' });
+    console.error("Tournament creation error:", err);
+    res.status(500).json({ success: false, msg: 'Error creating tournament', error: err.message });
   }
 });
+
 
 // routes/wallet.js
 
@@ -7935,32 +8017,66 @@ router.delete("/match/player/:matchId/:userId", authAdmin, async (req, res) => {
 
 
 // POST - make public
+// GET - Public Payment Config
 router.get("/payment-config", async (req, res) => {
   try {
-    const config = await PaymentConfig.findOne();
+    let config = await PaymentConfig.findOne();
+
+    // If no config, provide default
+    if (!config) {
+      config = {
+        upiId: "yourupi@upi",
+        qrImage: "default.png"
+      };
+    }
+
+    // Build full URL for qrImage if not already full URL
+    const qrImageUrl =
+      config.qrImage && !config.qrImage.startsWith("http")
+        ? `${req.protocol}://${req.get("host")}/uploads/qr/${config.qrImage}`
+        : config.qrImage;
+
     res.json({
       success: true,
-      config: config || { upiId: "yourupi@upi", qrImage: "default.png" },
+      config: {
+        upiId: config.upiId,
+        qrImage: qrImageUrl
+      }
     });
   } catch (err) {
     console.error("Payment config fetch error:", err);
-    res.status(500).json({ success: false, msg: "Server error", error: err.message });
+    res.status(500).json({
+      success: false,
+      msg: "Server error",
+      error: err.message
+    });
   }
 });
+
+
 
 // ----------------------
 // POST Payment Config
 // ----------------------
+/* ======================
+   Payment Config Route
+====================== */
 router.post("/payment-config", authAdmin, upload.single("qrImage"), async (req, res) => {
   try {
     const { upiId } = req.body;
-    const qrImage = req.file ? req.file.filename : null;
 
+    // ✅ Build the URL if file uploaded
+    const qrImageUrl = req.file
+      ? `${req.protocol}://${req.get("host")}/uploads/qr/${req.file.filename}`
+      : null;
+
+    // Fetch or create config
     let config = await PaymentConfig.findOne();
     if (!config) config = new PaymentConfig({});
 
+    // Update fields
     if (upiId) config.upiId = upiId;
-    if (qrImage) config.qrImage = qrImage;
+    if (qrImageUrl) config.qrImage = qrImageUrl;
 
     await config.save();
 
@@ -7971,10 +8087,13 @@ router.post("/payment-config", authAdmin, upload.single("qrImage"), async (req, 
     });
   } catch (err) {
     console.error("Payment config update error:", err);
-    res.status(500).json({ success: false, msg: "Server error", error: err.message });
+    res.status(500).json({
+      success: false,
+      msg: "Server error",
+      error: err.message,
+    });
   }
 });
-
 
 
 // ------------------ ADMIN UPLOAD POSTER ------------------
