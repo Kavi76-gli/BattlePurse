@@ -112,7 +112,111 @@
 /* mobile only */
 @media (min-width:900px){
   .app-bar, .swipe-area, .swipe-arrow{ display:none; }
-}    
+}   
+
+/* Poster Upload Styles */
+.poster-title {
+  text-align: center;
+  margin: 20px 0;
+  font-size: 24px;
+  color: #00cfff;
+  text-shadow: 0 0 10px rgba(0, 207, 255, 0.7);
+}
+
+.poster-form {
+  max-width: 400px;
+  margin: 0 auto 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.poster-form label {
+  font-weight: bold;
+  color: #a9dfff;
+}
+
+.poster-form input, .poster-form select {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #12314d;
+  background: #030914;
+  color: #e8f7ff;
+}
+
+.btn-upload {
+  padding: 10px;
+  background: linear-gradient(90deg, #00cfff, #0055ff);
+  border: none;
+  color: #fff;
+  font-weight: bold;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-upload:hover {
+  background: linear-gradient(90deg, #0055ff, #00cfff);
+  box-shadow: 0 0 20px #00cfff;
+}
+
+.poster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  padding: 0 16px;
+}
+
+.poster-card {
+  position: relative;
+  background: linear-gradient(180deg, #0d1c33, #071221);
+  border: 1px solid #12314d;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+
+.poster-card:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 0 25px rgba(0, 207, 255, 0.6);
+}
+
+.poster-card img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.poster-info {
+  padding: 8px;
+  font-weight: bold;
+  color: #00cfff;
+  text-align: center;
+  text-shadow: 0 0 5px #00cfff;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #ff4d4d;
+  border: none;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 12px;
+  transition: 0.2s;
+}
+
+.delete-btn:hover {
+  background: #ff1a1a;
+  box-shadow: 0 0 10px #ff4d4d;
+}
+
 </style>
 </head>
 
@@ -179,8 +283,9 @@
 
 <script>
 const API = "https://battlepurse-98-8d98.onrender.com/api/wallet/payment-config";
-
+const BACKEND_URL = "https://battlepurse-98-8d98.onrender.com";
 // ------------------------------
+const API_BASE = "https://battlepurse-98-8d98.onrender.com/api/wallet";
 // LOAD PREVIOUS CONFIG
 // ------------------------------
 async function loadPrevious() {

@@ -9,7 +9,10 @@ const auth = require('../middleware/authmiddleware');
 const adminAuth = require("../middleware/adminAuth"); // Adjust path as needed
 const authAdmin = require("../middleware/adminAuth");  // adjust the path if needed
 const transporter = require("../config/mail");
-
+const createUploader = require("../middleware/upload");
+const uploadAvatar = createUploader("avatars");
+const uploadPoster = createUploader("poster");
+const uploadQR = createUploader("qr");
 const axios = require("axios");
 
 require("dotenv").config();
@@ -492,27 +495,33 @@ router.get('/transactions', auth, async (req, res) => {
 // Get user profile
 // ✅ Get user profile (with name, phone, wallet balance, etc.)
 // Get user profile
-router.get('/profile', auth, async (req, res) => {
+router.get("/profile", auth, async (req, res) => {
   try {
-    // 🔍 Find user & exclude password
-    const user = await User.findById(req.user.id).select('-password');
+    // 🔍 Find user (exclude password)
+    const user = await User.findById(req.user.id).select("-password");
     if (!user) {
-      return res.status(404).json({ msg: 'User not found' });
+      return res.status(404).json({ success: false, msg: "User not found" });
     }
 
-    // 💰 Get wallet balance
+    // 💰 Wallet balance
     const wallet = await Wallet.findOne({ userId: req.user.id });
     const balance = wallet ? wallet.balance : 0;
 
-    // 📦 Send profile data
+    // 🖼️ Build avatar URL ONLY if avatar exists
+    let avatarUrl = null;
+    if (user.avatar) {
+      avatarUrl = `${req.protocol}://${req.get("host")}/uploads/avatars/${user.avatar}`;
+    }
+
+    // 📦 Response
     res.json({
       success: true,
       user: {
         id: user._id,
         name: user.name || "Player",
         phone: user.phone,
-        email: user.email,          // ✅ ADDED
-        avatarUrl: user.avatarUrl,
+        email: user.email,
+        avatarUrl,          // ✅ always correct
         uids: user.uids,
         isAdmin: user.isAdmin
       },
@@ -521,27 +530,13 @@ router.get('/profile', auth, async (req, res) => {
 
   } catch (err) {
     console.error("Profile error:", err);
-    res.status(500).json({ msg: 'Server error' });
+    res.status(500).json({ success: false, msg: "Server error" });
   }
 });
 
-router.post("/upload-avatar", auth, upload.single("avatar"), async (req, res) => {
-  if (!req.file) return res.status(400).json({ msg: "No file uploaded" });
 
-  const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
 
-  try {
-    const user = await User.findByIdAndUpdate(
-      req.user.id,
-      { avatarUrl: fileUrl },
-      { new: true }
-    );
-    res.json({ msg: "Avatar uploaded successfully", url: fileUrl });
-  } catch (err) {
-    console.error("Avatar Upload Error:", err);
-    res.status(500).json({ msg: "Server error" });
-  }
-});
+
 
 // Logout (client should just delete token)
 // ====================== LOGOUT ======================
@@ -693,6 +688,33 @@ const upload = multer({ storage });
 
 
 // GET avatar image
+
+
+
+router.post(
+  "/uploads-avatars",
+  auth,
+  uploadAvatar.single("avatar"),
+  async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ success: false, msg: "No file uploaded" });
+    }
+
+    // ✅ Save ONLY filename
+    await User.findByIdAndUpdate(req.user.id, {
+      avatar: req.file.filename
+    });
+
+    const avatarUrl = `${req.protocol}://${req.get("host")}/uploads/avatars/${req.file.filename}`;
+
+    res.json({
+      success: true,
+      msg: "Avatar uploaded successfully",
+      url: avatarUrl
+    });
+  }
+);
+
 
 
 
