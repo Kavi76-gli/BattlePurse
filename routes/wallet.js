@@ -771,34 +771,7 @@ router.post("/uploads-avatars", auth, upload.single("avatar"), async (req, res) 
 
 
 // GET avatar image
-router.get("/uploads/avatars/:filename", (req, res) => {
-  try {
-    const { filename } = req.params;
 
-    const filePath = path.resolve(
-      __dirname,
-      "../uploads/avatars",
-      filename
-    );
-
-    // Check file exists
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({
-        success: false,
-        msg: "Avatar image not found"
-      });
-    }
-
-    // Send image
-    res.sendFile(filePath);
-  } catch (err) {
-    console.error("Avatar GET error:", err);
-    res.status(500).json({
-      success: false,
-      msg: "Server error"
-    });
-  }
-});
 
 
 router.post("/update-profile", auth, async (req, res) => {
