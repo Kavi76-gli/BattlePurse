@@ -13,6 +13,7 @@ const createUploader = require("../middleware/upload");
 const uploadAvatar = createUploader("avatars");
 const uploadPoster = createUploader("poster");
 const uploadQR = createUploader("qr");
+const uploadPromo = createUploader("promos")
 const axios = require("axios");
 
 require("dotenv").config();
@@ -1825,47 +1826,116 @@ const Promo = require("../models/promo");
 
 // POST add promo
 // GET all active promos
+router.post(
+  "/promos",
+  authAdmin,
+  uploadPromo.array("images", 10),
+  async (req, res) => {
+    try {
+      const { title } = req.body;
 
-// POST add promo
-router.post("/promos", upload.array("images", 10), async (req, res) => {
-  try {
-    if (!req.body.title || !req.files.length) {
-      return res.status(400).json({ error: "Title and images are required" });
+      if (!title || !req.files || !req.files.length) {
+        return res.status(400).json({
+          success: false,
+          msg: "Title and images are required"
+        });
+      }
+
+      const imageFiles = req.files.map(f => f.filename);
+
+      const promo = await Promo.create({
+        title,
+        images: imageFiles
+        // code auto-generated
+      });
+
+      const imageUrls = imageFiles.map(f =>
+        `${req.protocol}://${req.get("host")}/uploads/promos/${f}`
+      );
+
+      res.json({
+        success: true,
+        msg: "Promo added successfully",
+        promo: {
+          ...promo.toObject(),
+          imageUrls
+        }
+      });
+
+    } catch (err) {
+      console.error("Promo create error:", err);
+      res.status(500).json({
+        success: false,
+        msg: "Failed to add promo"
+      });
     }
-
-    const promo = new Promo({
-      title: req.body.title,
-      images: req.files.map(f => f.filename)
-    });
-
-    await promo.save();
-    res.json({ msg: "Promo added successfully", promo });
-  } catch (err) {
-    console.error("Error adding promo", err);
-    res.status(500).json({ error: "Failed to add promo" });
   }
-});
+);
 
-// GET all promos
 router.get("/promos", async (req, res) => {
   try {
-    const promos = await Promo.find().sort({ createdAt: -1 })
-    .limit(100);
-    res.json(promos);
+    const promos = await Promo.find()
+      .sort({ createdAt: -1 })
+      .limit(100)
+      .lean();
+
+    const result = promos.map(p => ({
+      ...p,
+      imageUrls: p.images.map(img =>
+        img.startsWith("http")
+          ? img // backward safety
+          : `${req.protocol}://${req.get("host")}/uploads/promos/${img}`
+      )
+    }));
+
+    res.json({
+      success: true,
+      promos: result
+    });
+
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch promos" });
+    console.error("Promo fetch error:", err);
+    res.status(500).json({
+      success: false,
+      msg: "Failed to fetch promos"
+    });
   }
 });
 
-// DELETE promo
-router.delete("/promos/:id", async (req, res) => {
+router.delete("/promos/:id", authAdmin, async (req, res) => {
   try {
-    await Promo.findByIdAndDelete(req.params.id);
-    res.json({ msg: "Promo deleted successfully" });
+    const promo = await Promo.findById(req.params.id);
+    if (!promo) {
+      return res.status(404).json({
+        success: false,
+        msg: "Promo not found"
+      });
+    }
+
+    // Try deleting files (ignore error on Render)
+    promo.images.forEach(img => {
+      const filePath = path.join(__dirname, "..", "uploads", "promos", img);
+      fs.unlink(filePath, () => {});
+    });
+
+    await promo.deleteOne();
+
+    res.json({
+      success: true,
+      msg: "Promo deleted successfully"
+    });
+
   } catch (err) {
-    res.status(500).json({ error: "Failed to delete promo" });
+    console.error("Promo delete error:", err);
+    res.status(500).json({
+      success: false,
+      msg: "Failed to delete promo"
+    });
   }
 });
+
+
+// POST add promo
 
 
 
@@ -8000,75 +8070,77 @@ router.delete("/match/player/:matchId/:userId", authAdmin, async (req, res) => {
 // USER HISTORY ROUTE
 
 
-// POST - make public
-router.post("/payment-config", authAdmin, upload.single("qrImage"), async (req, res) => {
-  try {
-    const { upiId } = req.body;
 
-    // ✅ Build the URL if file uploaded
-    const qrImageUrl = req.file
-      ? `${req.protocol}://${req.get("host")}/uploads/qr/${req.file.filename}`
-      : null;
+/* =========================
+   POST PAYMENT CONFIG
+========================= */
+router.post(
+  "/payment-config",
+  authAdmin,
+  uploadQR.single("qrImage"),
+  async (req, res) => {
+    try {
+      const { upiId } = req.body;
 
-    // Fetch or create config
-    let config = await PaymentConfig.findOne();
-    if (!config) config = new PaymentConfig({});
+      let config = await PaymentConfig.findOne();
+      if (!config) config = new PaymentConfig({});
 
-    // Update fields
-    if (upiId) config.upiId = upiId;
-    if (qrImageUrl) config.qrImage = qrImageUrl;
+      if (upiId) config.upiId = upiId;
 
-    await config.save();
+      if (req.file) {
+        config.qrImage = req.file.filename; // ✅ filename only
+      }
 
-    res.json({
-      success: true,
-      msg: "Payment config updated successfully",
-      config,
-    });
-  } catch (err) {
-    console.error("Payment config update error:", err);
-    res.status(500).json({
-      success: false,
-      msg: "Server error",
-      error: err.message,
-    });
+      await config.save();
+
+      const qrImageUrl = config.qrImage
+        ? `${req.protocol}://${req.get("host")}/uploads/qr/${config.qrImage}`
+        : null;
+
+      res.json({
+        success: true,
+        msg: "Payment config updated successfully",
+        config: {
+          upiId: config.upiId,
+          qrImageUrl
+        }
+      });
+
+    } catch (err) {
+      console.error("Payment config error:", err);
+      res.status(500).json({ success: false, msg: "Server error" });
+    }
   }
-});
-router.post("/payment-config", authAdmin, upload.single("qrImage"), async (req, res) => {
-  try {
-    const { upiId } = req.body;
-    const qrImage = req.file ? req.file.filename : null;
+);
 
-    let config = await PaymentConfig.findOne();
-    if (!config) config = new PaymentConfig({});
-
-    if (upiId) config.upiId = upiId;
-    if (qrImage) config.qrImage = qrImage;
-
-    await config.save();
-
-    res.json({
-      success: true,
-      msg: "Payment config updated successfully",
-      config,
-    });
-  } catch (err) {
-    console.error("Payment config update error:", err);
-    res.status(500).json({ success: false, msg: "Server error", error: err.message });
-  }
-});
-
-
+/* =========================
+   GET PAYMENT CONFIG
+========================= */
 router.get("/payment-config", async (req, res) => {
   try {
     const config = await PaymentConfig.findOne();
+
+    if (!config) {
+      return res.json({
+        success: true,
+        config: { upiId: "", qrImageUrl: null }
+      });
+    }
+
+    const qrImageUrl = config.qrImage
+      ? `${req.protocol}://${req.get("host")}/uploads/qr/${config.qrImage}`
+      : null;
+
     res.json({
       success: true,
-      config: config || { upiId: "yourupi@upi", qrImage: "default.png" },
+      config: {
+        upiId: config.upiId,
+        qrImageUrl
+      }
     });
+
   } catch (err) {
-    console.error("Payment config fetch error:", err);
-    res.status(500).json({ success: false, msg: "Server error", error: err.message });
+    res.status(500).json({ success: false, msg: "Server error" });
   }
 });
 
