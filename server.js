@@ -13,11 +13,6 @@ process.setMaxListeners(20);
 /* ======================
    ENV CHECK
 ====================== */
-if (!process.env.PORT) {
-  console.error("❌ PORT missing in .env");
-  process.exit(1);
-}
-
 if (!process.env.MONGO_URI) {
   console.error("❌ MONGO_URI missing in .env");
   process.exit(1);
@@ -33,14 +28,18 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 /* ======================
    STATIC FRONTEND
 ====================== */
-const publicPath = path.join(__dirname, "public");
+const publicPath = path.resolve(__dirname, "public");
 app.use(express.static(publicPath));
 
 /* ======================
    ENSURE UPLOAD FOLDERS
 ====================== */
-const uploadBase = path.join(__dirname, "uploads");
-["avatars", "poster", "qr"].forEach(folder => {
+const uploadBase = path.resolve(__dirname, "uploads");
+
+
+const uploadDirs = ["avatars", "poster", "qr"];
+
+uploadDirs.forEach(folder => {
   const dirPath = path.join(uploadBase, folder);
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: true });
@@ -49,16 +48,15 @@ const uploadBase = path.join(__dirname, "uploads");
 });
 
 /* ======================
-   STATIC UPLOAD FILES
+   STATIC UPLOAD FILES (VERY IMPORTANT)
 ====================== */
 app.use("/uploads", express.static(uploadBase));
 console.log("📂 Uploads available at /uploads");
 
 /* ======================
-   API ROUTES (VERY IMPORTANT)
+   API ROUTES
 ====================== */
 app.use("/api/wallet", require("./routes/wallet"));
-
 
 /* ======================
    FRONTEND ENTRY
@@ -68,7 +66,7 @@ app.get("/", (req, res) => {
 });
 
 /* ======================
-   404 HANDLER (LAST)
+   404 HANDLER (ALWAYS LAST)
 ====================== */
 app.use((req, res) => {
   res.status(404).json({
@@ -94,7 +92,7 @@ mongoose
 /* ======================
    START SERVER
 ====================== */
-const PORT = Number(process.env.PORT);
+const PORT = Number(process.env.PORT || 5000);
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });

@@ -37,9 +37,36 @@
     }
     button:hover { background: #009624; }
     .info { margin: 10px 0; color: #bbb; }
+
+
+    /* ================ SWIPE BACK ================= */
+/* SWIPE BACK EDGE */
+.swipe-area {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  z-index: 50;
+}
+
+/* MOBILE TWEAKS */
+@media (max-width: 480px) {
+  h1 { font-size: 1.5rem; }
+  .app-header img { height: 34px; }
+}
   </style>
 </head>
 <body>
+  <!-- Swipe-back edge -->
+<div class="swipe-area"></div>
+
+<!-- APP BAR -->
+<div class="app-bar">
+  <button onclick="goBack()">←</button>
+  <div class="app-title">Tournament</div>
+</div>
+
   <h2 id="tName">Loading tournament...</h2>
   <p id="tMode"></p>
   <div id="uidContainer"></div>
@@ -131,6 +158,52 @@
     }
 
     loadTournament();
+
+    /* ⬅ BACK LOGIC (ANDROID STYLE) */
+function goBack(){
+  if(document.referrer && document.referrer !== location.href){
+    history.back();
+  }else{
+    location.href="gamezone.html"; // fallback
+  }
+}
+
+/* 👆 SWIPE BACK */
+let startX=0, startY=0;
+const arrow=document.querySelector('.swipe-arrow');
+
+document.addEventListener("touchstart", e=>{
+  const t=e.touches[0];
+  if(t.clientX < 30){
+    startX=t.clientX;
+    startY=t.clientY;
+    arrow.style.opacity="1";
+  }
+});
+
+document.addEventListener("touchmove", e=>{
+  if(!startX) return;
+  const dx=e.touches[0].clientX - startX;
+  if(dx>0){
+    arrow.style.left=Math.min(dx-18,50)+"px";
+  }
+});
+
+document.addEventListener("touchend", e=>{
+  if(!startX) return;
+
+  const dx=e.changedTouches[0].clientX - startX;
+  const dy=Math.abs(e.changedTouches[0].clientY - startY);
+
+  arrow.style.left="-44px";
+  arrow.style.opacity="0";
+
+  if(startX < 30 && dx > 90 && dy < 70){
+    goBack();
+  }
+  startX=0;
+});
+
   </script>
 </body>
 </html>

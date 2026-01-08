@@ -1142,22 +1142,38 @@ router.get("/tournaments", async (req, res) => {
   try {
     const tournaments = await Tournament.find().lean();
 
-    const result = tournaments.map(t => ({
-      ...t,
-      posterUrl: t.poster
-        ? `https://battlepurse-98-8d98.onrender.com/uploads/poster/${t.poster}`
-        : null
-    }));
+    const result = tournaments.map(t => {
+      let posterUrl = null;
+
+      if (t.poster) {
+        // 🛡️ Safety for old data (if full URL was stored earlier)
+        if (typeof t.poster === "string" && t.poster.startsWith("http")) {
+          posterUrl = t.poster;
+        } else {
+          posterUrl = `${req.protocol}://${req.get("host")}/uploads/poster/${t.poster}`;
+        }
+      }
+
+      return {
+        ...t,
+        posterUrl // ✅ always correct
+      };
+    });
 
     res.json({
       success: true,
       tournaments: result
     });
+
   } catch (err) {
     console.error("Tournament list error:", err);
-    res.status(500).json({ success: false, msg: "Server error" });
+    res.status(500).json({
+      success: false,
+      msg: "Server error"
+    });
   }
 });
+
 
 
 
@@ -1722,54 +1738,71 @@ router.get("/tournaments/:id/players", /* authAdmin, */ async (req, res) => {
 /* ======================
    Create Tournament Route
 ====================== */
-router.post('/tournaments', adminAuth, upload.single('poster'), async (req, res) => {
-  try {
-    const {
-      name,
-      game,
-      gameId,
-      mode,
-      date,
-      time,
-      entryFee,
-      prizePool,
-      maxPlayers,
-      description
-    } = req.body;
+router.post(
+  "/tournaments",
+  adminAuth,
+  uploadPoster.single("poster"),
+  async (req, res) => {
+    try {
+      const {
+        name,
+        game,
+        gameId,
+        mode,
+        date,
+        time,
+        entryFee,
+        prizePool,
+        maxPlayers,
+        description
+      } = req.body;
 
-    const posterFileName = req.file ? req.file.filename : null;
-    const posterUrl = posterFileName
-      ? `${req.protocol}://${req.get("host")}/uploads/poster/${posterFileName}`
-      : null;
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          msg: "Poster image is required"
+        });
+      }
 
-    const tournament = new Tournament({
-      name,
-      game,
-      gameId,
-      mode,
-      date,
-      time,
-      entryFee,
-      prizePool,
-      maxPlayers,
-      description,
-      poster: posterFileName,
-      posterUrl: posterUrl,
-      players: []
-    });
+      // ✅ save ONLY filename
+      const posterFileName = req.file.filename;
 
-    await tournament.save();
+      const tournament = await Tournament.create({
+        name,
+        game,
+        gameId,
+        mode,
+        date,
+        time,
+        entryFee,
+        prizePool,
+        maxPlayers,
+        description,
+        poster: posterFileName,
+        players: []
+      });
 
-    res.json({
-      success: true,
-      msg: 'Tournament created successfully',
-      tournament
-    });
-  } catch (err) {
-    console.error("Tournament creation error:", err);
-    res.status(500).json({ success: false, msg: 'Error creating tournament', error: err.message });
+      // ✅ build URL only for response
+      const posterUrl = `${req.protocol}://${req.get("host")}/uploads/poster/${posterFileName}`;
+
+      res.json({
+        success: true,
+        msg: "Tournament created successfully",
+        tournament: {
+          ...tournament.toObject(),
+          posterUrl
+        }
+      });
+
+    } catch (err) {
+      console.error("Tournament creation error:", err);
+      res.status(500).json({
+        success: false,
+        msg: err.message || "Error creating tournament"
+      });
+    }
   }
-});
+);
 
 
 // routes/wallet.js
