@@ -2941,6 +2941,74 @@ router.get("/leaderboard/:tournamentId", async (req, res) => {
   try {
     const { tournamentId } = req.params;
 
+    // fetch tournament + winners
+    const tournament = await Tournament.findById(tournamentId)
+      .populate("winners.userId", "name avatar") // fetch avatar field
+      .lean();
+
+    if (!tournament)
+      return res.status(404).json({ msg: "Tournament not found" });
+
+    const winners = (tournament.winners || []).sort((a, b) => a.position - b.position);
+
+    const leaderboard = [1, 2, 3].map(pos => {
+      const w = winners.find(x => x.position === pos);
+
+      if (w && w.userId) {
+        // use full URL if avatar exists
+        const avatarUrl = w.userId.avatar
+          ? `${req.protocol}://${req.get("host")}/uploads/avatars/${w.userId.avatar}`
+          : "https://cdn-icons-png.flaticon.com/512/147/147144.png";
+
+        return {
+          position: pos,
+          rankEmoji: pos === 1 ? "🥇" : pos === 2 ? "🥈" : "🥉",
+          name: w.userId.name || "Unknown Player",
+          prize: w.prize || 0,
+          avatarUrl,
+          gameUid: w.userId.gameUid || "-",
+          declaredAt: w.declaredAt ? new Date(w.declaredAt).toLocaleString() : "Not Declared"
+        };
+      }
+
+      // fallback if winner not declared
+      return {
+        position: pos,
+        rankEmoji: pos === 1 ? "🥇" : pos === 2 ? "🥈" : "🥉",
+        name: "Waiting...",
+        prize: 0,
+        avatarUrl: "https://cdn-icons-png.flaticon.com/512/147/147144.png",
+        gameUid: "-",
+        declaredAt: "Not Declared"
+      };
+    });
+
+    res.json({
+      success: true,
+      tournamentId: tournament._id,
+      tournamentName: tournament.name,
+      game: tournament.game,
+      mode: tournament.mode,
+      prizePool: tournament.prizePool,
+      totalWinners: winners.length,
+      leaderboard
+    });
+
+  } catch (err) {
+    console.error("Leaderboard fetch error:", err);
+    res.status(500).json({
+      success: false,
+      msg: "Server error while fetching leaderboard",
+      error: err.message
+    });
+  }
+});
+
+
+router.get("/leaderboard/:tournamentId", async (req, res) => {
+  try {
+    const { tournamentId } = req.params;
+
     const tournament = await Tournament.findById(tournamentId)
       .populate("winners.userId", "name avatarUrl gameUid")
       .lean();
@@ -6290,6 +6358,65 @@ router.delete("/admin/match/:matchId", authAdmin, async (req, res) => {
   } catch (err) {
     console.error("Delete match error:", err);
     res.status(500).json({ success: false, msg: "Server Error" });
+  }
+});
+
+router.get("/admin/match/winners", authAdmin, async (req, res) => {
+  try {
+    // fetch latest completed matches
+    const matches = await Match.find({ status: "completed" })
+      .sort({ updatedAt: -1 })
+      .limit(10) // limit to 10 latest matches
+      .populate("results.userId", "name avatar"); // populate user name + avatar
+
+    const winners = [];
+
+    matches.forEach(m => {
+      if (!m.results || !m.results.length) return;
+
+      if (m.type === "1v1") {
+        const winner = m.results.sort((a, b) => (b.kills || 0) - (a.kills || 0))[0];
+        if (winner && winner.userId) {
+          const avatarUrl = winner.userId.avatar
+            ? `${req.protocol}://${req.get("host")}/uploads/avatars/${winner.userId.avatar}`
+            : null;
+
+          winners.push({
+            name: winner.userId.name || "Player",
+            avatar: avatarUrl,
+            matchId: m._id,
+            amount: m.prizeGiven || 0,
+            game: m.game,
+            mode: m.mode
+          });
+        }
+      } else {
+        const winningTeam = m.winnerTeam;
+        const winnerPlayers = m.results.filter(r => r.team === winningTeam);
+        winnerPlayers.forEach(p => {
+          if (!p.userId) return;
+
+          const avatarUrl = p.userId.avatar
+            ? `${req.protocol}://${req.get("host")}/uploads/avatars/${p.userId.avatar}`
+            : null;
+
+          winners.push({
+            name: p.userId.name || "Player",
+            avatar: avatarUrl,
+            matchId: m._id,
+            amount: p.share || 0,
+            game: m.game,
+            mode: m.mode,
+            teamColor: p.team ? p.team.toLowerCase() : null
+          });
+        });
+      }
+    });
+
+    res.json({ success: true, list: winners });
+  } catch (err) {
+    console.error("Admin winners error:", err);
+    res.status(500).json({ success: false, msg: "Server error" });
   }
 });
 
