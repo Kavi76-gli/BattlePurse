@@ -1058,6 +1058,34 @@ button:disabled {
   100% { opacity: 0.7; transform: translateY(0); }
 }
 
+
+.wallet-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #0b1c24, #111);
+  border: 1px solid #00eaff44;
+  border-radius: 14px;
+  padding: 12px 16px;
+  margin: 14px auto;
+  max-width: 420px;
+  box-shadow: 0 0 12px rgba(0, 234, 255, 0.15);
+}
+
+.wallet-label {
+  font-size: 0.9rem;
+  color: #9bdfff;
+  font-weight: 500;
+}
+
+.wallet-amount {
+  font-size: 1.2rem;
+  font-weight: 700;
+  background: linear-gradient(90deg, #00eaff, #0dfc89);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 </style>
 </head>
 
@@ -1170,6 +1198,12 @@ button:disabled {
   <h3 class="active-title">🎮 Your Active Match</h3>
   <div id="activeMatchContent" class="active-match-content"></div>
 </section>
+
+
+<div class="wallet-box">
+  <span class="wallet-label">Wallet Balance</span>
+  <span class="wallet-amount" id="walletBalance">₹0</span>
+</div>
 
 
 <section class="join-container">
@@ -2069,6 +2103,35 @@ setInterval(() => {
     bpEl.style.opacity = 1;
   }, 300);
 }, 3000);
+
+
+async function loadWalletBalance() {
+  const token = localStorage.getItem("token");
+  if (!token) return;
+
+  try {
+    const res = await fetch(
+      "https://battlepurse-98-8d98.onrender.com/api/wallet/balance",
+      {
+        headers: {
+          Authorization: "Bearer " + token
+        }
+      }
+    );
+
+    const data = await res.json();
+
+    if (data.success) {
+      document.getElementById("walletBalance").innerText =
+        "₹" + (data.balance || 0);
+    }
+  } catch (err) {
+    console.error("Wallet fetch error:", err);
+  }
+}
+
+// Call on page load
+loadWalletBalance();
 
 
 document.addEventListener("DOMContentLoaded", loadPosters);
