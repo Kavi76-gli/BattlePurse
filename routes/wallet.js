@@ -496,6 +496,48 @@ router.get('/transactions', auth, async (req, res) => {
 
 // Get user profile
 // ✅ Get user profile (with name, phone, wallet balance, etc.)
+// ✅ Get user profile (APK-safe, HTTPS avatars)
+router.get("/profile", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        msg: "User not found"
+      });
+    }
+
+    const wallet = await Wallet.findOne({ userId: req.user.id });
+    const balance = wallet ? wallet.balance : 0;
+
+    // ✅ FORCE HTTPS (important for Android WebView)
+    const avatarUrl = user.avatar
+      ? `https://battlepurse-98-8d98.onrender.com/uploads/avatars/${user.avatar}`
+      : null;
+
+    res.json({
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name || "Player",
+        phone: user.phone,
+        email: user.email,
+        avatarUrl,
+        uids: user.uids,
+        isAdmin: user.isAdmin
+      },
+      balance
+    });
+
+  } catch (err) {
+    console.error("Profile error:", err);
+    res.status(500).json({
+      success: false,
+      msg: "Server error"
+    });
+  }
+});
+
 router.get("/profile", auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
@@ -685,6 +727,43 @@ const upload = multer({ storage });
 
 // GET avatar image
 
+router.post(
+  "/uploads-avatars",
+  auth,
+  uploadAvatar.single("avatar"),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          msg: "No file uploaded"
+        });
+      }
+
+      // save filename in DB
+      await User.updateOne(
+        { _id: req.user.id },
+        { $set: { avatar: req.file.filename } }
+      );
+
+      // ✅ FORCE HTTPS URL (important for APK WebView)
+      const avatarUrl = `https://battlepurse-98-8d98.onrender.com/uploads/avatars/${req.file.filename}`;
+
+      res.json({
+        success: true,
+        msg: "Avatar uploaded successfully",
+        avatarUrl
+      });
+
+    } catch (err) {
+      console.error("Avatar upload error:", err);
+      res.status(500).json({
+        success: false,
+        msg: "Server error"
+      });
+    }
+  }
+);
 
 
 router.post(

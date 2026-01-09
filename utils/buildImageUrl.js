@@ -1,7 +1,4 @@
-function buildImageUrl(req, folder, filename) {
+function buildImageUrl(folder, filename) {
   if (!filename) return null;
- return `https://${req.get("host")}/uploads/${folder}/${filename}`;
-
+  return `https://battlepurse-98-8d98.onrender.com/uploads/${folder}/${filename}`;
 }
-
-module.exports = buildImageUrl;
