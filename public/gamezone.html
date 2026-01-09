@@ -1141,22 +1141,27 @@ async function fetchWinners() {
       const match = matches[i];
 
       const winnersHTML = match.winners.length
-        ? match.winners
-            .map(
-              p => `
+  ? match.winners
+      .map(p => `
         <div class="winner-player">
-          <img src="${p.avatarUrl || "https://i.ibb.co/2d1zY0m/user.png"}" />
+
+          ${
+            p.avatarUrl
+              ? `<img src="${p.avatarUrl}" alt="${p.name}" />`
+              : ``
+          }
 
           <div class="winner-info">
             <div class="winner-name">${p.name}</div>
             <div class="winner-uid">UID: ${p.uid}</div>
             <div class="winner-amount">₹${p.winningPrice}</div>
           </div>
+
         </div>
-      `
-            )
-            .join("")
-        : `<p class="no-winner">Winner not declared</p>`;
+      `)
+      .join("")
+  : `<p class="no-winner">Winner not declared</p>`;
+
 
       container.innerHTML = `
         <div class="winner-card-mobile">
