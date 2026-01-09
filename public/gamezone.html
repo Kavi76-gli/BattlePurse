@@ -908,6 +908,156 @@ button:disabled {
   }
 }
 
+
+
+
+/* ===============================
+   ANNOUNCEMENT AREA
+================================ */
+.announcement-area {
+  margin: 12px 0 18px;
+  overflow: hidden;
+}
+
+/* Shared scroll style */
+.premium-wrapper,
+.support-wrapper,
+.notice {
+  background: #0e1624;
+  border-radius: 12px;
+  padding: 10px 0;
+  margin-bottom: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(0,255,255,0.15);
+}
+
+/* Scrolling text */
+.premium-text,
+.support-text,
+.notice {
+  display: inline-block;
+  white-space: nowrap;
+  padding-left: 100%;
+  animation: scroll-left 18s linear infinite;
+  font-size: 13px;
+  color: #9bdfff;
+}
+
+/* Different speeds for variety */
+.support-text {
+  animation-duration: 22s;
+  color: #7cffc4;
+}
+
+.notice {
+  animation-duration: 26s;
+  color: #ffd966;
+  font-weight: 600;
+}
+
+/* Scroll animation */
+@keyframes scroll-left {
+  from {
+    transform: translateX(0%);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+/* ===============================
+   SUPPORT BUTTON
+================================ */
+.support-btn-wrapper {
+  text-align: center;
+  margin-top: 8px;
+}
+
+.support-btn {
+  display: inline-block;
+  padding: 10px 22px;
+  background: linear-gradient(135deg, #00eaff, #0dfc89);
+  color: #000;
+  font-weight: 700;
+  border-radius: 24px;
+  text-decoration: none;
+  font-size: 14px;
+  box-shadow: 0 0 12px rgba(0,255,255,0.4);
+}
+
+.support-btn:active {
+  transform: scale(0.96);
+}
+
+/* ===============================
+   MOBILE OPTIMIZATION
+================================ */
+@media (max-width: 480px) {
+  .premium-text,
+  .support-text,
+  .notice {
+    font-size: 12px;
+  }
+}
+
+/* ================= HERO SECTION ================= */
+.hero {
+  min-height: 60vh;              /* smaller & cleaner for mobile */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px 24px;
+  background: radial-gradient(circle at top, #0b1c24 0%, #000 70%);
+}
+
+.hero-content {
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+}
+
+/* ================= TAGLINE ================= */
+.bp-tagline {
+  margin-top: 8px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.4;
+}
+
+/* animated main line */
+.bp-tagline span {
+  display: block;
+  margin-top: 4px;
+  background: linear-gradient(90deg, #00eaff, #0dfc89);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: opacity 0.3s ease;
+}
+
+/* ================= COMING SOON LINE ================= */
+.bp-soon {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #9bdfff;
+  opacity: 0.85;
+  animation: pulseText 2.5s infinite ease-in-out;
+}
+
+/* subtle pulse animation */
+@keyframes pulseText {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+@keyframes pulseText {
+  0% { opacity: 0.7; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-2px); }
+  100% { opacity: 0.7; transform: translateY(0); }
+}
+
 </style>
 </head>
 
@@ -948,6 +1098,39 @@ button:disabled {
     </button>
   </div>
 </section>
+
+
+
+
+
+<div class="announcement-area">
+
+  <div class="premium-wrapper">
+    <span class="premium-text">
+      🎮 Welcome to GameZone! Play daily tournaments & matches, win prizes, climb the leaderboard. 
+      ⚠️ Note: Never use hacks — if detected, winnings will not be shared.
+    </span>
+  </div>
+
+  <div class="support-wrapper">
+    <span class="support-text">
+      💬 Facing any issue? Game problem, payment delay, or match error — contact us on Help & Support page.
+    </span>
+  </div>
+
+  <div class="notice">
+    💰 8% of the total winning prize will be deducted by BattlePurse as a service fee.
+  </div>
+
+  <div class="support-btn-wrapper">
+    <a href="help&support.html" class="support-btn">Help & Support</a>
+  </div>
+
+</div>
+
+
+
+
 
 <!-- WINNERS SECTION -->
 <section class="winner-spotlight">
@@ -1045,11 +1228,22 @@ button:disabled {
 
 
 <section class="poster-section">
-  <h2 class="poster-title">🔥 Ongoing Tournaments</h2>
+  <h2 class="poster-title">🔥 Ongoing Room</h2>
 
   <div id="posterGrid" class="poster-grid">
     <!-- posters injected here -->
   </div>
+</section>
+
+<section class="hero">
+  <div class="bp-tagline">
+  BattlePurse — <span id="bp-rotate">Skill Decides.</span>
+</div>
+
+<div class="bp-soon">
+  🚀 More updates coming soon…
+</div>
+
 </section>
 
 
@@ -1080,6 +1274,17 @@ function viewTournaments() {
   // ✅ open tournaments page
   window.location.href = "./kavi.html";
 }
+
+document.querySelectorAll(
+  ".premium-text, .support-text, .notice"
+).forEach(el => {
+  el.addEventListener("touchstart", () => {
+    el.style.animationPlayState = "paused";
+  });
+  el.addEventListener("touchend", () => {
+    el.style.animationPlayState = "running";
+  });
+});
 
 
 
@@ -1153,7 +1358,7 @@ async function fetchWinners() {
 
           <div class="winner-info">
             <div class="winner-name">${p.name}</div>
-            <div class="winner-uid">UID: ${p.uid}</div>
+           
             <div class="winner-amount">₹${p.winningPrice}</div>
           </div>
 
@@ -1845,6 +2050,27 @@ async function loadPosters() {
 }
 
 // 🚀 Load on page open
+
+const bpTexts = [
+  "Skill Decides.",
+  "Victory Pays.",
+  "Play Smart. Win Real."
+];
+
+let bpIndex = 0;
+const bpEl = document.getElementById("bp-rotate");
+
+setInterval(() => {
+  bpIndex = (bpIndex + 1) % bpTexts.length;
+  bpEl.style.opacity = 0;
+
+  setTimeout(() => {
+    bpEl.textContent = bpTexts[bpIndex];
+    bpEl.style.opacity = 1;
+  }, 300);
+}, 3000);
+
+
 document.addEventListener("DOMContentLoaded", loadPosters);
 
 document.addEventListener("DOMContentLoaded", loadActiveMatch);
