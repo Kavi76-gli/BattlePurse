@@ -5738,6 +5738,125 @@ router.get("/history", auth, async (req, res) => {
   }
 });
 
+router.get("/leaderboard", auth, async (req, res) => {
+  try {
+    const { date, game } = req.query;
+
+    let start = date ? new Date(date) : new Date("2000-01-01");
+    let end = date ? new Date(date) : new Date();
+    if (date) {
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+    }
+
+    const userMap = new Map();
+
+    const matches = await QuickMatch.find({
+      status: "completed",
+      createdAt: { $gte: start, $lte: end },
+      ...(game ? { game } : {})
+    })
+      .limit(200)
+      .lean();
+
+    for (const m of matches) {
+      const entryFee = Number(m.entryFee || 0);
+      const totalPlayers = (m.players || []).length || 1;
+      const totalCollected = entryFee * totalPlayers;
+      const prizePool = Math.max(0, totalCollected - Math.round(totalCollected * 0.08));
+
+      const winnerIds = (m.winnerIds || []).map(id => String(id));
+      const userResults = Array.isArray(m.userResults) ? m.userResults : [];
+
+      const allPlayers = (m.players || [])
+        .map(p => p?.userId ? String(p.userId._id || p.userId) : null)
+        .filter(Boolean);
+
+      for (const uid of allPlayers) {
+        if (!userMap.has(uid)) {
+          userMap.set(uid, {
+            userId: uid,
+            totalWinnings: 0,
+            totalSpent: 0,
+            games: new Set()
+          });
+        }
+        userMap.get(uid).totalSpent += entryFee;
+        userMap.get(uid).games.add(m.game);
+      }
+
+      // ADMIN SELECTED WINNERS
+      if (winnerIds.length > 0) {
+        const winners = userResults.filter(r => winnerIds.includes(String(r.userId)));
+        const prizeToSplit = m.prizeGiven || prizePool;
+
+        if (m.prizeSystem === "team_equal") {
+          const share = Math.round(prizeToSplit / (winners.length || 1));
+          winners.forEach(p => {
+            const uid = String(p.userId);
+            userMap.get(uid).totalWinnings += share;
+          });
+        } else {
+          const totalKills = winners.reduce((s, x) => s + (Number(x.kills || 0)), 0);
+          winners.forEach(p => {
+            const uid = String(p.userId);
+            const share = totalKills
+              ? Math.round((p.kills / totalKills) * prizeToSplit)
+              : Math.round(prizeToSplit / winners.length);
+            userMap.get(uid).totalWinnings += share;
+          });
+        }
+        continue;
+      }
+
+      // AUTO RESULT for 1v1
+      if (m.type === "1v1") {
+        const top = [...userResults].sort((a, b) => b.kills - a.kills)[0];
+        if (top) {
+          userMap.get(String(top.userId)).totalWinnings += (top.prize || prizePool);
+        }
+      }
+    }
+
+    // FETCH USER DETAILS (NAME + AVATAR)
+    const userIds = [...userMap.keys()];
+    const users = await User.find(
+      { _id: { $in: userIds } },
+      { name: 1, avatar: 1 }
+    ).lean();
+
+    const userInfo = new Map(
+      users.map(u => {
+        const avatarUrl = u.avatar
+          ? `${req.protocol}://${req.get("host")}/uploads/avatars/${u.avatar}`
+          : null;
+        return [String(u._id), { name: u.name || "Player", avatarUrl }];
+      })
+    );
+
+    const leaderboard = [...userMap.entries()]
+      .map(([uid, data]) => {
+        const user = userInfo.get(uid) || {};
+        const netWin = (data.totalWinnings || 0) - (data.totalSpent || 0);
+
+        return {
+          userId: uid,
+          player: user.name || "Unknown",
+          avatar: user.avatarUrl || "", // ✅ now full profile avatar
+          game: [...data.games].join(", "),
+          netWin
+        };
+      })
+      .sort((a, b) => b.netWin - a.netWin)
+      .map((u, i) => ({ ...u, rank: i + 1 }));
+
+    res.json({ success: true, leaderboard });
+
+  } catch (err) {
+    console.error("Leaderboard Error:", err);
+    res.status(500).json({ success: false, msg: "Server Error" });
+  }
+});
 
 
 router.get("/leaderboard", auth, async (req, res) => {

@@ -237,14 +237,34 @@ function fmt(d){
   return d?new Date(d).toLocaleString():'—';
 }
 
-async function loadTournamentsList(){
-  const r=await fetch(`${API}/tournaments`,{headers:{Authorization:`Bearer ${token}`}});
-  const t=await r.json();
-  select.innerHTML='<option value="">Select Tournament</option>';
-  t.forEach(x=>{
-    select.innerHTML+=`<option value="${x._id}">${x.name} | ${x.game}</option>`;
-  });
+
+async function loadTournamentsList() {
+  try {
+    const res = await fetch(`${API}/tournaments`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    });
+
+    const data = await res.json();
+
+    if (!data.success || !Array.isArray(data.tournaments)) {
+      console.error("Invalid tournaments response", data);
+      return;
+    }
+
+    select.innerHTML = `<option value="">Select Tournament</option>`;
+
+    data.tournaments.forEach(t => {
+      const opt = document.createElement("option");
+      opt.value = t._id;
+      opt.textContent = `${t.name} | ${t.game}`;
+      select.appendChild(opt);
+    });
+
+  } catch (err) {
+    console.error("Load tournaments list error:", err);
+  }
 }
+
 
 async function loadTournamentPlayers(){
   if(!select.value)return;

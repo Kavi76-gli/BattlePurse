@@ -302,7 +302,7 @@ function renderTable(rows){
     const resultText = i.result === "win" && i.position ? "#" + i.position : i.result;
     tableBody.innerHTML += `
       <tr>
-        <td>${i.matchNumber || i.tournamentName || "-"}</td>
+        <td>${i.matchId || i.tournamentName || "-"}</td>
         <td>${i.game || "-"}</td>
         <td>${date}</td>
         <td class="${cls}">${resultText}</td>

@@ -172,27 +172,40 @@ input[type="text"] {
 </div>
 
 <script>
+
 /* ================= AMOUNT FROM URL ================= */
-const urlParams = new URLSearchParams(window.location.search);
-const amount = parseInt(urlParams.get("amount")) || 0;
-document.getElementById("amountDisplay").innerText = amount;
+const params = new URLSearchParams(window.location.search);
+const amount = Number(params.get("amount")) || 0;
+
+document.getElementById("amountDisplay").innerText =
+  amount > 0 ? `₹${amount}` : "₹0";
 
 /* ================= LOAD PAYMENT CONFIG ================= */
-const API_CONFIG = "https://battlepurse-98-8d98.onrender.com/api/wallet/payment-config";
+const API_CONFIG =
+  "https://battlepurse-98-8d98.onrender.com/api/wallet/payment-config";
 
 async function loadPaymentConfig() {
   try {
     const res = await fetch(API_CONFIG);
     const data = await res.json();
-    if (data.success && data.config) {
-      const cfg = data.config;
-      document.getElementById("upiId").innerText = cfg.upiId || "yourupi@upi";
-      if (cfg.qrImage) {
-        document.getElementById("qrImage").src = "https://battlepurse-98-8d98.onrender.com/uploads/" + cfg.qrImage;
-      }
+
+    if (!data.success || !data.config) return;
+
+    const { upiId, qrImageUrl } = data.config;
+
+    // Show UPI
+    document.getElementById("upiId").innerText =
+      upiId || "yourupi@upi";
+
+    // Show QR
+    if (qrImageUrl) {
+      const qrImg = document.getElementById("qrImage");
+      qrImg.src = qrImageUrl;
+      qrImg.style.display = "block";
     }
-  } catch(err) {
-    console.error("Config fetch error:", err);
+
+  } catch (err) {
+    console.error("❌ Payment config fetch error:", err);
   }
 }
 
@@ -203,33 +216,46 @@ async function submitPayment() {
   const utr = document.getElementById("utr").value.trim();
   const token = localStorage.getItem("token");
 
-  if (!utr) return alert("❗ Please enter the UTR/Transaction number.");
-  if (!amount || amount < 300) return alert("❗ Invalid or missing amount.");
-  if (!token) return alert("❗ You're not logged in. Please log in first.");
+  if (!utr) {
+    return alert("❗ Please enter the UTR / Transaction ID.");
+  }
+
+  if (!amount || amount < 300) {
+    return alert("❗ Minimum deposit amount is ₹300.");
+  }
+
+  if (!token) {
+    return alert("❗ Please login before submitting payment.");
+  }
 
   try {
-    const res = await fetch("https://battlepurse-98-8d98.onrender.com/api/wallet/submit-utr", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
-      },
-      body: JSON.stringify({ amount, utr })
-    });
+    const res = await fetch(
+      "https://battlepurse-98-8d98.onrender.com/api/wallet/submit-utr",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token
+        },
+        body: JSON.stringify({ amount, utr })
+      }
+    );
 
     const data = await res.json();
 
-    if (res.ok) {
-      alert("✅ Payment submitted successfully. Awaiting admin approval.");
-      window.location.href = "profile.html";
-    } else {
-      alert("❌ " + (data.msg || "Something went wrong."));
+    if (!res.ok) {
+      return alert("❌ " + (data.msg || "Payment submission failed."));
     }
-  } catch(err) {
-    console.error("Payment error:", err);
+
+    alert("✅ Payment submitted successfully.\n⏳ Waiting for admin approval.");
+    window.location.href = "profile.html";
+
+  } catch (err) {
+    console.error("❌ Payment submit error:", err);
     alert("❌ Server error. Please try again later.");
   }
 }
+
 
 /* ================= BACK LOGIC ================= */
 function goBack() {

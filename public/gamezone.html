@@ -633,6 +633,159 @@ select, input {
   background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
 }
 
+/* =========================
+   BLUE NEON ACTIVE MATCH
+========================= */
+
+.neon-box {
+  max-width: 420px;
+  margin: 20px auto;
+  padding: 18px;
+  background: #020b18;
+  border-radius: 14px;
+  border: 1px solid #00d9ff;
+  box-shadow:
+    0 0 10px rgba(0, 217, 255, 0.5),
+    inset 0 0 8px rgba(0, 217, 255, 0.3);
+  color: #e6faff;
+  font-family: "Poppins", sans-serif;
+}
+
+.neon-title {
+  text-align: center;
+  margin-bottom: 14px;
+  font-size: 18px;
+  color: #00eaff;
+  text-shadow: 0 0 8px rgba(0, 234, 255, 0.9);
+}
+
+.neon-content p {
+  margin: 6px 0;
+  font-size: 14px;
+}
+
+.neon-content strong {
+  color: #7df6ff;
+}
+
+.neon-content div {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.neon-box button {
+  width: 100%;
+  margin-top: 14px;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #02131f;
+  background: linear-gradient(135deg, #00eaff, #009dff);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(0, 217, 255, 0.8);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.neon-box button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 18px rgba(0, 217, 255, 1);
+}
+
+
+/* ===============================
+   BLUE NEON BUTTONS
+=============================== */
+
+.btn {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  box-shadow: 0 0 8px rgba(0, 217, 255, 0.5);
+}
+
+/* PRIMARY BUTTON (filled neon) */
+.btn-primary {
+  background: linear-gradient(135deg, #00eaff, #009dff);
+  color: #02131f;
+  border: none;
+  text-shadow: 0 0 4px #00f0ff;
+  box-shadow: 0 0 12px rgba(0, 217, 255, 0.8);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 0 18px rgba(0, 217, 255, 1);
+  transform: translateY(-2px);
+}
+
+/* GHOST BUTTON (outlined neon) */
+.btn-ghost {
+  background: transparent;
+  color: #00eaff;
+  border: 2px solid #00eaff;
+  text-shadow: 0 0 3px #00f0ff;
+  box-shadow: 0 0 6px rgba(0, 217, 255, 0.5);
+}
+
+.btn-ghost:hover {
+  box-shadow: 0 0 14px rgba(0, 217, 255, 1);
+  transform: translateY(-2px);
+}
+
+/* DISABLED BUTTON */
+.btn:disabled,
+button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* NEON BUTTON GENERAL EFFECT */
+.btn, button {
+  outline: none;
+  user-select: none;
+  font-size: 14px;
+}
+
+/* ===============================
+   BLUE NEON BUTTONS (INCLUDING INLINE)
+=============================== */
+
+button {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  outline: none;
+  user-select: none;
+  font-size: 14px;
+  text-shadow: 0 0 4px #00f0ff;
+  box-shadow: 0 0 10px rgba(0, 217, 255, 0.6);
+  border: none;
+  color: #02131f;
+  background: linear-gradient(135deg, #00eaff, #009dff);
+}
+
+/* Hover effect */
+button:hover {
+  box-shadow: 0 0 20px rgba(0, 217, 255, 1);
+  transform: translateY(-2px);
+}
+
+/* Disabled buttons */
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+
 </style>
 </head>
 
@@ -1220,7 +1373,6 @@ async function loadActiveMatch() {
 
     const match = data.data;
 
-    // hide if completed
     if (match.status === "completed") {
       box.style.display = "none";
       return;
@@ -1228,13 +1380,11 @@ async function loadActiveMatch() {
 
     box.style.display = "block";
 
-    // status label
     const statusLabel =
       match.status === "room_published"
-        ? `<span style="color:#4cff4c;font-weight:bold;">Room Published ✓</span>`
-        : `<span style="color:#ffea55;">Waiting for Admin to Upload Room…</span>`;
+        ? `<span style="color:#3cff8f;font-weight:bold;">Room Published ✓</span>`
+        : `<span style="color:#ffd94c;">Waiting for Admin to Upload Room…</span>`;
 
-    // prize system
     let prizeHtml = "";
     if (match.prizeSystem) {
       let prizeType = "-";
@@ -1243,13 +1393,9 @@ async function loadActiveMatch() {
       prizeHtml = `<p><strong>Prize System:</strong> ${prizeType}</p>`;
     }
 
-    // all players list
     let fullList = [...(match.players || [])];
-
-    // sort players by team
     fullList.sort((a, b) => (a.team || 0) - (b.team || 0));
 
-    // max players based on type
     let maxPlayers = fullList.length;
     const type = match.type.toLowerCase();
     if (type === "1v1") maxPlayers = 2;
@@ -1259,15 +1405,13 @@ async function loadActiveMatch() {
 
     const finalPlayers = fullList.slice(0, maxPlayers);
 
-    // ⭐ NO UID — ONLY PLAYER NAME
     const playersList = finalPlayers
       .map(
         (p, i) =>
-          `${i + 1}. ${p.name}${p.team != null ? ` - Team ${p.team}` : ""}`
+          `${i + 1}. ${p.name}${p.team != null ? ` • Team ${p.team}` : ""}`
       )
       .join("<br>");
 
-    // final UI
     content.innerHTML = `
       <p><strong>Game:</strong> ${match.game}</p>
       <p><strong>Mode:</strong> ${match.mode}</p>
@@ -1279,10 +1423,10 @@ async function loadActiveMatch() {
       <p><strong>Status:</strong> ${statusLabel}</p>
 
       <p style="opacity:0.7;margin-top:6px;">
-        <strong>Match ID:</strong> ${match._id}
+        <strong>Match ID:</strong> ${  match._id}
       </p>
 
-      <div style="margin-top:12px;">
+      <div style="margin-top:10px;">
         <strong>Players:</strong><br>
         ${playersList}
       </div>
@@ -1335,6 +1479,7 @@ const matchMode = document.getElementById("matchMode");
 const feeSelect = document.getElementById("fee");
 const entryFee = document.getElementById("entryFee");
 const gameUID = document.getElementById("gameUID");
+const gameUIDLabel = document.getElementById("gameUIDLabel");
 const whatsapp = document.getElementById("whatsapp");
 const joinBtn = document.getElementById("joinBtn");
 const message = document.getElementById("message");
@@ -1343,16 +1488,53 @@ const cricketNote = document.getElementById("cricketNote");
 
 let selectedGame = null;
 
+/* ----------------------------------
+   HELPERS
+-----------------------------------*/
 function setMessage(text, color="lightgreen") {
   message.style.color = color;
   message.textContent = text;
+}
+
+function disableJoin(msg) {
+  joinBtn.style.display = "none";
+  if (msg) setMessage(msg, "salmon");
+}
+
+function enableJoin() {
+  joinBtn.style.display = "inline-block";
+  message.textContent = "";
+}
+
+/* ----------------------------------
+   UID LABEL + PLACEHOLDER
+-----------------------------------*/
+function updateUIDField(game) {
+  gameUID.value = "";
+
+  if (game === "Ludo") {
+    gameUIDLabel.textContent = "Ludo King ID:";
+    gameUID.placeholder = "Enter Ludo King ID";
+  }
+  else if (game === "Carrom") {
+    gameUIDLabel.textContent = "Carrom ID:";
+    gameUID.placeholder = "Enter Carrom ID";
+  }
+  else if (game === "8 Ball Pool") {
+    gameUIDLabel.textContent = "Unique ID:";
+    gameUID.placeholder = "Enter Unique ID";
+  }
+  else if (game === "Cricket") {
+    gameUIDLabel.textContent = "Facebook Profile Link (Required):";
+    gameUID.placeholder = "https://www.facebook.com/your.profile";
+  }
 }
 
 /* ----------------------------------
    GAME SELECT
 -----------------------------------*/
 document.querySelectorAll(".game-card").forEach(card => {
-  card.addEventListener("click", () => {
+  card.onclick = () => {
     document.querySelectorAll(".game-card")
       .forEach(c => c.classList.remove("active"));
 
@@ -1363,18 +1545,23 @@ document.querySelectorAll(".game-card").forEach(card => {
     formArea.style.display = "block";
 
     populateTypeMode(selectedGame);
+    updateUIDField(selectedGame);
 
-    cricketNote.style.display =
-      selectedGame === "Cricket" ? "block" : "none";
+    // 🏏 Cricket rules
+    if (selectedGame === "Cricket") {
+      cricketNote.style.display = "block";
+      cricketNote.textContent =
+        "⚠ Facebook profile link is mandatory for Cricket matches (Minimum Level 3 required)";
+    } else {
+      cricketNote.style.display = "none";
+    }
 
     downloadBtn.style.display = "block";
     downloadBtn.textContent = `Download ${selectedGame}`;
     downloadBtn.onclick = () =>
       window.open(DOWNLOAD_LINKS[selectedGame], "_blank");
-  });
+  };
 });
-
-
 
 /* ----------------------------------
    TYPE + MODE
@@ -1383,34 +1570,58 @@ function populateTypeMode(game) {
   matchType.innerHTML = "";
   matchMode.innerHTML = "";
 
-  GAME_CONFIG[game].types.forEach(t => {
-    matchType.add(new Option(t, t));
-  });
-
-  GAME_CONFIG[game].modes.forEach(m => {
-    matchMode.add(new Option(m, m));
-  });
+  GAME_CONFIG[game].types.forEach(t => matchType.add(new Option(t, t)));
+  GAME_CONFIG[game].modes.forEach(m => matchMode.add(new Option(m, m)));
 }
 
 /* ----------------------------------
-   ENTRY FEE
+   ENTRY FEE VALIDATION
 -----------------------------------*/
+function validateFee() {
+  const fee =
+    feeSelect.value === "custom"
+      ? Number(entryFee.value)
+      : Number(feeSelect.value);
+
+  if (!fee || fee < 50) {
+    disableJoin("❌ Minimum entry fee is ₹50");
+  } else {
+    enableJoin();
+  }
+}
+
 feeSelect.onchange = () => {
   entryFee.style.display = feeSelect.value === "custom" ? "block" : "none";
   if (feeSelect.value !== "custom") entryFee.value = feeSelect.value;
+  validateFee();
 };
+
+entryFee.oninput = validateFee;
 
 /* ----------------------------------
    JOIN
 -----------------------------------*/
 joinBtn.onclick = async () => {
-  const finalEntryFee = feeSelect.value === "custom"
-    ? Number(entryFee.value)
-    : Number(feeSelect.value);
+  const finalEntryFee =
+    feeSelect.value === "custom"
+      ? Number(entryFee.value)
+      : Number(feeSelect.value);
+
+  if (finalEntryFee < 50) return;
 
   if (!selectedGame) return setMessage("Select a game", "salmon");
-  if (!gameUID.value) return setMessage("Enter UID", "salmon");
-  if (!whatsapp.value) return setMessage("Enter WhatsApp number", "salmon");
+  if (!whatsapp.value.trim()) return setMessage("Enter WhatsApp number", "salmon");
+
+  // 🏏 Cricket Facebook validation
+  if (selectedGame === "Cricket") {
+    const fb = gameUID.value.trim();
+    if (!fb) return setMessage("Facebook profile link is required", "salmon");
+    if (!fb.startsWith("http") || !fb.includes("facebook.com")) {
+      return setMessage("Enter a valid Facebook profile link", "salmon");
+    }
+  } else {
+    if (!gameUID.value.trim()) return setMessage("Enter UID", "salmon");
+  }
 
   const payload = {
     game: selectedGame,
@@ -1445,7 +1656,6 @@ joinBtn.onclick = async () => {
     setMessage("Network error", "salmon");
   }
 };
-
 
 
 

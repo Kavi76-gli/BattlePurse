@@ -159,104 +159,115 @@
 
 
 <script>
+
 const API = "https://battlepurse-98-8d98.onrender.com/api/wallet/payment-config";
-const BACKEND_URL = "https://battlepurse-98-8d98.onrender.com";
-// ------------------------------
-const API_BASE = "https://battlepurse-98-8d98.onrender.com/api/wallet";
-// LOAD PREVIOUS CONFIG
-// ------------------------------
+
+/* ------------------------------
+   LOAD CURRENT CONFIG
+------------------------------ */
 async function loadPrevious() {
+  const oldBox = document.getElementById("oldData");
+  oldBox.innerHTML = "Loading current config...";
+
   try {
     const res = await fetch(API);
-
     const data = await res.json();
 
-    if (data.success && data.config) {
-      const cfg = data.config;
-
-      document.getElementById("upiId").value = cfg.upiId || "";
-
-      let html = "";
-
-      if (cfg.qrImage) {
-        html += `
-          <p>Current QR:</p>
-          <img src="https://battlepurse-98-8d98.onrender.com/uploads/${cfg.qrImage}" width="180" style="border-radius:12px;">
-        `;
-      }
-
-      if (cfg.upiId) {
-        html += `<p>Current UPI: <strong>${cfg.upiId}</strong></p>`;
-      }
-
-      document.getElementById("oldData").innerHTML = html;
-    } else {
-      document.getElementById("oldData").innerHTML = "<p>No payment config found.</p>";
+    if (!data.success || !data.config) {
+      oldBox.innerHTML = "<p>No payment config found.</p>";
+      return;
     }
+
+    const { upiId, qrImageUrl } = data.config;
+
+    document.getElementById("upiId").value = upiId || "";
+
+    let html = "";
+
+    if (qrImageUrl) {
+      html += `
+        <p><strong>Current QR:</strong></p>
+        <img src="${qrImageUrl}" width="180"
+             style="border-radius:12px; border:1px solid #333;">
+      `;
+    }
+
+    if (upiId) {
+      html += `<p>Current UPI: <strong>${upiId}</strong></p>`;
+    }
+
+    oldBox.innerHTML = html || "<p>No data saved yet.</p>";
+
   } catch (err) {
     console.error(err);
-    document.getElementById("oldData").innerHTML = "<p>Error loading config.</p>";
+    oldBox.innerHTML = "<p>Error loading config.</p>";
   }
 }
 
 loadPrevious();
 
-// ------------------------------
-// SHOW NEW QR PREVIEW
-// ------------------------------
-document.getElementById("qrImage").addEventListener("change", (e) => {
+/* ------------------------------
+   QR PREVIEW
+------------------------------ */
+document.getElementById("qrImage").addEventListener("change", e => {
   const file = e.target.files[0];
-  if (file) {
-    const imgURL = URL.createObjectURL(file);
-    document.getElementById("qrPreview").src = imgURL;
-    document.getElementById("qrPreviewBox").style.display = "block";
-  }
+  if (!file) return;
+
+  document.getElementById("qrPreview").src = URL.createObjectURL(file);
+  document.getElementById("qrPreviewBox").style.display = "block";
 });
 
-// ------------------------------
-// UPDATE CONFIG
-// ------------------------------
+/* ------------------------------
+   UPDATE CONFIG
+------------------------------ */
 async function updateConfig() {
   const upiId = document.getElementById("upiId").value.trim();
   const qrFile = document.getElementById("qrImage").files[0];
 
   if (!upiId && !qrFile) {
-    return alert("Enter UPI or select a QR image!");
+    return alert("Enter a UPI ID or upload a QR image.");
+  }
+
+  if (upiId && !upiId.includes("@")) {
+    return alert("Invalid UPI ID format.");
   }
 
   const token = localStorage.getItem("token");
-  if (!token) {
-    return alert("Admin not logged in. Token missing.");
-  }
+  if (!token) return alert("Admin token missing.");
 
-  const form = new FormData();
-  if (upiId) form.append("upiId", upiId);
-  if (qrFile) form.append("qrImage", qrFile);
+  const formData = new FormData();
+  if (upiId) formData.append("upiId", upiId);
+  if (qrFile) formData.append("qrImage", qrFile);
 
   try {
     const res = await fetch(API, {
       method: "POST",
       headers: {
-        "Authorization": "Bearer " + token   // ✅ THIS IS THE FIX
+        Authorization: "Bearer " + token
       },
-      body: form
+      body: formData
     });
 
     const data = await res.json();
 
-    if (data.success) {
-      alert("✔ Payment Config Updated Successfully!");
-      loadPrevious();
-      document.getElementById("qrImage").value = "";
-      document.getElementById("qrPreviewBox").style.display = "none";
-    } else {
-      alert("❌ Error updating config: " + data.msg);
+    if (!data.success) {
+      return alert("Update failed: " + data.msg);
     }
+
+    alert("✔ Payment configuration updated");
+
+    // Reset UI
+    document.getElementById("qrImage").value = "";
+    document.getElementById("qrPreviewBox").style.display = "none";
+
+    loadPrevious();
+
   } catch (err) {
     console.error(err);
-    alert("❌ Server error!");
+    alert("Server error while saving config.");
   }
 }
+
 
 
 
