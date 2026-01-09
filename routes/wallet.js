@@ -6361,65 +6361,6 @@ router.delete("/admin/match/:matchId", authAdmin, async (req, res) => {
   }
 });
 
-router.get("/admin/match/winners", authAdmin, async (req, res) => {
-  try {
-    // fetch latest completed matches
-    const matches = await Match.find({ status: "completed" })
-      .sort({ updatedAt: -1 })
-      .limit(10) // limit to 10 latest matches
-      .populate("results.userId", "name avatar"); // populate user name + avatar
-
-    const winners = [];
-
-    matches.forEach(m => {
-      if (!m.results || !m.results.length) return;
-
-      if (m.type === "1v1") {
-        const winner = m.results.sort((a, b) => (b.kills || 0) - (a.kills || 0))[0];
-        if (winner && winner.userId) {
-          const avatarUrl = winner.userId.avatar
-            ? `${req.protocol}://${req.get("host")}/uploads/avatars/${winner.userId.avatar}`
-            : null;
-
-          winners.push({
-            name: winner.userId.name || "Player",
-            avatar: avatarUrl,
-            matchId: m._id,
-            amount: m.prizeGiven || 0,
-            game: m.game,
-            mode: m.mode
-          });
-        }
-      } else {
-        const winningTeam = m.winnerTeam;
-        const winnerPlayers = m.results.filter(r => r.team === winningTeam);
-        winnerPlayers.forEach(p => {
-          if (!p.userId) return;
-
-          const avatarUrl = p.userId.avatar
-            ? `${req.protocol}://${req.get("host")}/uploads/avatars/${p.userId.avatar}`
-            : null;
-
-          winners.push({
-            name: p.userId.name || "Player",
-            avatar: avatarUrl,
-            matchId: m._id,
-            amount: p.share || 0,
-            game: m.game,
-            mode: m.mode,
-            teamColor: p.team ? p.team.toLowerCase() : null
-          });
-        });
-      }
-    });
-
-    res.json({ success: true, list: winners });
-  } catch (err) {
-    console.error("Admin winners error:", err);
-    res.status(500).json({ success: false, msg: "Server error" });
-  }
-});
-
 
 router.get("/admin/match/winners", authAdmin, async (req, res) => {
   try {
@@ -7232,6 +7173,123 @@ router.get("/admin/matches", async (req, res) => {
     return res.status(500).json({ success: false, msg: "Server Error" });
   }
 });
+
+
+router.get("/matches/winners", async (req, res) => {
+  try {
+    const matches = await QuickMatch.find({ status: "completed" })
+      .sort({ createdAt: -1 })
+      .limit(3)
+      .populate("players.userId", "name phone uid wallet avatar");
+
+    if (!matches.length) {
+      return res.json({ success: false, msg: "No completed matches found" });
+    }
+
+    const formatted = matches.map(match => {
+      const prizeSystem = match.prizeSystem || null;
+      const entryFee = Number(match.entryFee) || 0;
+      const totalPlayers = match.players.length;
+      const totalCollected = entryFee * totalPlayers;
+      const adminCut = Math.round(totalCollected * 0.08);
+      const prizePool = Math.max(0, totalCollected - adminCut);
+
+      const results = match.userResults || [];
+      let winners = [];
+
+      // helper to build avatar URL like profile
+      const buildAvatar = user =>
+        user?.avatar
+          ? `${req.protocol}://${req.get("host")}/uploads/avatars/${user.avatar}`
+          : null;
+
+      /* =======================
+         🟢 1v1 MATCH
+      ======================= */
+      if (match.type === "1v1") {
+        const winner = results.sort((a, b) => b.kills - a.kills)[0];
+        if (winner) {
+          const playerObj = match.players.find(
+            p => String(p.userId?._id) === String(winner.userId)
+          );
+
+          winners.push({
+            ...winner,
+            name: playerObj?.userId?.name || "Unknown",
+            uid: winner.uid || "-",
+            phone: playerObj?.userId?.phone || "-",
+            wallet: playerObj?.userId?.wallet || 0,
+            avatarUrl: buildAvatar(playerObj?.userId),
+            winningPrice: prizePool
+          });
+        }
+      }
+
+      /* =======================
+         🟢 TEAM MATCHES
+      ======================= */
+      else {
+        const teamKills = {};
+
+        results.forEach(r => {
+          teamKills[r.team] = (teamKills[r.team] || 0) + Number(r.kills || 0);
+        });
+
+        const winnerTeam = Object.keys(teamKills).sort(
+          (a, b) => teamKills[b] - teamKills[a]
+        )[0];
+
+        const winnerPlayers = results.filter(r => r.team === winnerTeam);
+
+        winnerPlayers.forEach(p => {
+          const playerObj = match.players.find(
+            pl => String(pl.userId?._id) === String(p.userId)
+          );
+
+          let share = 0;
+          if (prizeSystem === "team_equal") {
+            share = Math.round(prizePool / winnerPlayers.length);
+          } else {
+            const totalKills = teamKills[winnerTeam] || 0;
+            share = totalKills
+              ? Math.round((p.kills / totalKills) * prizePool)
+              : Math.round(prizePool / winnerPlayers.length);
+          }
+
+          winners.push({
+            ...p,
+            name: playerObj?.userId?.name || "Unknown",
+            uid: p.uid || "-",
+            phone: playerObj?.userId?.phone || "-",
+            wallet: playerObj?.userId?.wallet || 0,
+            avatarUrl: buildAvatar(playerObj?.userId),
+            winningPrice: share
+          });
+        });
+      }
+
+      return {
+        matchId: match._id,
+        matchNumber: match.matchNumber,
+        game: match.game,
+        mode: match.mode,
+        type: match.type,
+        entryFee,
+        prizeSystem,
+        prizeGiven: prizePool,
+        completedAt: match.updatedAt || match.createdAt,
+        winners
+      };
+    });
+
+    return res.json({ success: true, list: formatted });
+
+  } catch (err) {
+    console.error("fetch winners error:", err);
+    return res.status(500).json({ success: false, msg: "Server error" });
+  }
+});
+
 
 router.get("/matches/winners", async (req, res) => {
   try {

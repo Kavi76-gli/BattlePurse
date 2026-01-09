@@ -785,6 +785,128 @@ button:disabled {
   box-shadow: none;
 }
 
+/* ===== WINNER MOBILE CARD ===== */
+.winner-card-mobile {
+  background: #0f172a;
+  border-radius: 18px;
+  padding: 14px;
+  color: #fff;
+  box-shadow: 0 0 18px rgba(0, 234, 255, 0.35);
+  margin: 10px;
+  animation: fadeUp 0.4s ease;
+}
+
+/* top row */
+.match-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.match-id {
+  font-size: 15px;
+  font-weight: 600;
+  color: #00eaff;
+}
+
+.match-sub {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* prize */
+.prize-box {
+  background: linear-gradient(135deg, #00eaff, #0066ff);
+  padding: 6px 12px;
+  border-radius: 14px;
+  font-weight: bold;
+  font-size: 14px;
+  color: #000;
+}
+
+/* meta tags */
+.match-meta {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.match-meta span {
+  background: #111;
+  padding: 4px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  color: #9bdfff;
+}
+
+/* winners */
+.winner-list {
+  margin-top: 10px;
+}
+
+.winner-player {
+  display: flex;
+  align-items: center;
+  background: #111;
+  padding: 10px;
+  border-radius: 14px;
+  margin-bottom: 8px;
+}
+
+.winner-player img {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 12px;
+  box-shadow: 0 0 10px #00eaff;
+}
+
+.winner-info {
+  flex: 1;
+}
+
+.winner-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.winner-uid {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.winner-amount {
+  font-size: 14px;
+  font-weight: bold;
+  color: #0dfc89;
+}
+
+/* footer */
+.match-time {
+  margin-top: 8px;
+  font-size: 11px;
+  opacity: 0.6;
+  text-align: right;
+}
+
+.no-winner {
+  text-align: center;
+  opacity: 0.6;
+  padding: 12px;
+}
+
+/* animation */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 </style>
 </head>
@@ -1006,82 +1128,75 @@ async function fetchWinners() {
     const container = document.getElementById("matches");
     container.innerHTML = "";
 
-    if (!data.success || !data.list.length) {
+    if (!data.success || !data.list?.length) {
       container.innerHTML =
         '<p style="text-align:center;color:#9bdfff;">No winners yet</p>';
       return;
     }
 
-    const matches = data.list.slice(0, 3);
+    const matches = data.list;
     let index = 0;
 
     function renderMatch(i) {
       const match = matches[i];
-      const winner = match.winners[0];
 
-      if (!winner) {
-        container.innerHTML =
-          '<p style="text-align:center;color:#9bdfff;">Winner not declared</p>';
-        return;
-      }
+      const winnersHTML = match.winners.length
+        ? match.winners
+            .map(
+              p => `
+        <div class="winner-player">
+          <img src="${p.avatarUrl || "https://i.ibb.co/2d1zY0m/user.png"}" />
+
+          <div class="winner-info">
+            <div class="winner-name">${p.name}</div>
+            <div class="winner-uid">UID: ${p.uid}</div>
+            <div class="winner-amount">₹${p.winningPrice}</div>
+          </div>
+        </div>
+      `
+            )
+            .join("")
+        : `<p class="no-winner">Winner not declared</p>`;
 
       container.innerHTML = `
-        <div class="winner-main-card">
-          
-          <div class="winner-header">
-            <img class="winner-avatar"
-                 src="${winner.avatarUrl || 'https://i.ibb.co/2d1zY0m/user.png'}">
+        <div class="winner-card-mobile">
+          <div class="match-top">
             <div>
-              <div class="winner-name">${winner.name}</div>
-              <div class="winner-amount">₹${winner.winningPrice}</div>
+              <div class="match-id">Match ${match.matchId || ""}</div>
+              <div class="match-sub">${match.game} • ${match.mode}</div>
             </div>
+            <div class="prize-box">₹${match.prizeGiven}</div>
           </div>
 
-          <div class="winner-details">
-            <div class="detail-box">
-              <div class="detail-label">Match ID</div>
-              <div class="detail-value">${ match.matchId}</div>
-            </div>
-
-            <div class="detail-box">
-              <div class="detail-label">Game</div>
-              <div class="detail-value">${match.game}</div>
-            </div>
-
-            <div class="detail-box">
-              <div class="detail-label">Match Type</div>
-              <div class="detail-value">${match.type}</div>
-            </div>
-
-            <div class="detail-box">
-              <div class="detail-label">Prize System</div>
-              <div class="detail-value">${match.prizeSystem || "Standard"}</div>
-            </div>
+          <div class="match-meta">
+            <span>${match.type}</span>
+            <span>${match.prizeSystem || "Standard"}</span>
           </div>
 
-          <div class="winner-footer">
-            Match completed on ${new Date(match.completedAt).toLocaleString()}
+          <div class="winner-list">
+            ${winnersHTML}
           </div>
 
+          <div class="match-time">
+            Completed: ${new Date(match.completedAt).toLocaleString()}
+          </div>
         </div>
       `;
     }
 
-    // Initial render
     renderMatch(index);
 
-    // Rotate every 5 seconds
     setInterval(() => {
       index = (index + 1) % matches.length;
       renderMatch(index);
     }, 5000);
 
   } catch (err) {
-    console.error("Error fetching winners:", err);
+    console.error(err);
     document.getElementById("matches").innerHTML =
       '<p style="text-align:center;color:red;">Failed to load winners</p>';
   }
-} 
+}
 
 
 /* =========================
