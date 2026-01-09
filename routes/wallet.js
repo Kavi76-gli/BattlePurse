@@ -3526,17 +3526,22 @@ router.post("/pair", authAdmin, async (req, res) => {
     }
 
     // ❌ Prevent multiple active matches
-    const activeExists = await QuickMatch.findOne({
-      status: { $in: ["paired", "room_created", "ongoing"] },
-      "players.userId": { $in: selectedMembers.map(p => p.userId) }
-    });
+    // ❌ Prevent multiple ACTIVE matches (room or ongoing only)
+const activeExists = await QuickMatch.findOne({
+  status: { $in: ["room_created", "ongoing"] },
+  "players.userId": {
+    $in: selectedMembers
+      .map(p => p.userId)
+      .filter(id => mongoose.Types.ObjectId.isValid(id))
+  }
+});
 
-    if (activeExists) {
-      return res.status(400).json({
-        success: false,
-        msg: "One or more selected players already have an active match"
-      });
-    }
+if (activeExists) {
+  return res.status(400).json({
+    success: false,
+    msg: "One or more selected players already have an active match"
+  });
+}
 
     const n = parseInt(type.split("v")[0], 10);
     const teamSize = n * 2;
@@ -8221,107 +8226,3 @@ router.delete("/admin/poster/:id", authAdmin, async (req, res) => {
 module.exports = router;
 
 
-router.get('/profile', auth, async (req, res) => {
-  try {
-    // 🔍 Find user & exclude password
-    const user = await User.findById(req.user.id).select('-password');
-    if (!user) {
-      return res.status(404).json({ msg: 'User not found' });
-    }
-
-    // 💰 Get wallet balance
-    const wallet = await Wallet.findOne({ userId: req.user.id });
-    const balance = wallet ? wallet.balance : 0;
-
-    // 📦 Send profile data
-    res.json({
-      success: true,
-      user: {
-        id: user._id,
-        name: user.name || "Player",
-        phone: user.phone,
-        email: user.email,          // ✅ ADDED
-        avatarUrl: user.avatarUrl,
-        uids: user.uids,
-        isAdmin: user.isAdmin
-      },
-      balance
-    });
-
-  } catch (err) {
-    console.error("Profile error:", err);
-    res.status(500).json({ msg: 'Server error' });
-  }
-});
-
-router.post("/upload-avatar", auth, upload.single("avatar"), async (req, res) => {
-  if (!req.file) return res.status(400).json({ msg: "No file uploaded" });
-
-  const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
-
-  try {
-    const user = await User.findByIdAndUpdate(
-      req.user.id,
-      { avatarUrl: fileUrl },
-      { new: true }
-    );
-    res.json({ msg: "Avatar uploaded successfully", url: fileUrl });
-  } catch (err) {
-    console.error("Avatar Upload Error:", err);
-    res.status(500).json({ msg: "Server error" });
-  }
-});
-router.post('/tournaments', adminAuth, upload.single('poster'), async (req, res) => {
-  try {
-    const {
-      name,
-      game,
-      gameId,
-      mode,
-      date,
-      time,
-      entryFee,
-      prizePool,
-      maxPlayers,
-      description
-    } = req.body;
-
-    const tournament = new Tournament({
-      name,
-      game,
-      gameId,
-      mode,
-      date,
-      time,
-      entryFee,
-      prizePool,
-      maxPlayers,
-      description,
-      poster: req.file ? req.file.filename : null,
-      posterUrl: req.file ? `/uploads/${req.file.filename}` : null,
-      players: []
-    });
-
-    await tournament.save();
-    res.json({ msg: 'Tournament created successfully', tournament });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: 'Error creating tournament' });
-  }
-});  router.get("/tournaments", async (req, res) => {
-  try {
-    const tournaments = await Tournament.find().lean();
-
-    const result = tournaments.map(t => ({
-      ...t,
-      posterUrl: t.poster
-        ? `https://battlepurse-98-8d98.onrender.com/uploads/${t.poster}`
-        : null
-    }));
-
-    res.json(result);
-  } catch (err) {
-    console.error("Tournament list error:", err);
-    res.status(500).json({ msg: "Server error" });
-  }
-});

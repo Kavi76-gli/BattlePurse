@@ -562,41 +562,95 @@ document.getElementById("roomForm").addEventListener("submit", async e=>{
 /* ---------------- Other features like promos, rooms, create tournament ---------------- */
 /* ...keep your existing promoForm, roomForm, createForm code here... */
 /* ---------------- Promos ---------------- */
-document.getElementById("promoForm").addEventListener("submit", async e=>{
+document.getElementById("promoForm").addEventListener("submit", async e => {
   e.preventDefault();
+
   const formData = new FormData();
   formData.append("title", document.getElementById("promoTitle").value);
-  const files = document.getElementById("promoImages").files;
-  for(let f of files) formData.append("images", f);
-  try{
-    const res = await fetch(PROMO_URL, { method:"POST", headers:{ Authorization:`Bearer ${token}` }, body:formData });
-    const data = await res.json();
-    alert(res.ok ? "Promo added!" : data.error || "Failed");
-    loadPromos();
-  }catch(err){ console.error(err); alert("Error adding promo"); }
-});
 
-async function loadPromos(){
-  try{
-    const res = await fetch(PROMO_URL, { headers:{ Authorization:`Bearer ${token}` }});
-    const promos = await res.json();
+  const files = document.getElementById("promoImages").files;
+  for (let f of files) {
+    formData.append("images", f);
+  }
+
+  try {
+    const res = await fetch(PROMO_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error || "Failed to add promo");
+      return;
+    }
+
+    alert("✅ Promo added successfully");
+    document.getElementById("promoForm").reset();
+    loadPromos();
+
+  } catch (err) {
+    console.error(err);
+    alert("❌ Error adding promo");
+  }
+});
+async function loadPromos() {
+  try {
+    const res = await fetch(PROMO_URL, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    const data = await res.json();
     const promoList = document.getElementById("promoList");
-    promoList.innerHTML = promos.length
-      ? promos.map(p=>`<div style="border:1px solid #444; padding:10px; margin:10px;">
-          <strong>${p.title}</strong><br>
-          ${p.images.map(img=>`<img src="${UPLOADS_BASE}/${img}" style="max-width:150px;margin:5px;">`).join('')}
-          <br><button onclick="deletePromo('${p._id}')">Delete</button>
-        </div>`).join('')
-      : "<p>No promos available.</p>";
-  }catch(err){ console.error(err); }
+
+    if (!data.success || !data.promos.length) {
+      promoList.innerHTML = "<p>No promos available.</p>";
+      return;
+    }
+
+    promoList.innerHTML = data.promos.map(promo => `
+      <div style="border:1px solid #444; padding:10px; margin:10px; border-radius:10px;">
+        <strong>${promo.title}</strong>
+        <div style="display:flex; flex-wrap:wrap; margin-top:8px;">
+          ${promo.imageUrls.map(url => `
+            <img 
+              src="${url}" 
+              style="width:140px;height:140px;object-fit:cover;border-radius:8px;margin:5px;"
+            >
+          `).join("")}
+        </div>
+        <button onclick="deletePromo('${promo._id}')" style="margin-top:8px;">
+          Delete
+        </button>
+      </div>
+    `).join("");
+
+  } catch (err) {
+    console.error("Failed to load promos", err);
+  }
 }
 
-async function deletePromo(id){
-  if(!confirm("Delete this promo?")) return;
-  const res = await fetch(`${PROMO_URL}/${id}`, { method:"DELETE", headers:{ Authorization:`Bearer ${token}` }});
-  const data = await res.json();
-  alert(data.msg || "Deleted");
-  loadPromos();
+async function deletePromo(id) {
+  if (!confirm("Delete this promo?")) return;
+
+  try {
+    const res = await fetch(`${PROMO_URL}/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    const data = await res.json();
+    alert(data.msg || "Promo deleted");
+    loadPromos();
+
+  } catch (err) {
+    console.error(err);
+    alert("Failed to delete promo");
+  }
 }
 
 
