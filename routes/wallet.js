@@ -549,7 +549,7 @@ router.get("/profile", auth, async (req, res) => {
     const balance = wallet ? wallet.balance : 0;
 
     const avatarUrl = user.avatar
-      ? `${req.protocol}://${req.get("host")}/uploads/avatars/${user.avatar}`
+      ? `https://battlepurse-98-8d98.onrender.com/uploads/avatars/${user.avatar}`
       : null;
 
     res.json({
@@ -780,7 +780,7 @@ router.post(
       { $set: { avatar: req.file.filename } }
     );
 
-    const avatarUrl = `${req.protocol}://${req.get("host")}/uploads/avatars/${req.file.filename}`;
+    const avatarUrl = `https://battlepurse-98-8d98.onrender.com/uploads/avatars/${req.file.filename}`;
 
     res.json({
       success: true,
@@ -1231,7 +1231,7 @@ router.get("/tournaments", async (req, res) => {
         if (typeof t.poster === "string" && t.poster.startsWith("http")) {
           posterUrl = t.poster;
         } else {
-          posterUrl = `${req.protocol}://${req.get("host")}/uploads/poster/${t.poster}`;
+          posterUrl = `https://battlepurse-98-8d98.onrender.com/uploads/poster/${t.poster}`;
         }
       }
 
@@ -1864,7 +1864,7 @@ router.post(
       });
 
       // ✅ build URL only for response
-      const posterUrl = `${req.protocol}://${req.get("host")}/uploads/poster/${posterFileName}`;
+      const posterUrl = `https://battlepurse-98-8d98.onrender.com/uploads/poster/${posterFileName}`;
 
       res.json({
         success: true,
@@ -1930,7 +1930,7 @@ router.post(
       });
 
       const imageUrls = imageFiles.map(f =>
-        `${req.protocol}://${req.get("host")}/uploads/promos/${f}`
+        `https://battlepurse-98-8d98.onrender.com/uploads/promos/${f}`
       );
 
       res.json({
@@ -1964,7 +1964,7 @@ router.get("/promos", async (req, res) => {
       imageUrls: p.images.map(img =>
         img.startsWith("http")
           ? img // backward safety
-          : `${req.protocol}://${req.get("host")}/uploads/promos/${img}`
+          : `https://battlepurse-98-8d98.onrender.com/uploads/promos/${img}`
       )
     }));
 
@@ -3037,7 +3037,7 @@ router.get("/leaderboard/:tournamentId", async (req, res) => {
       if (w && w.userId) {
         // use full URL if avatar exists
         const avatarUrl = w.userId.avatar
-          ? `${req.protocol}://${req.get("host")}/uploads/avatars/${w.userId.avatar}`
+          ? `https://battlepurse-98-8d98.onrender.com/uploads/avatars/${w.userId.avatar}`
           : "https://cdn-icons-png.flaticon.com/512/147/147144.png";
 
         return {
@@ -5976,7 +5976,7 @@ router.get("/leaderboard", auth, async (req, res) => {
     const userInfo = new Map(
       users.map(u => {
         const avatarUrl = u.avatar
-          ? `${req.protocol}://${req.get("host")}/uploads/avatars/${u.avatar}`
+          ? `https://battlepurse-98-8d98.onrender.com/uploads/avatars/${u.avatar}`
           : null;
         return [String(u._id), { name: u.name || "Player", avatarUrl }];
       })
@@ -7280,7 +7280,7 @@ router.get("/matches/winners", async (req, res) => {
       // helper to build avatar URL like profile
       const buildAvatar = user =>
         user?.avatar
-          ? `${req.protocol}://${req.get("host")}/uploads/avatars/${user.avatar}`
+          ? `https://battlepurse-98-8d98.onrender.com/uploads/avatars/${user.avatar}`
           : null;
 
       /* =======================
@@ -8483,7 +8483,7 @@ router.post(
       await config.save();
 
       const qrImageUrl = config.qrImage
-        ? `${req.protocol}://${req.get("host")}/uploads/qr/${config.qrImage}`
+        ? `https://battlepurse-98-8d98.onrender.com/uploads/qr/${config.qrImage}`
         : null;
 
       res.json({
@@ -8517,7 +8517,7 @@ router.get("/payment-config", async (req, res) => {
     }
 
     const qrImageUrl = config.qrImage
-      ? `${req.protocol}://${req.get("host")}/uploads/qr/${config.qrImage}`
+      ? `https://battlepurse-98-8d98.onrender.com/uploads/qr/${config.qrImage}`
       : null;
 
     res.json({
