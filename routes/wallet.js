@@ -15,6 +15,7 @@ const uploadPoster = createUploader("poster");
 const uploadQR = createUploader("qr");
 const uploadPromo = createUploader("promos")
 const axios = require("axios");
+const buildImageUrl = require("../utils/buildImageUrl");
 
 require("dotenv").config();
 
