@@ -210,7 +210,7 @@ body{
 
 <script>
 /* --------- CONFIG ---------- */
-const API_BASE = 'https://battlepurse-98-8d98.onrender.com/api/wallet'; // adjust backend
+const API_BASE = 'http://localhost:5000/api/wallet'; // adjust backend
 const token = localStorage.getItem('token'); // admin token
 const headersWithAuth = () => ({ 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' });
 

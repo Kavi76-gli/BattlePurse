@@ -17,6 +17,7 @@ const uploadPromo = createUploader("promos")
 const axios = require("axios");
 const buildImageUrl = require("../utils/buildImageUrl");
 
+
 require("dotenv").config();
 
 
@@ -3659,49 +3660,74 @@ router.get("/pairss/:matchId", authAdmin, async (req, res) => {
 });
 
 // POST /pair — Admin pairs players for a match
-// POST /pair — Admin pairs players for a match
+
 
 
 const NON_ROUND_GAMES = ["Ludo", "Carrom", "Cricket", "8 Ball Pool"];
+async function getNextMatchNumber() {
+  const lastMatch = await QuickMatch
+    .findOne({ matchNumber: { $type: "number" } })
+    .sort({ matchNumber: -1 })
+    .lean();
 
-// POST /pair — Admin pairs players for a match
+  return lastMatch?.matchNumber ? lastMatch.matchNumber + 1 : 1;
+}
 router.post("/pair", authAdmin, async (req, res) => {
   try {
     const { selectedMembers, game, mode, type, entryFee } = req.body;
 
+    /* ===============================
+       BASIC VALIDATION
+    =============================== */
     if (!Array.isArray(selectedMembers) || selectedMembers.length === 0) {
-      return res.status(400).json({ success: false, msg: "No members selected" });
+      return res.status(400).json({
+        success: false,
+        msg: "No members selected"
+      });
     }
 
-    // ❌ Prevent multiple active matches
-    // ❌ Prevent multiple ACTIVE matches (room or ongoing only)
-const activeExists = await QuickMatch.findOne({
-  status: { $in: ["room_created", "ongoing"] },
-  "players.userId": {
-    $in: selectedMembers
+    /* ===============================
+       PREVENT MULTIPLE ACTIVE MATCHES
+    =============================== */
+    const validUserIds = selectedMembers
       .map(p => p.userId)
-      .filter(id => mongoose.Types.ObjectId.isValid(id))
-  }
-});
+      .filter(id => mongoose.Types.ObjectId.isValid(id));
 
-if (activeExists) {
-  return res.status(400).json({
-    success: false,
-    msg: "One or more selected players already have an active match"
-  });
-}
+    const activeMatch = await QuickMatch.findOne({
+      status: { $in: [ "room_created", "ongoing"] },
+      "players.userId": { $in: validUserIds }
+    });
 
-    const n = parseInt(type.split("v")[0], 10);
+    if (activeMatch) {
+      return res.status(400).json({
+        success: false,
+        msg: "One or more selected players already have an active match"
+      });
+    }
+
+    /* ===============================
+       TEAM SIZE CALCULATION
+    =============================== */
+    const n = parseInt(type?.split("v")[0], 10);
+    if (!n || isNaN(n)) {
+      return res.status(400).json({
+        success: false,
+        msg: "Invalid match type"
+      });
+    }
+
     const teamSize = n * 2;
 
     if (selectedMembers.length % teamSize !== 0) {
       return res.status(400).json({
         success: false,
-        msg: `You must select ${teamSize} players per match (${type})`
+        msg: `You must select ${teamSize} players for ${type}`
       });
     }
 
-    // Split groups
+    /* ===============================
+       SPLIT INTO MATCH GROUPS
+    =============================== */
     const groups = [];
     for (let i = 0; i < selectedMembers.length; i += teamSize) {
       groups.push(selectedMembers.slice(i, i + teamSize));
@@ -3710,58 +3736,60 @@ if (activeExists) {
     const createdMatches = [];
     const isNonRoundGame = NON_ROUND_GAMES.includes(game);
 
+    /* ===============================
+       CREATE MATCHES
+    =============================== */
     for (const group of groups) {
 
+      /* ---------- ROUNDS (ONLY IF NEEDED) ---------- */
       let rounds = null;
-
       if (!isNonRoundGame) {
-        const roundsValues = group.map(p => Number(p.rounds));
-
-        if (roundsValues.some(r => !Number.isInteger(r))) {
+        const roundsList = group.map(p => Number(p.rounds));
+        if (roundsList.some(r => !Number.isInteger(r))) {
           return res.status(400).json({
             success: false,
             msg: "Invalid rounds found"
           });
         }
-
-        if (new Set(roundsValues).size !== 1) {
+        if (new Set(roundsList).size !== 1) {
           return res.status(400).json({
             success: false,
-            msg: "All selected players must have same rounds"
+            msg: "All players must have same rounds"
           });
         }
-
-        rounds = roundsValues[0];
+        rounds = roundsList[0];
       }
 
+      /* ---------- PRIZE SYSTEM ---------- */
       const prizeSystem =
         type === "1v1"
           ? "kill_based"
           : (group[0]?.prizeSystem || "kill_based");
 
+      /* ---------- PLAYERS ARRAY ---------- */
       const half = group.length / 2;
 
       const playersArr = group.map((p, idx) => ({
-        userId:
-          p.userId && mongoose.Types.ObjectId.isValid(p.userId)
-            ? new mongoose.Types.ObjectId(p.userId)
-            : null,
-        uid: p.uid,
+        userId: mongoose.Types.ObjectId.isValid(p.userId)
+          ? new mongoose.Types.ObjectId(p.userId)
+          : null,
+        uid: p.uid || "-",
         name: p.name || "Unknown",
-        phone: p.phone || "Unknown",
+        phone: p.phone || "-",
         whatsappNumber: p.whatsappNumber || "",
         team: idx < half ? "LION" : "TIGER",
-        joinedAt: p.joinedAt || new Date(),
+        joinedAt: new Date(),
         rounds,
         freeFireSettings: p.freeFireSettings || {}
       }));
 
+      /* ---------- CREATE MATCH ---------- */
       const newMatch = new QuickMatch({
-        matchNumber: await QuickMatch.countDocuments() + 1,
+        matchNumber: await getNextMatchNumber(),
         type,
         game,
         mode,
-        entryFee,
+        entryFee: Number(entryFee) || 0,
         prizeSystem,
         rounds,
         players: playersArr,
@@ -3773,6 +3801,9 @@ if (activeExists) {
       createdMatches.push(newMatch);
     }
 
+    /* ===============================
+       RESPONSE
+    =============================== */
     res.json({
       success: true,
       msg: "Players paired successfully",
@@ -3781,10 +3812,12 @@ if (activeExists) {
 
   } catch (err) {
     console.error("🔥 PAIR ROUTE ERROR:", err);
-    res.status(500).json({ success: false, msg: "Server error" });
+    res.status(500).json({
+      success: false,
+      msg: "Server error"
+    });
   }
 });
-
 
 router.post("/pair", authAdmin, async (req, res) => {
   try {

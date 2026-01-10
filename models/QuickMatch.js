@@ -79,10 +79,14 @@ const PlayerSchema = new mongoose.Schema(
 ========================= */
 const QuickMatchSchema = new mongoose.Schema(
   {
+
     matchNumber: {
-      type: String,
-      unique: true
-    },
+  type: Number,
+  unique: true,
+  required: true
+},
+
+    
 
     prizeSystem: {
       type: String,
