@@ -3785,7 +3785,10 @@ router.post("/pair", authAdmin, async (req, res) => {
 
       /* ---------- CREATE MATCH ---------- */
       const newMatch = new QuickMatch({
-        matchNumber: await getNextMatchNumber(),
+  matchNumber: await getNextMatchNumber(), // ✅ correct
+  
+
+      
         type,
         game,
         mode,
@@ -6794,6 +6797,17 @@ router.delete("/joined/paired/:matchId", async (req, res) => {
 });
 
 
+async function getNextMatchNumber() {
+  const last = await QuickMatch
+    .findOne({ matchNumber: { $type: "number" } }, { matchNumber: 1 })
+    .sort({ matchNumber: -1 })
+    .lean();
+
+  return last?.matchNumber ? last.matchNumber + 1 : 100001;
+}
+
+
+
 router.post("/joins", auth, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -6902,6 +6916,7 @@ router.post("/joins", auth, async (req, res) => {
 
     if (!match) {
       match = new QuickMatch({
+        matchNumber: await getNextMatchNumber(), // ✅ FIX
         type,
         game,
         mode,
@@ -6996,20 +7011,23 @@ router.post("/joins", auth, async (req, res) => {
     await match.save();
 
     res.json({
-      success: true,
-      msg: `Joined match — Team ${assignedTeam} for ${playerRounds} rounds. ₹${fee} deducted.`,
-      assignedTeam,
-      match
-    });
+  success: true,
+  msg:
+    playerRounds
+      ? `Joined match — Team ${assignedTeam} for ${playerRounds} rounds. ₹${fee} deducted.`
+      : `Joined match — Team ${assignedTeam}. ₹${fee} deducted.`,
+  assignedTeam,
+  matchNumber: match.matchNumber,          // numeric (DB safe)
+  displayMatchNumber: `QM-${match.matchNumber}`, // UI friendly
+  match
+});
+
 
   } catch (err) {
     console.error("Join Error:", err);
     res.status(500).json({ success: false, msg: "Internal server error" });
   }
 });
-
-
-
 
 
 
@@ -7594,6 +7612,11 @@ router.get("/admin/refresh-token", (req, res) => {
   }
 });
 
+
+
+
+
+
 router.post("/join", auth, async (req, res) => {
   let wallet;
 
@@ -7693,6 +7716,7 @@ router.post("/join", auth, async (req, res) => {
 
     if (!match || match.players.length >= totalSlots) {
       match = new QuickMatch({
+        matchNumber: await getNextMatchNumber(),
         game,
         type,
         mode,
