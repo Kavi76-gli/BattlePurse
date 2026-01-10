@@ -4777,15 +4777,7 @@ router.get("/joined/paired", async (req, res) => {
 
 
 // Helper: generate match number
-async function generateMatchNumber() {
-  const last = await QuickMatch.findOne().sort({ createdAt: -1 })
-  .limit(100).lean();
-  if (!last || !last.matchNumber) return `QM-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-0001`;
-  const parts = (last.matchNumber || '').split('-');
-  const lastSeq = parts[2] ? parseInt(parts[2]) : NaN;
-  const nextSeq = isNaN(lastSeq) ? 1 : lastSeq + 1;
-  return `QM-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${String(nextSeq).padStart(4,'0')}`;
-}
+
 
 /**
  * POST /api/wallet/pair
@@ -6900,36 +6892,66 @@ router.post("/joins", auth, async (req, res) => {
     // ----------------------------
     // 6️⃣ FIND OR CREATE MATCH
     // ----------------------------
-    let match = await QuickMatch.findOne({ game, mode, type, prizeSystem, entryFee: fee, status: "waiting" });
+    // ----------------------------
+// 6️⃣ FIND OR CREATE MATCH (AUTO NEXT MATCH)
+// ----------------------------
 
-    // 6a. Determine rounds safely
-    let playerRounds;
-    if (match && match.rounds) {
-      playerRounds = match.rounds;
-    } else {
-      if (!rounds) return res.status(400).json({ success: false, msg: "Rounds are required" });
-      rounds = Number(rounds);
-      if (!allowedRounds.includes(rounds))
-        return res.status(400).json({ success: false, msg: `Invalid rounds. Choose from ${allowedRounds.join(", ")}` });
-      playerRounds = rounds;
-    }
+// 6a️⃣ Determine rounds safely
+let playerRounds;
 
-    if (!match) {
-      match = new QuickMatch({
-        matchNumber: await getNextMatchNumber(), // ✅ FIX
-        type,
-        game,
-        mode,
-        entryFee: fee,
-        prizeSystem,
-        status: "waiting",
-        rounds: playerRounds,
-        players: []
-      });
-    }
+if (rounds !== undefined && rounds !== null) {
+  rounds = Number(rounds);
 
-    if (match.players.length >= totalSlots)
-      return res.status(400).json({ success: false, msg: "Match full" });
+  if (!allowedRounds.includes(rounds)) {
+    return res.status(400).json({
+      success: false,
+      msg: `Invalid rounds. Choose from ${allowedRounds.join(", ")}`
+    });
+  }
+
+  playerRounds = rounds;
+}
+
+// 6b️⃣ Find a waiting match that still has free slots
+let match = await QuickMatch.findOne({
+  game,
+  mode,
+  type,
+  prizeSystem,
+  entryFee: fee,
+  status: "waiting",
+  $expr: {
+    $lt: [{ $size: "$players" }, totalSlots]
+  }
+});
+
+// 6c️⃣ If no available match → create a new one
+if (!match) {
+  if (!playerRounds) {
+    return res.status(400).json({
+      success: false,
+      msg: "Rounds are required"
+    });
+  }
+
+  match = new QuickMatch({
+    matchNumber: await getNextMatchNumber(), // numeric, DB-safe
+    type,
+    game,
+    mode,
+    entryFee: fee,
+    prizeSystem,
+    status: "waiting",
+    rounds: playerRounds,
+    players: []
+  });
+} else {
+  // Existing match → inherit rounds automatically
+  playerRounds = match.rounds;
+}
+
+
+    
 
     // ----------------------------
     // 7️⃣ TEAM ASSIGNMENT

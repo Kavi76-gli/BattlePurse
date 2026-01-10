@@ -28,9 +28,58 @@
   .players-count{font-weight:700;color:#fff}
   .small {font-size:12px;color:var(--muted)}
   @media(max-width:700px){ .row{flex-direction:column} }
+
+  /* ===== SWIPE EDGE ===== */
+.swipe-area{
+  position:fixed;
+  left:0;
+  top:0;
+  width:26px;
+  height:100%;
+  z-index:999;
+}
+
+/* swipe arrow feedback */
+.swipe-arrow{
+  position:fixed;
+  left:-44px;
+  top:50%;
+  transform:translateY(-50%);
+  width:38px;
+  height:38px;
+  background:rgba(0,0,0,.75);
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  color:#fff;
+  box-shadow:0 0 16px rgba(0,250,255,.7);
+  opacity:0;
+  transition:all .18s ease;
+  z-index:1001;
+  pointer-events:none;
+}
+
+/* mobile only */
+@media (min-width:900px){
+  .app-bar, .swipe-area, .swipe-arrow{ display:none; }
+}    
 </style>
 </head>
 <body>
+  <!-- ANDROID APP BAR -->
+<div class="app-bar">
+  <button class="back-btn" onclick="goBack()">←</button>
+  <span class="app-title">🧾 Pending Deposits</span>
+</div>
+
+<!-- Swipe-back edge -->
+<div class="swipe-area"></div>
+
+<!-- Swipe arrow indicator -->
+<div class="swipe-arrow">←</div> 
+
 <main>
   <header>
     <div>
@@ -308,6 +357,52 @@ const match = {
   loadMatch();
 
 })();
+
+/* ⬅ BACK LOGIC (ANDROID STYLE) */
+function goBack(){
+  if(document.referrer && document.referrer !== location.href){
+    history.back();
+  }else{
+    location.href="gamezone.html"; // fallback
+  }
+}
+
+/* 👆 SWIPE BACK */
+let startX=0, startY=0;
+const arrow=document.querySelector('.swipe-arrow');
+
+document.addEventListener("touchstart", e=>{
+  const t=e.touches[0];
+  if(t.clientX < 30){
+    startX=t.clientX;
+    startY=t.clientY;
+    arrow.style.opacity="1";
+  }
+});
+
+document.addEventListener("touchmove", e=>{
+  if(!startX) return;
+  const dx=e.touches[0].clientX - startX;
+  if(dx>0){
+    arrow.style.left=Math.min(dx-18,50)+"px";
+  }
+});
+
+document.addEventListener("touchend", e=>{
+  if(!startX) return;
+
+  const dx=e.changedTouches[0].clientX - startX;
+  const dy=Math.abs(e.changedTouches[0].clientY - startY);
+
+  arrow.style.left="-44px";
+  arrow.style.opacity="0";
+
+  if(startX < 30 && dx > 90 && dy < 70){
+    goBack();
+  }
+  startX=0;
+});
+
 </script>
 </body>
 </html>
