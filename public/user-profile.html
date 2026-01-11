@@ -112,50 +112,53 @@
 
     
   /* 💳 Transactions */
-  .tx-section {
-    margin-top: 20px;
-  }
+  /* 💳 Transactions */
+.tx-section {
+  margin-top: 22px;
+}
 
-  .tx-title {
-    color: #00faff;
-    font-weight: 600;
-    margin-bottom: 10px;
-  }
+.tx-title {
+  color: #00faff;
+  font-weight: 600;
+  margin-bottom: 12px;
+  font-size: 15px;
+}
 
-  .tx-card {
-    background: #181818;
-    padding: 12px;
-    border-radius: 12px;
-    margin-bottom: 10px;
-    box-shadow: 0 0 8px #00000055;
-  }
+.tx-card {
+  background: #181818;
+  padding: 14px;
+  border-radius: 14px;
+  margin-bottom: 12px;
+  box-shadow: 0 0 10px #00000066;
+}
 
-  .tx-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 13px;
-    margin-bottom: 6px;
-  }
+.tx-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
 
-  .tx-type {
-    font-weight: 600;
-    text-transform: capitalize;
-  }
+.tx-type {
+  font-weight: 600;
+}
 
-  .tx-date {
-    font-size: 11px;
-    opacity: 0.7;
-  }
+.tx-amount {
+  font-weight: bold;
+  font-size: 14px;
+}
 
-  .tx-amount {
-    font-weight: bold;
-  }
+.tx-date {
+  font-size: 11px;
+  opacity: 0.65;
+}
 
-  .empty {
-    text-align: center;
-    opacity: 0.6;
-    margin-top: 15px;
-  }
+.empty {
+  text-align: center;
+  opacity: 0.6;
+  margin-top: 18px;
+}
 
 
   </style>
@@ -178,49 +181,113 @@
   <!-- ⬅ Bottom Back Button -->
   <a class="back-btn" href="admin-users.html">⬅ Back to Users</a>
 
-  <script>
+<script>
   const token = localStorage.getItem("token");
 
   function goBack() {
     window.history.back();
   }
 
-  async function loadUserProfile() {
-    const params = new URLSearchParams(window.location.search);
-    const userId = params.get("userId");
+  /* ===============================
+     🎯 TRANSACTION FORMATTER (FIXED)
+     =============================== */
+  function formatTransaction(tx) {
+    const amount = Number(tx.amount || 0);
+    const rawType = (tx.type || "").toLowerCase();
 
-    if (!userId) {
-      alert("No user ID found");
+    // Display titles
+    const titles = {
+      deposit: "Deposit",
+      withdrawal: "Withdrawal",
+      tournament: "Tournament Joined",
+      match_reward: "Match Reward",
+      winning: "Tournament Award",
+      refund: "Refund",
+      win: "Match Win",
+      loss: "Match Loss",
+      debit: "Debit",
+      credit: "Credit"
+    };
+
+    const title = titles[rawType] || tx.type || "Transaction";
+
+    // ❗ SINGLE SOURCE OF TRUTH
+    const negativeTypes = [
+      "withdrawal",
+      "tournament",
+      "loss",
+      "debit"
+    ];
+
+    const positiveTypes = [
+      "deposit",
+      "winning",
+      "match_reward",
+      "refund",
+      "win",
+      "credit"
+    ];
+
+    const isNegative = negativeTypes.includes(rawType);
+    const isPositive = positiveTypes.includes(rawType);
+
+    return {
+      title,
+      amountText: `${isNegative ? "-" : "+"}₹${Math.abs(amount)}`,
+      color: isNegative ? "#ff4444" : "#00ff99"
+    };
+  }
+
+  /* ===============================
+     🔄 LOAD USER PROFILE
+     =============================== */
+  async function loadUserProfile() {
+  console.log("FULL URL:", window.location.href);
+  console.log("QUERY:", window.location.search);
+
+  const params = new URLSearchParams(window.location.search);
+  const userId = params.get("userId")?.trim();
+
+  if (!token) {
+    alert("Admin not logged in");
+    return;
+  }
+
+  if (!userId || userId.length !== 24) {
+    alert("Invalid user ID");
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      `https://battlepurse-98-8d98.onrender.com/api/wallet/admin/user/${userId}`,
+      {
+        headers: {
+          Authorization: "Bearer " + token
+        }
+      }
+    );
+
+    const data = await res.json();
+
+    if (!data.success) {
+      alert(data.msg || "Failed to load user");
       return;
     }
 
-    try {
-      const res = await fetch(
-        `https://battlepurse-98-8d98.onrender.com/api/wallet/admin/user/${userId}`,
-        {
-          headers: {
-            Authorization: "Bearer " + token
-          }
-        }
-      );
+    const { user, balance, transactions } = data;
 
-      const data = await res.json();
-      if (!data.success) {
-        alert("Failed to load user");
-        return;
-      }
+    let txHtml = `<p class="empty">No transactions found</p>`;
 
-      const { user, balance, transactions } = data;
-
-      let txHtml = `<p class="empty">No transactions found</p>`;
-
-      if (transactions && transactions.length) {
-        txHtml = transactions.map(tx => `
+    if (transactions?.length) {
+      txHtml = transactions.map(tx => {
+        const ui = formatTransaction(tx);
+        return `
           <div class="tx-card">
             <div class="tx-row">
-              <span class="tx-type">${tx.type}</span>
-              <span class="tx-amount" style="color:${tx.color}">
-                ₹${tx.amount}
+              <span class="tx-type">${ui.title}</span>
+              <span class="tx-amount" style="color:${ui.color}">
+                ${ui.amountText}
               </span>
             </div>
             <div class="tx-row">
@@ -230,29 +297,30 @@
               ${new Date(tx.createdAt).toLocaleString()}
             </div>
           </div>
-        `).join("");
-      }
-
-      document.getElementById("profile").innerHTML = `
-        <p><span class="label">Phone</span>${user.phone}</p>
-        <p><span class="label">Role</span>${user.isAdmin ? "Admin" : "User"}</p>
-        <p><span class="label">Status</span>${user.banned ? "Banned" : "Active"}</p>
-        <p><span class="label">Wallet Balance</span>₹${balance}</p>
-
-        <div class="tx-section">
-          <div class="tx-title">Transactions</div>
-          ${txHtml}
-        </div>
-      `;
-
-    } catch (err) {
-      console.error(err);
-      alert("❌ Failed to load profile");
+        `;
+      }).join("");
     }
-  }
 
-  window.onload = loadUserProfile;
+    document.getElementById("profile").innerHTML = `
+      <p><span class="label">Phone</span>${user.phone}</p>
+      <p><span class="label">Role</span>${user.isAdmin ? "Admin" : "User"}</p>
+      <p><span class="label">Status</span>${user.banned ? "Banned" : "Active"}</p>
+      <p><span class="label">Wallet Balance</span>₹${balance}</p>
+
+      <div class="tx-section">
+        <div class="tx-title">Transactions</div>
+        ${txHtml}
+      </div>
+    `;
+
+  } catch (err) {
+    console.error(err);
+    alert("❌ Failed to load profile");
+  }
+}
+  loadUserProfile();
 </script>
 
+
 </body>
-</html>
+</html> 

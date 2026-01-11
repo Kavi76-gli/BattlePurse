@@ -501,6 +501,57 @@ router.get('/transactions', auth, async (req, res) => {
 router.get("/profile", auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        msg: "User not found"
+      });
+    }
+
+    // 🚫 BLOCK BANNED USERS
+    if (user.banned) {
+      return res.status(403).json({
+        success: false,
+        msg: "Your account has been banned. Contact support."
+      });
+    }
+
+    const wallet = await Wallet.findOne({ userId: req.user.id });
+    const balance = wallet ? wallet.balance : 0;
+
+    // ✅ FORCE HTTPS (Android WebView safe)
+    const avatarUrl = user.avatar
+      ? `https://battlepurse-98-8d98.onrender.com/uploads/avatars/${user.avatar}`
+      : null;
+
+    res.json({
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name || "Player",
+        phone: user.phone,
+        email: user.email,
+        avatarUrl,
+        uids: user.uids || [],
+        isAdmin: user.isAdmin,
+        banned: user.banned
+      },
+      balance
+    });
+
+  } catch (err) {
+    console.error("Profile error:", err);
+    res.status(500).json({
+      success: false,
+      msg: "Server error"
+    });
+  }
+});
+
+router.get("/profile", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -1189,6 +1240,82 @@ router.get("/admin/users", adminAuth, async (req, res) => {
 
 
 
+// ✅ 2. Ban a User
+// ✅ Ban a User (Admin)
+router.put("/admin/ban/:id", adminAuth, async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { banned: true },
+      { new: true }
+    ).select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        msg: "User not found"
+      });
+    }
+
+    res.json({
+      success: true,
+      msg: "User banned successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        phone: user.phone,
+        email: user.email,
+        banned: user.banned,
+        isAdmin: user.isAdmin
+      }
+    });
+
+  } catch (err) {
+    console.error("Ban user error:", err);
+    res.status(500).json({
+      success: false,
+      msg: "Failed to ban user"
+    });
+  }
+});
+
+// ✅ Unban a User (Admin)
+router.put("/admin/unban/:id", adminAuth, async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { banned: false },
+      { new: true }
+    ).select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        msg: "User not found"
+      });
+    }
+
+    res.json({
+      success: true,
+      msg: "User unbanned successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        phone: user.phone,
+        email: user.email,
+        banned: user.banned,
+        isAdmin: user.isAdmin
+      }
+    });
+
+  } catch (err) {
+    console.error("Unban user error:", err);
+    res.status(500).json({
+      success: false,
+      msg: "Failed to unban user"
+    });
+  }
+});
 // ✅ 2. Ban a User
 router.put('/admin/ban/:id', adminAuth, async (req, res) => {
   try {
@@ -8716,6 +8843,58 @@ router.get("/payment-config", async (req, res) => {
 // ------------------ ADMIN UPLOAD POSTER ------------------
 
 // ------------------ ADMIN UPLOAD POSTER ------------------
+
+
+// ------------------ ADMIN UPLOAD POSTER ------------------
+router.post(
+  "/admin/poster/upload",
+  authAdmin,
+  upload.single("image"),
+  async (req, res) => {
+    try {
+      const { game } = req.body;
+
+      if (!game)
+        return res.status(400).json({ success: false, msg: "Game is required" });
+
+      if (!req.file)
+        return res.status(400).json({ success: false, msg: "Image is required" });
+
+      // 📂 uploads/logo
+      const logoDir = path.join(__dirname, "../uploads/logo");
+      if (!fs.existsSync(logoDir)) {
+        fs.mkdirSync(logoDir, { recursive: true });
+      }
+
+      // 🧠 UNIQUE FILE NAME (VERY IMPORTANT)
+      const ext = path.extname(req.file.originalname);
+      const safeGame = game.replace(/\s+/g, "_").toLowerCase();
+      const finalFileName = `${safeGame}_${Date.now()}${ext}`;
+      const finalPath = path.join(logoDir, finalFileName);
+
+      // move file
+      fs.renameSync(req.file.path, finalPath);
+
+      // save DB
+      const poster = await Poster.create({
+        game,
+        image: `/uploads/logo/${finalFileName}`,
+        redirectUrl: "/kavi.html"
+      });
+
+      res.json({
+        success: true,
+        msg: "Poster uploaded successfully",
+        poster
+      });
+
+    } catch (err) {
+      console.error("Poster upload error:", err);
+      res.status(500).json({ success: false, msg: "Server error" });
+    }
+  }
+);
+
 router.post(
   "/admin/poster/upload",
   authAdmin,
