@@ -155,33 +155,54 @@ body {
 <div class="user-list" id="userList"></div>
 
 <script>
+const API_BASE = "https://battlepurse-98-8d98.onrender.com/api/wallet";
 const token = localStorage.getItem("token");
+
+if (!token) {
+  alert("Unauthorized. Please login again.");
+  location.href = "login.html";
+}
+
 let allUsers = [];
 
 /* LOAD USERS */
 async function loadUsers() {
-  const res = await fetch(
-    "https://battlepurse-98-8d98.onrender.com/api/wallet/admin/users",
-    { headers: { Authorization: "Bearer " + token } }
-  );
-  const data = await res.json();
-  allUsers = data.users || [];
-  renderUsers(allUsers);
+  try {
+    const res = await fetch(`${API_BASE}/admin/users`, {
+      headers: { Authorization: "Bearer " + token }
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      alert(data.msg || "Failed to load users");
+      return;
+    }
+
+    allUsers = data.users || [];
+    renderUsers(allUsers);
+
+  } catch (err) {
+    console.error("Load users error:", err);
+    alert("Server error");
+  }
 }
 
 /* RENDER USERS */
 function renderUsers(users) {
   const list = document.getElementById("userList");
+
   list.innerHTML = users.map(u => `
     <div class="user-card">
 
       <div class="user-top">
-        <img class="avatar"
-          src="${u.avatarUrl || 'https://via.placeholder.com/80'}">
+        <img class="avatar" src="${u.avatarUrl || '/uploads/avatars/default.png'}">
+        
         <div>
-          <div class="phone">${u.name}</div>
-          <div style="font-size:13px">${u.phone}</div>
+          <div class="phone">${u.name || "Player"}</div>
+          <div style="font-size:13px">${u.phone || "-"}</div>
         </div>
+
         <span class="badge ${u.isAdmin ? 'admin' : 'user'}">
           ${u.isAdmin ? 'ADMIN' : 'USER'}
         </span>
@@ -189,18 +210,18 @@ function renderUsers(users) {
 
       <div class="meta">
         <div>Email: ${u.email || '—'}</div>
-        <div>Balance: ₹${u.balance}</div>
+        <div>Balance: ₹${u.balance ?? 0}</div>
         <div class="status ${u.banned ? 'banned' : 'active'}">
           ${u.banned ? 'BANNED' : 'ACTIVE'}
         </div>
       </div>
 
       <div class="actions">
-        <button onclick="toggleBan('${user._id}', ${user.banned})">
-  ${user.banned ? "Unban" : "Ban"}
-</button>
-
-        
+        <button
+          class="${u.banned ? 'unban' : 'ban'}"
+          onclick="toggleBan('${u.id}', ${u.banned})">
+          ${u.banned ? "Unban" : "Ban"}
+        </button>
 
         <button class="view"
           onclick="viewProfile('${u.id}')">
@@ -212,6 +233,7 @@ function renderUsers(users) {
           RESET
         </button>
       </div>
+
     </div>
   `).join('');
 }
@@ -219,49 +241,41 @@ function renderUsers(users) {
 /* SEARCH */
 function filterUsers() {
   const q = search.value.toLowerCase();
-  renderUsers(allUsers.filter(u =>
-    (u.phone || '').includes(q) ||
-    (u.name || '').toLowerCase().includes(q)
-  ));
+  renderUsers(
+    allUsers.filter(u =>
+      (u.phone || '').includes(q) ||
+      (u.name || '').toLowerCase().includes(q)
+    )
+  );
 }
 
-/* ACTIONS */
-
-const API_BASE = "https://battlepurse-98-8d98.onrender.com/api/wallet";
-
+/* BAN / UNBAN */
 async function toggleBan(userId, isBanned) {
   try {
-    const action = isBanned ? "unban" : "ban";
+    const url = `${API_BASE}/admin/${isBanned ? "unban" : "ban"}/${userId}`;
 
-    const res = await fetch(
-      `${API_BASE}/admin/${action}/${userId}`,
-      {
-        method: "PUT",
-        headers: {
-          "Authorization": "Bearer " + token,
-          "Content-Type": "application/json"
-        }
+    const res = await fetch(url, {
+      method: "PUT",
+      headers: {
+        Authorization: "Bearer " + token,
+        "Content-Type": "application/json"
       }
-    );
+    });
 
     const data = await res.json();
 
-    if (!res.ok || !data.success) {
-      throw new Error(data.msg || "Action failed");
+    if (!data.success) {
+      alert(data.msg || "Action failed");
+      return;
     }
 
-    alert(data.msg); // ✅ "User banned successfully" / "User unbanned successfully"
-
-    // 🔄 Reload user list
-    loadUsers();
+    await loadUsers(); // 🔥 refresh after DB update
 
   } catch (err) {
-    console.error("Ban toggle error:", err);
-    alert("❌ " + err.message);
+    console.error("Toggle ban error:", err);
+    alert("Server error");
   }
 }
-
-
 
 function viewProfile(id) {
   location.href = `user-profile.html?userId=${id}`;
@@ -270,17 +284,16 @@ function viewProfile(id) {
 async function resetPassword(id) {
   const p = prompt("Enter new password");
   if (!p || p.length < 4) return alert("Min 4 chars");
-  await fetch(
-    `https://battlepurse-98-8d98.onrender.com/api/wallet/admin/reset-password/${id}`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token
-      },
-      body: JSON.stringify({ newPassword: p })
-    }
-  );
+
+  await fetch(`${API_BASE}/admin/reset-password/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token
+    },
+    body: JSON.stringify({ newPassword: p })
+  });
+
   alert("Password Reset");
 }
 
@@ -290,6 +303,7 @@ function goBack() {
 
 window.onload = loadUsers;
 </script>
+
 
 </body>
 </html>

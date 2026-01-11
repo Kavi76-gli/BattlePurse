@@ -644,6 +644,23 @@ router.post('/logout', auth, (req, res) => {
 });
 
 // Profile route
+// Profile route
+router.get('/me', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ success: false });
+    }
+
+    res.json({
+      success: true,
+      user
+    });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
 router.get('/me', auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
@@ -1242,13 +1259,10 @@ router.get("/admin/users", adminAuth, async (req, res) => {
 
 // ✅ 2. Ban a User
 // ✅ Ban a User (Admin)
+// ✅ Ban User
 router.put("/admin/ban/:id", adminAuth, async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      { banned: true },
-      { new: true }
-    ).select("-password");
+    const user = await User.findById(req.params.id);
 
     if (!user) {
       return res.status(404).json({
@@ -1257,21 +1271,20 @@ router.put("/admin/ban/:id", adminAuth, async (req, res) => {
       });
     }
 
+    user.banned = true;
+    await user.save(); // 🔥 IMPORTANT
+
     res.json({
       success: true,
       msg: "User banned successfully",
       user: {
         id: user._id,
-        name: user.name,
-        phone: user.phone,
-        email: user.email,
-        banned: user.banned,
-        isAdmin: user.isAdmin
+        banned: user.banned
       }
     });
 
   } catch (err) {
-    console.error("Ban user error:", err);
+    console.error("Ban error:", err);
     res.status(500).json({
       success: false,
       msg: "Failed to ban user"
@@ -1279,14 +1292,10 @@ router.put("/admin/ban/:id", adminAuth, async (req, res) => {
   }
 });
 
-// ✅ Unban a User (Admin)
+// ✅ Unban User
 router.put("/admin/unban/:id", adminAuth, async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      { banned: false },
-      { new: true }
-    ).select("-password");
+    const user = await User.findById(req.params.id);
 
     if (!user) {
       return res.status(404).json({
@@ -1295,27 +1304,27 @@ router.put("/admin/unban/:id", adminAuth, async (req, res) => {
       });
     }
 
+    user.banned = false;
+    await user.save();
+
     res.json({
       success: true,
       msg: "User unbanned successfully",
       user: {
         id: user._id,
-        name: user.name,
-        phone: user.phone,
-        email: user.email,
-        banned: user.banned,
-        isAdmin: user.isAdmin
+        banned: user.banned
       }
     });
 
   } catch (err) {
-    console.error("Unban user error:", err);
+    console.error("Unban error:", err);
     res.status(500).json({
       success: false,
       msg: "Failed to unban user"
     });
   }
 });
+
 // ✅ 2. Ban a User
 router.put('/admin/ban/:id', adminAuth, async (req, res) => {
   try {

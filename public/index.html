@@ -183,11 +183,40 @@
     </div>
 
 <script>
-    // Redirect after splash screen
-    setTimeout(() => {
-        window.location.href = "auth.html"; 
-    }, 2800);
+  setTimeout(async () => {
+    const token = localStorage.getItem("token");
+
+    // ❌ No token → login
+    if (!token) {
+      location.replace("auth.html");
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        "https://battlepurse-98-8d98.onrender.com/api/wallet/me",
+        {
+          headers: {
+            Authorization: "Bearer " + token
+          }
+        }
+      );
+
+      // ✅ Token valid → go to game
+      if (res.ok) {
+        location.replace("gamezone.html");
+      } else {
+        // ❌ Token expired / invalid
+        localStorage.removeItem("token");
+        location.replace("auth.html");
+      }
+
+    } catch (err) {
+      location.replace("auth.html");
+    }
+  }, 2800);
 </script>
+
 
 </body>
 </html>

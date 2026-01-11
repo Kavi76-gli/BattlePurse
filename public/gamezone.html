@@ -1286,7 +1286,7 @@ button:disabled {
 <div class="sidebar">
   <div class="nav-btn active" onclick="location.href='gamezone.html'"><i>🎮</i><span>Game</span></div>
   <div class="nav-btn" onclick="location.href='history.html'"><i>📜</i><span>History</span></div>
-  <div class="nav-btn" onclick="location.href='leaderboard.html'"><i>🏆</i><span>Leaders</span></div>
+  <div class="nav-btn" onclick="location.href='leaderboard.html'"><i>🏆</i><span>Leaderboard</span></div>
   <div class="nav-btn" onclick="location.href='profile.html'"><i>👤</i><span>Profile</span></div>
   <div class="nav-btn" onclick="location.href='more.html'"><i>⋯</i><span>More</span></div>
 </div>
@@ -2055,9 +2055,9 @@ async function loadPosters() {
         <div class="poster-info">${poster.game}</div>
       `;
 
-      card.addEventListener("click", () => {
-        window.location.href = poster.redirectUrl || "kavi.html";
-      });
+     card.addEventListener("click", () => { const path = "kavi.html";
+
+        window.location.href = `${path}?posterId=${poster._id}`; });
 
       posterGrid.appendChild(card);
     });
