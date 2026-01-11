@@ -109,6 +109,55 @@
         font-size: 15px;
       }
     }
+
+    
+  /* 💳 Transactions */
+  .tx-section {
+    margin-top: 20px;
+  }
+
+  .tx-title {
+    color: #00faff;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  .tx-card {
+    background: #181818;
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 0 8px #00000055;
+  }
+
+  .tx-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+
+  .tx-type {
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+
+  .tx-date {
+    font-size: 11px;
+    opacity: 0.7;
+  }
+
+  .tx-amount {
+    font-weight: bold;
+  }
+
+  .empty {
+    text-align: center;
+    opacity: 0.6;
+    margin-top: 15px;
+  }
+
+
   </style>
 </head>
 
@@ -130,63 +179,80 @@
   <a class="back-btn" href="admin-users.html">⬅ Back to Users</a>
 
   <script>
-    const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
 
-    function goBack() {
-      window.history.back();
+  function goBack() {
+    window.history.back();
+  }
+
+  async function loadUserProfile() {
+    const params = new URLSearchParams(window.location.search);
+    const userId = params.get("userId");
+
+    if (!userId) {
+      alert("No user ID found");
+      return;
     }
 
-    async function loadUserProfile() {
-      const params = new URLSearchParams(window.location.search);
-      const userId = params.get("userId");
-      if (!userId) {
-        alert("No user ID found in URL");
+    try {
+      const res = await fetch(
+        `https://battlepurse-98-8d98.onrender.com/api/wallet/admin/user/${userId}`,
+        {
+          headers: {
+            Authorization: "Bearer " + token
+          }
+        }
+      );
+
+      const data = await res.json();
+      if (!data.success) {
+        alert("Failed to load user");
         return;
       }
 
-      try {
-        const res = await fetch(
-          `https://battlepurse-98-8d98.onrender.com/api/wallet/admin/user/${userId}`,
-          {
-            headers: {
-              Authorization: "Bearer " + token
-            }
-          }
-        );
+      const { user, balance, transactions } = data;
 
-        const data = await res.json();
-        if (!data.user) {
-          alert("User not found");
-          return;
-        }
+      let txHtml = `<p class="empty">No transactions found</p>`;
 
-        const user = data.user;
-        const balance = data.balance || 0;
-
-        document.getElementById("profile").innerHTML = `
-          <p><span class="label">Phone</span>${user.phone}</p>
-          <p><span class="label">Role</span>${user.isAdmin ? 'Admin' : 'User'}</p>
-          <p><span class="label">Status</span>${user.banned ? 'Banned' : 'Active'}</p>
-          <p><span class="label">Wallet Balance</span>₹${balance}</p>
-          ${
-            user.gameUIDs
-              ? Object.entries(user.gameUIDs)
-                  .map(
-                    ([game, uid]) =>
-                      `<p><span class="label">${game} UID</span>${uid}</p>`
-                  )
-                  .join("")
-              : ""
-          }
-        `;
-      } catch (err) {
-        console.error(err);
-        alert("❌ Failed to load user profile");
+      if (transactions && transactions.length) {
+        txHtml = transactions.map(tx => `
+          <div class="tx-card">
+            <div class="tx-row">
+              <span class="tx-type">${tx.type}</span>
+              <span class="tx-amount" style="color:${tx.color}">
+                ₹${tx.amount}
+              </span>
+            </div>
+            <div class="tx-row">
+              <span>${tx.description || "—"}</span>
+            </div>
+            <div class="tx-date">
+              ${new Date(tx.createdAt).toLocaleString()}
+            </div>
+          </div>
+        `).join("");
       }
-    }
 
-    window.onload = loadUserProfile;
-  </script>
+      document.getElementById("profile").innerHTML = `
+        <p><span class="label">Phone</span>${user.phone}</p>
+        <p><span class="label">Role</span>${user.isAdmin ? "Admin" : "User"}</p>
+        <p><span class="label">Status</span>${user.banned ? "Banned" : "Active"}</p>
+        <p><span class="label">Wallet Balance</span>₹${balance}</p>
+
+        <div class="tx-section">
+          <div class="tx-title">Transactions</div>
+          ${txHtml}
+        </div>
+      `;
+
+    } catch (err) {
+      console.error(err);
+      alert("❌ Failed to load profile");
+    }
+  }
+
+  window.onload = loadUserProfile;
+</script>
 
 </body>
 </html>

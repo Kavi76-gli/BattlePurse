@@ -2018,7 +2018,8 @@ joinBtn.onclick = async () => {
 
 
 
-const UPLOAD_BASE = "https://battlepurse-98-8d98.onrender.com/uploads/";
+
+const SERVER_BASE = "https://battlepurse-98-8d98.onrender.com";
 
 const posterGrid = document.getElementById("posterGrid");
 
@@ -2031,7 +2032,10 @@ async function loadPosters() {
 
     posterGrid.innerHTML = "";
 
-    if (!data.posters || data.posters.length === 0) {
+    // ✅ only admin-uploaded posters
+    const validPosters = (data.posters || []).filter(p => p.image);
+
+    if (validPosters.length === 0) {
       posterGrid.innerHTML = `
         <p style="grid-column:1/-1;text-align:center;opacity:0.7;">
           No posters available
@@ -2040,35 +2044,20 @@ async function loadPosters() {
       return;
     }
 
-    data.posters.forEach(poster => {
+    validPosters.forEach(poster => {
       const card = document.createElement("div");
       card.className = "poster-card";
 
-      const imageUrl = poster.image
-        ? UPLOAD_BASE + poster.image
-        : "https://i.ibb.co/2d1zY0m/user.png"; // fallback
+      const imageUrl = SERVER_BASE + poster.image;
 
       card.innerHTML = `
-        <img src="${imageUrl}" alt="${poster.game || "Poster"}">
-        <div class="poster-info">${poster.game || "Tournament"}</div>
+        <img src="${imageUrl}" alt="${poster.game}">
+        <div class="poster-info">${poster.game}</div>
       `;
 
-      // 👉 redirect logic (safe default)
-     card.addEventListener("click", () => {
-  const path = "kavi.html";
-
-  // frontend-only navigation
-  if (location.protocol.startsWith("http")) {
-    window.location.href = path;
-  }
-});
-
-
-      
-
-    
-
-      
+      card.addEventListener("click", () => {
+        window.location.href = poster.redirectUrl || "kavi.html";
+      });
 
       posterGrid.appendChild(card);
     });
@@ -2082,6 +2071,8 @@ async function loadPosters() {
     `;
   }
 }
+
+
 
 // 🚀 Load on page open
 

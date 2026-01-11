@@ -1142,14 +1142,52 @@ router.post('/supports/contact', async (req, res) => {
 // GET /api/wallet/admin/users
 
 // ✅ 1. Get All Registered Users
-router.get('/admin/users', adminAuth, async (req, res) => {
+// ✅ ADMIN – Get all players with profile + wallet + password
+router.get("/admin/users", adminAuth, async (req, res) => {
   try {
-    const users = await User.find({}, 'phone isAdmin banned');
-    res.json({ users });
+    const users = await User.find()
+      .select("+password"); // 👈 include hashed password
+
+    const userList = await Promise.all(
+      users.map(async (user) => {
+        const wallet = await Wallet.findOne({ userId: user._id });
+        const balance = wallet ? wallet.balance : 0;
+
+        const avatarUrl = user.avatar
+          ? `https://battlepurse-98-8d98.onrender.com/uploads/avatars/${user.avatar}`
+          : null;
+
+        return {
+          id: user._id,
+          name: user.name || "Player",
+          phone: user.phone,
+          email: user.email,
+          avatarUrl,
+          uids: user.uids,
+          isAdmin: user.isAdmin,
+          banned: user.banned,
+          password: user.password, // 🔐 hashed password
+          balance
+        };
+      })
+    );
+
+    res.json({
+      success: true,
+      totalUsers: userList.length,
+      users: userList
+    });
+
   } catch (err) {
-    res.status(500).json({ msg: 'Failed to fetch users' });
+    console.error("Admin users error:", err);
+    res.status(500).json({
+      success: false,
+      msg: "Failed to fetch users"
+    });
   }
 });
+
+
 
 // ✅ 2. Ban a User
 router.put('/admin/ban/:id', adminAuth, async (req, res) => {
@@ -1188,19 +1226,80 @@ router.put('/admin/reset-password/:id', adminAuth, async (req, res) => {
 });
 
 // ✅ Admin - Get any user's profile
+// ✅ ADMIN – Get user profile + wallet + transactions
 router.get('/admin/user/:id', adminAuth, async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select('-password');
-    if (!user) return res.status(404).json({ msg: 'User not found' });
+    const userId = req.params.id;
+    const { type, startDate, endDate } = req.query;
 
-    const wallet = await Wallet.findOne({ userId: req.params.id });
-    const balance = wallet ? wallet.balance : 0;
+    // 1️⃣ Get user (admin can still hide password here)
+    const user = await User.findById(userId).select('-password');
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        msg: 'User not found'
+      });
+    }
 
-    res.json({ user, balance });
+    // 2️⃣ Wallet
+    let wallet = await Wallet.findOne({ userId });
+    if (!wallet) {
+      wallet = new Wallet({ userId, balance: 0 });
+      await wallet.save();
+    }
+
+    // 3️⃣ Transaction filters (ADMIN)
+    const filter = { userId };
+
+    if (type) filter.type = type;
+
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) filter.createdAt.$gte = new Date(startDate);
+      if (endDate)   filter.createdAt.$lte = new Date(endDate);
+    }
+
+    const transactions = await Transaction.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(100);
+
+    // 4️⃣ Add color logic (same as user route)
+    const updatedTransactions = transactions.map(t => ({
+      ...t._doc,
+      color: getColor(t.type, t.amount)
+    }));
+
+    // 5️⃣ Avatar URL (Android-safe)
+    const avatarUrl = user.avatar
+      ? `https://battlepurse-98-8d98.onrender.com/uploads/avatars/${user.avatar}`
+      : null;
+
+    res.json({
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name || "Player",
+        phone: user.phone,
+        email: user.email,
+        avatarUrl,
+        isAdmin: user.isAdmin,
+        banned: user.banned,
+        uids: user.uids
+      },
+      balance: wallet.balance,
+      transactions: updatedTransactions
+    });
+
   } catch (err) {
-    res.status(500).json({ msg: 'Failed to load profile' });
+    console.error("Admin user profile error:", err);
+    res.status(500).json({
+      success: false,
+      msg: 'Failed to load user profile'
+    });
   }
 });
+
+
 
 // ==================== 🎮 GAME ROUTES ====================
 
@@ -8615,36 +8714,65 @@ router.get("/payment-config", async (req, res) => {
 
 
 // ------------------ ADMIN UPLOAD POSTER ------------------
+
+// ------------------ ADMIN UPLOAD POSTER ------------------
 router.post(
   "/admin/poster/upload",
   authAdmin,
-  upload.single("image"), // <-- MUST be here
+  upload.single("image"),
   async (req, res) => {
     try {
-      const { game } = req.body; // multer fills req.body
+      const { game } = req.body;
 
-      if (!game) return res.status(400).json({ success: false, msg: "Game is required" });
-      if (!req.file) return res.status(400).json({ success: false, msg: "Image is required" });
+      if (!game) {
+        return res.status(400).json({ success: false, msg: "Game is required" });
+      }
 
+      if (!req.file) {
+        return res.status(400).json({ success: false, msg: "Image is required" });
+      }
+
+      // 📂 final directory
+      const logoDir = path.join(__dirname, "../uploads/logo");
+      if (!fs.existsSync(logoDir)) {
+        fs.mkdirSync(logoDir, { recursive: true });
+      }
+
+      // 🖼️ fixed file name (can also use `${game}.png`)
+      const finalFileName = "images.png";
+      const finalPath = path.join(logoDir, finalFileName);
+
+      // 🔁 move & overwrite
+      fs.renameSync(req.file.path, finalPath);
+
+      // 💾 save DB record
       const poster = await Poster.create({
         game,
-        image: `/uploads/${req.file.filename}`,
+        image: "/uploads/logo/images.png",
         redirectUrl: "/kavi.html"
       });
 
-      res.json({ success: true, msg: "Poster uploaded successfully", poster });
+      res.json({
+        success: true,
+        msg: "Poster uploaded successfully",
+        poster
+      });
+
     } catch (err) {
-      console.error(err);
+      console.error("Poster upload error:", err);
       res.status(500).json({ success: false, msg: "Server error" });
     }
   }
 );
 
+
+// ------------------ USER GET POSTERS ------------------
 // ------------------ USER GET POSTERS ------------------
 router.get("/posters", async (req, res) => {
   try {
     const { game } = req.query;
     const filter = {};
+
     if (game) filter.game = game;
 
     const posters = await Poster.find(filter)
@@ -8653,10 +8781,14 @@ router.get("/posters", async (req, res) => {
 
     res.json({ success: true, posters });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, msg: "Failed to load posters" });
+    console.error("Load posters error:", err);
+    res.status(500).json({
+      success: false,
+      msg: "Failed to load posters"
+    });
   }
 });
+
 
 
 

@@ -661,9 +661,14 @@ const TOKEN =
 
 
 
+const SERVER_BASE = "https://battlepurse-98-8d98.onrender.com";
+
+
 const posterForm = document.getElementById("posterForm");
 const posterGrid = document.getElementById("posterGrid");
 const messageEl = document.getElementById("message");
+
+
 
 // ------------------ UPLOAD POSTER ------------------
 posterForm.addEventListener("submit", async (e) => {
@@ -675,7 +680,8 @@ posterForm.addEventListener("submit", async (e) => {
 
   if (!game || !file) {
     messageEl.style.color = "red";
-    return (messageEl.textContent = "Select game and image!");
+    messageEl.textContent = "Select game and image!";
+    return;
   }
 
   const formData = new FormData();
@@ -685,7 +691,9 @@ posterForm.addEventListener("submit", async (e) => {
   try {
     const res = await fetch(`${API_BASE}/admin/poster/upload`, {
       method: "POST",
-      headers: { Authorization: "Bearer " + TOKEN },
+      headers: {
+        Authorization: `Bearer ${TOKEN}`
+      },
       body: formData
     });
 
@@ -696,8 +704,9 @@ posterForm.addEventListener("submit", async (e) => {
     messageEl.textContent = "✅ Poster uploaded successfully!";
     posterForm.reset();
     loadPosters();
+
   } catch (err) {
-    console.error(err);
+    console.error("Upload error:", err);
     messageEl.style.color = "red";
     messageEl.textContent = "❌ " + (err.message || "Upload failed");
   }
@@ -706,55 +715,65 @@ posterForm.addEventListener("submit", async (e) => {
 // ------------------ LOAD POSTERS ------------------
 async function loadPosters() {
   try {
-    const res = await fetch(`${BACKEND_URL}/api/wallet/posters`);
+    const res = await fetch(`${API_BASE}/posters`);
     const data = await res.json();
 
     posterGrid.innerHTML = "";
 
-    if (!data.success || data.posters.length === 0) {
+    if (!data.success || !data.posters || data.posters.length === 0) {
       posterGrid.innerHTML =
         "<p style='text-align:center;color:#aaa;'>No posters uploaded</p>";
       return;
     }
 
     data.posters.forEach(poster => {
+      if (!poster.image) return; // extra safety
+
       const card = document.createElement("div");
       card.className = "poster-card";
 
       card.innerHTML = `
-        <img src="${BACKEND_URL}${poster.image}" alt="${poster.game}">
+        <img src="${SERVER_BASE}${poster.image}" alt="${poster.game}">
         <div class="poster-info">${poster.game}</div>
         <button class="delete-btn">Delete</button>
       `;
 
+      // ------------------ DELETE POSTER ------------------
       card.querySelector(".delete-btn").onclick = async (e) => {
         e.stopPropagation();
         if (!confirm("Delete this poster?")) return;
 
-        const res = await fetch(
-          `${BACKEND_URL}/api/wallet/admin/poster/${poster._id}`,
-          {
-            method: "DELETE",
-            headers: {
-              Authorization: "Bearer " + TOKEN
+        try {
+          const res = await fetch(
+            `${API_BASE}/admin/poster/${poster._id}`,
+            {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${TOKEN}`
+              }
             }
-          }
-        );
+          );
 
-        const result = await res.json();
-        if (result.success) loadPosters();
-        else alert(result.msg);
+          const result = await res.json();
+          if (!result.success) throw new Error(result.msg);
+
+          loadPosters();
+        } catch (err) {
+          alert(err.message || "Delete failed");
+        }
       };
 
       posterGrid.appendChild(card);
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("Poster load error:", err);
     posterGrid.innerHTML =
       "<p style='color:red;text-align:center;'>Failed to load posters</p>";
   }
 }
+
+
 
 // ------------------ DELETE POSTER ------------------
 

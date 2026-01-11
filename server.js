@@ -37,7 +37,7 @@ app.use(express.static(publicPath));
 const uploadBase = path.resolve(__dirname, "uploads");
 
 
-const uploadDirs = ["avatars", "poster", "qr"];
+const uploadDirs = ["avatars", "poster", "qr", "logo"];
 
 uploadDirs.forEach(folder => {
   const dirPath = path.join(uploadBase, folder);
