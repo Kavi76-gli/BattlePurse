@@ -500,13 +500,20 @@ router.get('/transactions', auth, async (req, res) => {
 // ✅ Get user profile (APK-safe, HTTPS avatars)
 router.get("/profile", auth, async (req, res) => {
   try {
-    // req.user is already verified & NOT banned
     const user = await User.findById(req.user.id).select("-password");
 
     if (!user) {
       return res.status(404).json({
         success: false,
         msg: "User not found"
+      });
+    }
+
+    // ❌ BLOCK BANNED USERS
+    if (user.banned) {
+      return res.status(403).json({
+        success: false,
+        msg: "Your account has been banned due to unusual activity. Contact support."
       });
     }
 

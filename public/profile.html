@@ -288,14 +288,36 @@ const avatarInput = document.getElementById("avatarInput");
 /* ================= LOAD PROFILE ================= */
 async function loadProfile() {
   try {
-    const res = await fetch("https://battlepurse-98-8d98.onrender.com/api/wallet/profile", {
-      headers: { Authorization: "Bearer " + token }
-    });
+    const res = await fetch(
+      "https://battlepurse-98-8d98.onrender.com/api/wallet/profile",
+      {
+        headers: { Authorization: "Bearer " + token }
+      }
+    );
+
     const data = await res.json();
 
+    // 🚫 HANDLE BANNED USER
+    if (!res.ok) {
+      if (res.status === 403) {
+        alert(data.msg || "Your account has been banned due to unusual activity.");
+        localStorage.removeItem("token");
+        location.replace("auth.html"); // or banned.html
+        return;
+      }
+
+      // ❌ TOKEN INVALID / OTHER ERRORS
+      alert(data.msg || "Session expired. Please login again.");
+      localStorage.removeItem("token");
+      location.replace("auth.html");
+      return;
+    }
+
+    // ✅ SAFE TO USE DATA
     const u = data.user;
-    username.innerText = u.name;
-    mobile.innerText = u.phone;
+
+    username.innerText = u.name || "Player";
+    mobile.innerText = u.phone || "-";
     email.innerText = u.email || "Not set";
     userid.innerText = u.id;
 
@@ -311,17 +333,23 @@ async function loadProfile() {
       adminSection.style.display = "block";
     }
 
-    const wbRes = await fetch("https://battlepurse-98-8d98.onrender.com/api/wallet/balance", {
-      headers: { Authorization: "Bearer " + token }
-    });
+    // 💰 LOAD WALLET
+    const wbRes = await fetch(
+      "https://battlepurse-98-8d98.onrender.com/api/wallet/balance",
+      {
+        headers: { Authorization: "Bearer " + token }
+      }
+    );
+
     const wb = await wbRes.json();
-    wallet.innerText = wb.balance || 0;
+    wallet.innerText = wb.balance ?? 0;
 
   } catch (err) {
     console.error("Profile load error:", err);
-    alert("Failed to load profile");
+    alert("Unable to load profile. Please try again.");
   }
 }
+
 
 /* ================= AVATAR UPLOAD ================= */
 async function uploadAvatar() {
