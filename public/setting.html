@@ -155,8 +155,16 @@ footer {
   <div class="title">Account Settings</div>
 </div>
 
+
+
 <!-- CONTAINER -->
 <div class="container">
+
+<label class="toggle">
+  <span>Biometric Security</span>
+  <input type="checkbox" id="bioToggle">
+</label>
+
 
   <!-- Change Password -->
   <div class="form-group">
@@ -224,6 +232,21 @@ document.addEventListener("touchend", e => {
     goBack();
   }
 });
+
+
+/* ================= BIOMETRIC TOGGLE ================= */
+const toggle = document.getElementById("bioToggle");
+
+// Load saved value
+toggle.checked = localStorage.getItem("biometricEnabled") === "true";
+
+toggle.onchange = () => {
+  localStorage.setItem(
+    "biometricEnabled",
+    toggle.checked ? "true" : "false"
+  );
+  alert("Biometric setting updated");
+};
 
 /* ================= CHANGE PASSWORD ================= */
 async function changePassword() {

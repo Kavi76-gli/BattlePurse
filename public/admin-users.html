@@ -165,7 +165,9 @@ if (!token) {
 
 let allUsers = [];
 
-/* LOAD USERS */
+/* ===============================
+   LOAD USERS
+================================ */
 async function loadUsers() {
   try {
     const res = await fetch(`${API_BASE}/admin/users`, {
@@ -188,57 +190,68 @@ async function loadUsers() {
   }
 }
 
-/* RENDER USERS */
+/* ===============================
+   RENDER USERS
+================================ */
 function renderUsers(users) {
   const list = document.getElementById("userList");
 
-  list.innerHTML = users.map(u => `
-    <div class="user-card">
+  list.innerHTML = users.map(u => {
+    const avatar = u.avatarUrl
+      ? u.avatarUrl.replace("http://", "https://")
+      : "https://battlepurse-98-8d98.onrender.com/uploads/avatars/default.png";
 
-      <div class="user-top">
-        <img class="avatar" src="${u.avatarUrl || '/uploads/avatars/default.png'}">
-        
-        <div>
-          <div class="phone">${u.name || "Player"}</div>
-          <div style="font-size:13px">${u.phone || "-"}</div>
+    return `
+      <div class="user-card">
+
+        <div class="user-top">
+          <img class="avatar" src="${avatar}">
+          
+          <div>
+            <div class="phone">${u.name || "Player"}</div>
+            <div style="font-size:13px">${u.phone || "-"}</div>
+          </div>
+
+          <span class="badge ${u.isAdmin ? 'admin' : 'user'}">
+            ${u.isAdmin ? 'ADMIN' : 'USER'}
+          </span>
         </div>
 
-        <span class="badge ${u.isAdmin ? 'admin' : 'user'}">
-          ${u.isAdmin ? 'ADMIN' : 'USER'}
-        </span>
-      </div>
+        <div class="meta">
+          <div>Email: ${u.email || '—'}</div>
+          <div>Balance: ₹${u.balance ?? 0}</div>
 
-      <div class="meta">
-        <div>Email: ${u.email || '—'}</div>
-        <div>Balance: ₹${u.balance ?? 0}</div>
-        <div class="status ${u.banned ? 'banned' : 'active'}">
-          ${u.banned ? 'BANNED' : 'ACTIVE'}
+          <div class="status ${u.banned ? 'banned' : 'active'}">
+            ${u.banned ? 'BANNED' : 'ACTIVE'}
+          </div>
         </div>
+
+        <div class="actions">
+          <button
+            class="ban-btn ${u.banned ? 'unban' : 'ban'}"
+            onclick="toggleBan(this, '${u.id}', ${u.banned})">
+            ${u.banned ? "UNBAN" : "BAN"}
+          </button>
+
+          <button class="view"
+            onclick="viewProfile('${u.id}')">
+            VIEW
+          </button>
+
+          <button class="reset"
+            onclick="resetPassword('${u.id}')">
+            RESET
+          </button>
+        </div>
+
       </div>
-
-      <div class="actions">
-        <button
-          class="${u.banned ? 'unban' : 'ban'}"
-          onclick="toggleBan('${u.id}', ${u.banned})">
-          ${u.banned ? "Unban" : "Ban"}
-        </button>
-
-        <button class="view"
-          onclick="viewProfile('${u.id}')">
-          VIEW
-        </button>
-
-        <button class="reset"
-          onclick="resetPassword('${u.id}')">
-          RESET
-        </button>
-      </div>
-
-    </div>
-  `).join('');
+    `;
+  }).join("");
 }
 
-/* SEARCH */
+/* ===============================
+   SEARCH
+================================ */
 function filterUsers() {
   const q = search.value.toLowerCase();
   renderUsers(
@@ -249,41 +262,55 @@ function filterUsers() {
   );
 }
 
-/* BAN / UNBAN */
-async function toggleBan(userId, isBanned) {
+/* ===============================
+   BAN / UNBAN
+================================ */
+async function toggleBan(btn, userId, isBanned) {
+  const confirmMsg = isBanned
+    ? "Unban this user?"
+    : "Ban this user?";
+
+  if (!confirm(confirmMsg)) return;
+
+  btn.disabled = true;
+  btn.innerText = "Please wait...";
+
   try {
     const url = `${API_BASE}/admin/${isBanned ? "unban" : "ban"}/${userId}`;
 
     const res = await fetch(url, {
       method: "PUT",
       headers: {
-        Authorization: "Bearer " + token,
-        "Content-Type": "application/json"
+        Authorization: "Bearer " + token
       }
     });
 
     const data = await res.json();
 
-    if (!data.success) {
-      alert(data.msg || "Action failed");
-      return;
-    }
+    alert(data.msg || "Action completed");
 
-    await loadUsers(); // 🔥 refresh after DB update
+    if (data.success) {
+      await loadUsers(); // 🔄 refresh UI
+    }
 
   } catch (err) {
     console.error("Toggle ban error:", err);
     alert("Server error");
+  } finally {
+    btn.disabled = false;
   }
 }
 
+/* ===============================
+   OTHER ACTIONS
+================================ */
 function viewProfile(id) {
   location.href = `user-profile.html?userId=${id}`;
 }
 
 async function resetPassword(id) {
-  const p = prompt("Enter new password");
-  if (!p || p.length < 4) return alert("Min 4 chars");
+  const p = prompt("Enter new password (min 4 chars)");
+  if (!p || p.length < 4) return alert("Minimum 4 characters");
 
   await fetch(`${API_BASE}/admin/reset-password/${id}`, {
     method: "PUT",
@@ -294,7 +321,7 @@ async function resetPassword(id) {
     body: JSON.stringify({ newPassword: p })
   });
 
-  alert("Password Reset");
+  alert("Password reset successfully");
 }
 
 function goBack() {
@@ -304,6 +331,6 @@ function goBack() {
 window.onload = loadUsers;
 </script>
 
-
 </body>
+
 </html>

@@ -500,6 +500,7 @@ router.get('/transactions', auth, async (req, res) => {
 // ✅ Get user profile (APK-safe, HTTPS avatars)
 router.get("/profile", auth, async (req, res) => {
   try {
+    // req.user is already verified & NOT banned
     const user = await User.findById(req.user.id).select("-password");
 
     if (!user) {
@@ -509,18 +510,10 @@ router.get("/profile", auth, async (req, res) => {
       });
     }
 
-    // 🚫 BLOCK BANNED USERS
-    if (user.banned) {
-      return res.status(403).json({
-        success: false,
-        msg: "Your account has been banned. Contact support."
-      });
-    }
-
-    const wallet = await Wallet.findOne({ userId: req.user.id });
+    const wallet = await Wallet.findOne({ userId: user._id });
     const balance = wallet ? wallet.balance : 0;
 
-    // ✅ FORCE HTTPS (Android WebView safe)
+    // ✅ Android WebView safe avatar URL
     const avatarUrl = user.avatar
       ? `https://battlepurse-98-8d98.onrender.com/uploads/avatars/${user.avatar}`
       : null;
@@ -549,83 +542,6 @@ router.get("/profile", auth, async (req, res) => {
   }
 });
 
-router.get("/profile", auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select("-password");
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        msg: "User not found"
-      });
-    }
-
-    const wallet = await Wallet.findOne({ userId: req.user.id });
-    const balance = wallet ? wallet.balance : 0;
-
-    // ✅ FORCE HTTPS (important for Android WebView)
-    const avatarUrl = user.avatar
-      ? `https://battlepurse-98-8d98.onrender.com/uploads/avatars/${user.avatar}`
-      : null;
-
-    res.json({
-      success: true,
-      user: {
-        id: user._id,
-        name: user.name || "Player",
-        phone: user.phone,
-        email: user.email,
-        avatarUrl,
-        uids: user.uids,
-        isAdmin: user.isAdmin
-      },
-      balance
-    });
-
-  } catch (err) {
-    console.error("Profile error:", err);
-    res.status(500).json({
-      success: false,
-      msg: "Server error"
-    });
-  }
-});
-
-router.get("/profile", auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select("-password");
-    if (!user) {
-      return res.status(404).json({ success: false, msg: "User not found" });
-    }
-
-    const wallet = await Wallet.findOne({ userId: req.user.id });
-    const balance = wallet ? wallet.balance : 0;
-
-    const avatarUrl = user.avatar
-      ? `https://battlepurse-98-8d98.onrender.com/uploads/avatars/${user.avatar}`
-      : null;
-
-    res.json({
-      success: true,
-      user: {
-        id: user._id,
-        name: user.name || "Player",
-        phone: user.phone,
-        email: user.email,
-        avatarUrl,
-        uids: user.uids,
-        isAdmin: user.isAdmin
-      },
-      balance
-    });
-
-  } catch (err) {
-    console.error("Profile error:", err);
-    res.status(500).json({ success: false, msg: "Server error" });
-  }
-});
-
-
-
 
 
 // Logout (client should just delete token)
@@ -637,11 +553,6 @@ router.post("/logout", auth, (req, res) => {
   });
 });
 
-router.post('/logout', auth, (req, res) => {
-  // JWT can't be invalidated unless you're using a token blacklist
-  // Just instruct client to delete token
-  res.json({ msg: 'Logout successful (please delete token on client)' });
-});
 
 // Profile route
 // Profile route
@@ -661,15 +572,7 @@ router.get('/me', auth, async (req, res) => {
   }
 });
 
-router.get('/me', auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select('-password');
-    if (!user) return res.status(404).json({ msg: 'User not found' });
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ msg: 'Server error' });
-  }
-});
+
 
 // Save UIDs Route (Protected)
 
@@ -835,29 +738,7 @@ router.post(
 );
 
 
-router.post(
-  "/uploads-avatars",
-  auth,
-  uploadAvatar.single("avatar"),
-  async (req, res) => {
-    if (!req.file) {
-      return res.status(400).json({ success: false, msg: "No file uploaded" });
-    }
 
-    await User.updateOne(
-      { _id: req.user.id },
-      { $set: { avatar: req.file.filename } }
-    );
-
-    const avatarUrl = `https://battlepurse-98-8d98.onrender.com/uploads/avatars/${req.file.filename}`;
-
-    res.json({
-      success: true,
-      msg: "Avatar uploaded successfully",
-      url: avatarUrl
-    });
-  }
-);
 
 
 
@@ -1260,9 +1141,21 @@ router.get("/admin/users", adminAuth, async (req, res) => {
 // ✅ 2. Ban a User
 // ✅ Ban a User (Admin)
 // ✅ Ban User
+
+
 router.put("/admin/ban/:id", adminAuth, async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const { id } = req.params;
+
+    // ✅ Validate MongoDB ID
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        msg: "Invalid user ID"
+      });
+    }
+
+    const user = await User.findById(id);
 
     if (!user) {
       return res.status(404).json({
@@ -1271,15 +1164,27 @@ router.put("/admin/ban/:id", adminAuth, async (req, res) => {
       });
     }
 
+    // ✅ Already banned
+    if (user.banned) {
+      return res.json({
+        success: true,
+        msg: "User is already banned",
+        user: {
+          id: user._id,
+          banned: true
+        }
+      });
+    }
+
     user.banned = true;
-    await user.save(); // 🔥 IMPORTANT
+    await user.save();
 
     res.json({
       success: true,
       msg: "User banned successfully",
       user: {
         id: user._id,
-        banned: user.banned
+        banned: true
       }
     });
 
@@ -1292,15 +1197,38 @@ router.put("/admin/ban/:id", adminAuth, async (req, res) => {
   }
 });
 
+
 // ✅ Unban User
 router.put("/admin/unban/:id", adminAuth, async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const { id } = req.params;
+
+    // ✅ Validate MongoDB ID
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        msg: "Invalid user ID"
+      });
+    }
+
+    const user = await User.findById(id);
 
     if (!user) {
       return res.status(404).json({
         success: false,
         msg: "User not found"
+      });
+    }
+
+    // ✅ Already unbanned
+    if (!user.banned) {
+      return res.json({
+        success: true,
+        msg: "User is already active",
+        user: {
+          id: user._id,
+          banned: false
+        }
       });
     }
 
@@ -1312,7 +1240,7 @@ router.put("/admin/unban/:id", adminAuth, async (req, res) => {
       msg: "User unbanned successfully",
       user: {
         id: user._id,
-        banned: user.banned
+        banned: false
       }
     });
 
@@ -1325,25 +1253,9 @@ router.put("/admin/unban/:id", adminAuth, async (req, res) => {
   }
 });
 
-// ✅ 2. Ban a User
-router.put('/admin/ban/:id', adminAuth, async (req, res) => {
-  try {
-    await User.findByIdAndUpdate(req.params.id, { banned: true });
-    res.json({ msg: 'User banned successfully' });
-  } catch (err) {
-    res.status(500).json({ msg: 'Failed to ban user' });
-  }
-});
 
-// ✅ 3. Unban a User
-router.put('/admin/unban/:id', adminAuth, async (req, res) => {
-  try {
-    await User.findByIdAndUpdate(req.params.id, { banned: false });
-    res.json({ msg: 'User unbanned successfully' });
-  } catch (err) {
-    res.status(500).json({ msg: 'Failed to unban user' });
-  }
-});
+// ✅ 2. Ban a User
+
 
 // ✅ 4. Reset Password
 router.put('/admin/reset-password/:id', adminAuth, async (req, res) => {
@@ -5961,193 +5873,6 @@ router.get("/history", auth, async (req, res) => {
 
 
 
-router.get("/history", auth, async (req, res) => {
-  try {
-    const userId = new mongoose.Types.ObjectId(req.user.id);
-
-    /* =========================
-       MATCH HISTORY
-    ========================= */
-    // ---- DATE RANGE (SAFE DEFAULTS) ----
-   const matches = await QuickMatch.find( { status: "completed", createdAt: { $gte: start, $lte: end }, ...(game ? { game } : {}) },
-
-  {
-    players: 1,
-    userResults: 1,
-    entryFee: 1,
-    prizeGiven: 1,
-    prizeSystem: 1,
-    winnerIds: 1
-  }
-)
-.limit(200)   // VERY IMPORTANT
-.lean();
-
-
-    
-    const history = [];
-
-    for (const m of matches) {
-      const entryFee = Number(m.entryFee || 0);
-
-      const playersCount =
-        (m.players?.length || 0) +
-        (m.slots?.length || 0) || 1;
-
-      const totalCollected = entryFee * playersCount;
-      const prizePool = Math.max(
-        0,
-        totalCollected - Math.round(totalCollected * 0.08)
-      );
-
-      const winnerIds = (m.winnerIds || []).map(id => String(id));
-      const userResults = Array.isArray(m.userResults) ? m.userResults : [];
-
-      const myResult = userResults.find(
-        r => String(r.userId) === String(userId)
-      );
-
-      let isWinner = false;
-      let prizeWon = 0;
-
-      /* ===== ADMIN SELECTED WINNERS ===== */
-      if (winnerIds.length > 0) {
-        if (winnerIds.includes(String(userId))) {
-          isWinner = true;
-
-          if (m.prizeSystem === "team_equal") {
-            const winners = userResults.filter(r =>
-              winnerIds.includes(String(r.userId))
-            );
-            prizeWon = Math.round(
-              (m.prizeGiven || prizePool) / (winners.length || 1)
-            );
-          } 
-          else if (m.prizeSystem === "kill_based") {
-            const winners = userResults.filter(r =>
-              winnerIds.includes(String(r.userId))
-            );
-            const totalKills = winners.reduce(
-              (s, x) => s + Number(x.kills || 0), 0
-            );
-
-            if (totalKills > 0) {
-              const ur = winners.find(r => String(r.userId) === String(userId));
-              prizeWon = Math.round(
-                ((ur?.kills || 0) / totalKills) * (m.prizeGiven || prizePool)
-              );
-            } else {
-              prizeWon = Math.round(
-                (m.prizeGiven || prizePool) / (winners.length || 1)
-              );
-            }
-          } 
-          else {
-            prizeWon = m.prizeGiven || prizePool;
-          }
-        }
-      }
-
-      /* ===== AUTO RESULT (NO ADMIN) ===== */
-      else {
-        if (m.type === "1v1") {
-          const top = [...userResults].sort(
-            (a, b) => (b.kills || 0) - (a.kills || 0)
-          )[0];
-
-          if (top && String(top.userId) === String(userId)) {
-            isWinner = true;
-            prizeWon = top.prize || m.prizeGiven || prizePool;
-          }
-        } 
-        else {
-          const teamKills = {};
-          userResults.forEach(r => {
-            teamKills[r.team] = (teamKills[r.team] || 0) + Number(r.kills || 0);
-          });
-
-          const winnerTeam = Object.keys(teamKills).sort(
-            (a, b) => teamKills[b] - teamKills[a]
-          )[0];
-
-          const ur = userResults.find(
-            r => String(r.userId) === String(userId)
-          );
-
-          if (ur && ur.team === winnerTeam) {
-            isWinner = true;
-
-            if (m.prizeSystem === "kill_based") {
-              prizeWon = Math.round(
-                ((ur.kills || 0) / teamKills[winnerTeam]) *
-                (m.prizeGiven || prizePool)
-              );
-            } else {
-              const winners = userResults.filter(r => r.team === winnerTeam);
-              prizeWon = Math.round(
-                (m.prizeGiven || prizePool) / (winners.length || 1)
-              );
-            }
-          }
-        }
-      }
-
-      history.push({
-        type: "match",
-        matchId: m._id,
-        matchNumber: m.matchNumber,
-        game: m.game,
-        mode: m.mode,
-        entryFee,
-        createdAt: m.createdAt,
-        kills: myResult?.kills || 0,
-        result: isWinner ? "win" : "loss",
-        prize: prizeWon
-      });
-    }
-
-    /* =========================
-       TOURNAMENT HISTORY
-    ========================= */
-    const tournaments = await Tournament.find({
-      $or: [
-        { "winners.userId": userId },
-        { "joinedUsers.userId": userId },
-        { "players.userId": userId }
-      ]
-    })
-      .sort({ createdAt: -1 })
-      .limit(500)
-      .lean();
-
-    for (const t of tournaments) {
-      const win = t.winners?.find(w => String(w.userId) === String(userId));
-      const join =
-        t.joinedUsers?.find(j => String(j.userId) === String(userId)) ||
-        t.players?.find(p => String(p.userId) === String(userId));
-
-      history.push({
-        type: "tournament",
-        tournamentId: t._id,
-        tournamentName: t.name,
-        game: t.game,
-        entryFee: t.entryFee,
-        result: win ? "win" : "loss",
-        prize: win?.prize || 0,
-        position: win?.position || null,
-        createdAt: win?.declaredAt || join?.joinedAt || t.createdAt
-      });
-    }
-
-    history.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-    res.json({ success: true, count: history.length, history });
-
-  } catch (err) {
-    console.error("History Error:", err);
-    res.status(500).json({ success: false, msg: "Server error" });
-  }
-});
 
 router.get("/leaderboard", auth, async (req, res) => {
   try {
@@ -6268,272 +5993,6 @@ router.get("/leaderboard", auth, async (req, res) => {
     res.status(500).json({ success: false, msg: "Server Error" });
   }
 });
-
-
-router.get("/leaderboard", auth, async (req, res) => {
-  try {
-    const { date, game } = req.query;
-
-    let start = date ? new Date(date) : new Date("2000-01-01");
-    let end = date ? new Date(date) : new Date();
-    if (date) {
-      start.setHours(0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
-    }
-
-    const userMap = new Map();
-
-    const matches = await QuickMatch.find({
-      status: "completed",
-      createdAt: { $gte: start, $lte: end },
-      ...(game ? { game } : {})
-    })
-      .limit(200)
-      .lean();
-
-    for (const m of matches) {
-      const entryFee = Number(m.entryFee || 0);
-      const totalPlayers = (m.players || []).length || 1;
-      const totalCollected = entryFee * totalPlayers;
-      const prizePool = Math.max(0, totalCollected - Math.round(totalCollected * 0.08));
-
-      const winnerIds = (m.winnerIds || []).map(id => String(id));
-      const userResults = Array.isArray(m.userResults) ? m.userResults : [];
-
-      const allPlayers = (m.players || [])
-        .map(p => p?.userId ? String(p.userId._id || p.userId) : null)
-        .filter(Boolean);
-
-      for (const uid of allPlayers) {
-        if (!userMap.has(uid)) {
-          userMap.set(uid, {
-            userId: uid,
-            totalWinnings: 0,
-            totalSpent: 0,
-            games: new Set()
-          });
-        }
-        userMap.get(uid).totalSpent += entryFee;
-        userMap.get(uid).games.add(m.game);
-      }
-
-      // ADMIN SELECTED WINNERS
-      if (winnerIds.length > 0) {
-        const winners = userResults.filter(r => winnerIds.includes(String(r.userId)));
-
-        const prizeToSplit = m.prizeGiven || prizePool;
-
-        if (m.prizeSystem === "team_equal") {
-          const share = Math.round(prizeToSplit / (winners.length || 1));
-          winners.forEach(p => {
-            const uid = String(p.userId);
-            userMap.get(uid).totalWinnings += share;
-          });
-        } else {
-          const totalKills = winners.reduce((s, x) => s + (Number(x.kills || 0)), 0);
-          winners.forEach(p => {
-            const uid = String(p.userId);
-            const share = totalKills
-              ? Math.round((p.kills / totalKills) * prizeToSplit)
-              : Math.round(prizeToSplit / winners.length);
-            userMap.get(uid).totalWinnings += share;
-          });
-        }
-        continue;
-      }
-
-      // AUTO RESULT
-      if (m.type === "1v1") {
-        const top = [...userResults].sort((a, b) => b.kills - a.kills)[0];
-        if (top) {
-          userMap.get(String(top.userId)).totalWinnings += (top.prize || prizePool);
-        }
-      }
-    }
-
-    // FETCH USER DETAILS (NAME + AVATAR)
-    const userIds = [...userMap.keys()];
-    const users = await User.find(
-      { _id: { $in: userIds } },
-      { name: 1, avatarUrl: 1 }
-    ).lean();
-
-    const userInfo = new Map(
-      users.map(u => [String(u._id), u])
-    );
-
-    const leaderboard = [...userMap.entries()]
-      .map(([uid, data]) => {
-        const user = userInfo.get(uid) || {};
-        const netWin = (data.totalWinnings || 0) - (data.totalSpent || 0);
-
-        return {
-          userId: uid,
-          player: user.name || "Unknown",
-          avatar: user.avatarUrl || "",
-          game: [...data.games].join(", "),
-          netWin
-        };
-      })
-      .sort((a, b) => b.netWin - a.netWin)
-      .map((u, i) => ({ ...u, rank: i + 1 }));
-
-    res.json({ success: true, leaderboard });
-
-  } catch (err) {
-    console.error("Leaderboard Error:", err);
-    res.status(500).json({ success: false, msg: "Server Error" });
-  }
-});
-
-
-
-router.get("/leaderboard", auth, async (req, res) => {
-  try {
-    const { date, game } = req.query;
-
-    let start = date ? new Date(date) : new Date("2000-01-01");
-    let end = date ? new Date(date) : new Date();
-    if (date) { start.setHours(0,0,0,0); end.setHours(23,59,59,999); }
-
-    const userMap = new Map();
-const matches = await QuickMatch.find({
-  status: "completed",
-  createdAt: { $gte: start, $lte: end },
-  ...(game ? { game } : {})
-}).limit(200)   // VERY IMPORTANT
-.lean();
-
-    
-
-    for (const m of matches) {
-      const entryFee = Number(m.entryFee || 0);
-      const totalPlayers = (m.players || []).length || 1;
-      const totalCollected = entryFee * totalPlayers;
-      const prizePool = Math.max(0, totalCollected - Math.round(totalCollected * 0.08));
-
-      const winnerIds = (m.winnerIds || []).map(id => String(id));
-      const userResults = Array.isArray(m.userResults) ? m.userResults : [];
-
-      // Add spend for all players
-      const allPlayers = (m.players || []).map(p => {
-        if (!p || !p.userId) return null;
-        return typeof p.userId === "object" ? String(p.userId._id || p.userId) : String(p.userId);
-      }).filter(Boolean);
-
-      for (const uid of allPlayers) {
-        if (!userMap.has(uid)) userMap.set(uid, { userId: uid, name: "Unknown", totalWinnings: 0, totalSpent: 0 });
-        userMap.get(uid).totalSpent += entryFee;
-      }
-
-      // If admin selected winners, use those winnerIds + m.prizeGiven
-      if (winnerIds.length > 0) {
-        // winnerPlayers details from userResults (which were saved by admin)
-        const winnerPlayers = userResults.filter(r => winnerIds.includes(String(r.userId)));
-
-        // if team_equal
-        if (m.prizeSystem === "team_equal") {
-          const share = Math.round((m.prizeGiven || prizePool) / (winnerPlayers.length || 1));
-          for (const p of winnerPlayers) {
-            const uid = String(p.userId);
-            if (!userMap.has(uid)) userMap.set(uid, { userId: uid, name: "Unknown", totalWinnings: 0, totalSpent: 0 });
-            userMap.get(uid).totalWinnings += share;
-          }
-        } else { // kill_based
-          const totalTeamKills = winnerPlayers.reduce((s, x) => s + (Number(x.kills || 0)), 0);
-          if (totalTeamKills > 0) {
-            for (const p of winnerPlayers) {
-              const uid = String(p.userId);
-              const share = Math.round(((Number(p.kills || 0)) / totalTeamKills) * (m.prizeGiven || prizePool));
-              if (!userMap.has(uid)) userMap.set(uid, { userId: uid, name: "Unknown", totalWinnings: 0, totalSpent: 0 });
-              userMap.get(uid).totalWinnings += share;
-            }
-          } else {
-            // equal split fallback
-            const share = Math.round((m.prizeGiven || prizePool) / (winnerPlayers.length || 1));
-            for (const p of winnerPlayers) {
-              const uid = String(p.userId);
-              if (!userMap.has(uid)) userMap.set(uid, { userId: uid, name: "Unknown", totalWinnings: 0, totalSpent: 0 });
-              userMap.get(uid).totalWinnings += share;
-            }
-          }
-        }
-        continue; // next match
-      }
-
-      // If no admin winners, fallback to old (auto) logic
-      if (m.type === "1v1") {
-        const sorted = [...userResults].sort((a, b) => (b.kills || 0) - (a.kills || 0));
-        const top = sorted[0];
-        if (top) {
-          const uid = String(top.userId);
-          const prize = top.prize || m.prizeGiven || prizePool;
-          if (!userMap.has(uid)) userMap.set(uid, { userId: uid, name: "Unknown", totalWinnings: 0, totalSpent: 0 });
-          userMap.get(uid).totalWinnings += prize;
-        }
-      } else {
-        // team auto-detect
-        const teamKills = {};
-        userResults.forEach(r => {
-          teamKills[r.team] = (teamKills[r.team] || 0) + (Number(r.kills || 0));
-        });
-
-        const winnerTeam = Object.keys(teamKills).sort((a, b) => (teamKills[b] || 0) - (teamKills[a] || 0))[0];
-        const winnerPlayers = userResults.filter(r => r.team === winnerTeam);
-
-        if (winnerPlayers.length) {
-          if (m.prizeSystem === "team_equal") {
-            const share = Math.round((m.prizeGiven || prizePool) / (winnerPlayers.length || 1));
-            winnerPlayers.forEach(p => {
-              const uid = String(p.userId);
-              if (!userMap.has(uid)) userMap.set(uid, { userId: uid, name: "Unknown", totalWinnings: 0, totalSpent: 0 });
-              userMap.get(uid).totalWinnings += share;
-            });
-          } else { // kill_based
-            const totalTeamKills = winnerPlayers.reduce((s, x) => s + (Number(x.kills || 0)), 0);
-            if (totalTeamKills > 0) {
-              winnerPlayers.forEach(p => {
-                const uid = String(p.userId);
-                const share = Math.round(((p.kills || 0) / totalTeamKills) * (m.prizeGiven || prizePool));
-                if (!userMap.has(uid)) userMap.set(uid, { userId: uid, name: "Unknown", totalWinnings: 0, totalSpent: 0 });
-                userMap.get(uid).totalWinnings += share;
-              });
-            } else {
-              const share = Math.round((m.prizeGiven || prizePool) / (winnerPlayers.length || 1));
-              winnerPlayers.forEach(p => {
-                const uid = String(p.userId);
-                if (!userMap.has(uid)) userMap.set(uid, { userId: uid, name: "Unknown", totalWinnings: 0, totalSpent: 0 });
-                userMap.get(uid).totalWinnings += share;
-              });
-            }
-          }
-        }
-      }
-    }
-
-    // Attach names for user IDs
-    const allUserIds = Array.from(userMap.keys());
-    const users = await User.find({ _id: { $in: allUserIds } }, { name: 1 }).lean();
-    const nameMap = new Map(users.map(u => [String(u._id), u.name || "Unknown"]));
-    for (const uid of allUserIds) {
-      const entry = userMap.get(uid);
-      if (!entry) continue;
-      entry.name = nameMap.get(uid) || "Unknown";
-    }
-
-    const leaderboard = Array.from(userMap.values())
-      .map(u => ({ ...u, netWin: (u.totalWinnings || 0) - (u.totalSpent || 0) }))
-      .sort((a, b) => b.netWin - a.netWin)
-      .map((u, i) => ({ ...u, rank: i + 1 }));
-
-    res.json({ success: true, leaderboard });
-
-  } catch (err) {
-    console.error("Leaderboard Error:", err);
-    res.status(500).json({ success: false, msg: "Server Error", error: err.message });
-  }
-});
-
 
 
 

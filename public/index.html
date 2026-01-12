@@ -183,39 +183,51 @@
     </div>
 
 <script>
-  setTimeout(async () => {
-    const token = localStorage.getItem("token");
+setTimeout(async () => {
+  const token = localStorage.getItem("token");
+  const biometricEnabled = localStorage.getItem("biometricEnabled") === "true";
 
-    // ❌ No token → login
-    if (!token) {
-      location.replace("auth.html");
-      return;
+  // ❌ No token → login
+  if (!token) {
+    location.replace("auth.html");
+    return;
+  }
+
+  try {
+    // 🔐 If biometric enabled → ask Android
+    if (biometricEnabled && window.AndroidBiometric) {
+      AndroidBiometric.authenticate();
+      return; // wait for Android callback
     }
 
-    try {
-      const res = await fetch(
-        "https://battlepurse-98-8d98.onrender.com/api/wallet/me",
-        {
-          headers: {
-            Authorization: "Bearer " + token
-          }
-        }
-      );
+    // Otherwise validate token normally
+    const res = await fetch(
+      "https://battlepurse-98-8d98.onrender.com/api/wallet/me",
+      { headers: { Authorization: "Bearer " + token } }
+    );
 
-      // ✅ Token valid → go to game
-      if (res.ok) {
-        location.replace("gamezone.html");
-      } else {
-        // ❌ Token expired / invalid
-        localStorage.removeItem("token");
-        location.replace("auth.html");
-      }
-
-    } catch (err) {
+    if (res.ok) {
+      location.replace("gamezone.html");
+    } else {
+      localStorage.clear();
       location.replace("auth.html");
     }
-  }, 2800);
+
+  } catch (err) {
+    location.replace("auth.html");
+  }
+}, 2800);
+
+// ✅ Android callbacks
+function biometricSuccess() {
+  location.replace("gamezone.html");
+}
+
+function biometricFailed() {
+  location.replace("auth.html");
+}
 </script>
+
 
 
 </body>
