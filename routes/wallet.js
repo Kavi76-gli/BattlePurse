@@ -1141,117 +1141,74 @@ router.get("/admin/users", adminAuth, async (req, res) => {
 // ✅ 2. Ban a User
 // ✅ Ban a User (Admin)
 // ✅ Ban User
-
-
+// Ban user
+// Ban User
+// Ban user
+// Ban user
 router.put("/admin/ban/:id", adminAuth, async (req, res) => {
   try {
-    const { id } = req.params;
-
-    // ✅ Validate MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        msg: "Invalid user ID"
-      });
-    }
-
-    const user = await User.findById(id);
-
+    const user = await User.findById(req.params.id);
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        msg: "User not found"
-      });
+      return res.status(404).json({ success: false, msg: "User not found" });
     }
 
-    // ✅ Already banned
+    // If already banned
     if (user.banned) {
       return res.json({
-        success: true,
+        success: false,
         msg: "User is already banned",
-        user: {
-          id: user._id,
-          banned: true
-        }
+        user: { id: user._id, banned: user.banned }
       });
     }
 
+    // Ban the user
     user.banned = true;
     await user.save();
 
     res.json({
       success: true,
       msg: "User banned successfully",
-      user: {
-        id: user._id,
-        banned: true
-      }
+      user: { id: user._id, banned: user.banned }
     });
 
   } catch (err) {
     console.error("Ban error:", err);
-    res.status(500).json({
-      success: false,
-      msg: "Failed to ban user"
-    });
+    res.status(500).json({ success: false, msg: "Failed to ban user" });
   }
 });
-
-
-// ✅ Unban User
+// Unban user
 router.put("/admin/unban/:id", adminAuth, async (req, res) => {
   try {
-    const { id } = req.params;
-
-    // ✅ Validate MongoDB ID
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        msg: "Invalid user ID"
-      });
-    }
-
-    const user = await User.findById(id);
-
+    const user = await User.findById(req.params.id);
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        msg: "User not found"
-      });
+      return res.status(404).json({ success: false, msg: "User not found" });
     }
 
-    // ✅ Already unbanned
+    // If already active
     if (!user.banned) {
       return res.json({
-        success: true,
+        success: false,
         msg: "User is already active",
-        user: {
-          id: user._id,
-          banned: false
-        }
+        user: { id: user._id, banned: user.banned }
       });
     }
 
+    // Unban the user
     user.banned = false;
     await user.save();
 
     res.json({
       success: true,
       msg: "User unbanned successfully",
-      user: {
-        id: user._id,
-        banned: false
-      }
+      user: { id: user._id, banned: user.banned }
     });
 
   } catch (err) {
     console.error("Unban error:", err);
-    res.status(500).json({
-      success: false,
-      msg: "Failed to unban user"
-    });
+    res.status(500).json({ success: false, msg: "Failed to unban user" });
   }
 });
+
 
 
 // ✅ 2. Ban a User

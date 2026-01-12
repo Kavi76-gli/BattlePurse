@@ -226,7 +226,10 @@ function renderUsers(users) {
           </div>
         </div>
 
+
+
         <div class="actions">
+         
           <button
             class="ban-btn ${u.banned ? 'unban' : 'ban'}"
             onclick="toggleBan(this, '${u.id}', ${u.banned})">
@@ -287,11 +290,20 @@ async function toggleBan(btn, userId, isBanned) {
 
     const data = await res.json();
 
-    alert(data.msg || "Action completed");
-
-    if (data.success) {
-      await loadUsers(); // 🔄 refresh UI
+    if (!data.success) {
+      alert(data.msg || "Action failed");
+      return;
     }
+
+    // 🔄 Update the single user in `allUsers` instead of full reload
+    const index = allUsers.findIndex(u => u._id === userId);
+    if (index !== -1) {
+      allUsers[index].banned = !isBanned; // toggle locally
+    }
+
+    renderUsers(allUsers);
+
+    alert(data.msg || "Action completed");
 
   } catch (err) {
     console.error("Toggle ban error:", err);
