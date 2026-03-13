@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin - Pending Deposits</title>
+<link rel="stylesheet" href="global.css">
   <style>
     body {
       font-family: 'Poppins', sans-serif;
@@ -148,7 +149,7 @@ body{
   async function fetchDeposits() {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("https://battlepurse-98-8d98.onrender.com/api/wallet/admin/pending-deposits", {
+      const res = await fetch("https://battlepurse-t4yn.onrender.com/api/wallet/admin/pending-deposits", {
         headers: {
           "Authorization": `Bearer ${token}`
         }
@@ -183,7 +184,7 @@ body{
 
   async function approveDeposit(id) {
     const token = localStorage.getItem("token");
-    const res = await fetch("https://battlepurse-98-8d98.onrender.com/api/wallet/admin/approve-deposit", {
+    const res = await fetch("https://battlepurse-t4yn.onrender.com/api/wallet/admin/approve-deposit", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -199,7 +200,7 @@ body{
 
   async function rejectDeposit(id) {
     const token = localStorage.getItem("token");
-    const res = await fetch("https://battlepurse-98-8d98.onrender.com/api/wallet/admin/reject-deposit", {
+    const res = await fetch("https://battlepurse-t4yn.onrender.com/api/wallet/admin/reject-deposit", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -295,6 +296,6 @@ document.addEventListener("touchend", e=>{
 });
 
 </script>
-
+<script src="nav.js"></script>
 </body>
 </html>

@@ -522,7 +522,7 @@ router.get("/profile", auth, async (req, res) => {
 
     // ✅ Android WebView safe avatar URL
     const avatarUrl = user.avatar
-      ? `https://battlepurse-98-8d98.onrender.com/uploads/avatars/${user.avatar}`
+      ? `https://battlepurse-t4yn.onrender.com/uploads/avatars/${user.avatar}`
       : null;
 
     res.json({
@@ -726,7 +726,7 @@ router.post(
       );
 
       // ✅ FORCE HTTPS URL (important for APK WebView)
-      const avatarUrl = `https://battlepurse-98-8d98.onrender.com/uploads/avatars/${req.file.filename}`;
+      const avatarUrl = `https://battlepurse-t4yn.onrender.com/uploads/avatars/${req.file.filename}`;
 
       res.json({
         success: true,
@@ -1110,7 +1110,7 @@ router.get("/admin/users", adminAuth, async (req, res) => {
         const balance = wallet ? wallet.balance : 0;
 
         const avatarUrl = user.avatar
-          ? `https://battlepurse-98-8d98.onrender.com/uploads/avatars/${user.avatar}`
+          ? `https://battlepurse-t4yn.onrender.com/uploads/avatars/${user.avatar}`
           : null;
 
         return {
@@ -1283,7 +1283,7 @@ router.get('/admin/user/:id', adminAuth, async (req, res) => {
 
     // 5️⃣ Avatar URL (Android-safe)
     const avatarUrl = user.avatar
-      ? `https://battlepurse-98-8d98.onrender.com/uploads/avatars/${user.avatar}`
+      ? `https://battlepurse-t4yn.onrender.com/uploads/avatars/${user.avatar}`
       : null;
 
     res.json({
@@ -1343,7 +1343,7 @@ router.get("/tournaments", async (req, res) => {
         if (typeof t.poster === "string" && t.poster.startsWith("http")) {
           posterUrl = t.poster;
         } else {
-          posterUrl = `https://battlepurse-98-8d98.onrender.com/uploads/poster/${t.poster}`;
+          posterUrl = `https://battlepurse-t4yn.onrender.com/uploads/poster/${t.poster}`;
         }
       }
 
@@ -1513,7 +1513,7 @@ router.get("/tournaments/:id", auth, async (req, res) => {
 
       // ✅ unified image field
       posterUrl: tournament.poster
-        ? `https://battlepurse-98-8d98.onrender.com/uploads/${tournament.poster}`
+        ? `https://battlepurse-t4yn.onrender.com/uploads/${tournament.poster}`
         : null,
 
       roomId: joinedUser ? tournament.roomId : null,
@@ -1549,7 +1549,7 @@ router.get("/tournaments/:id", auth, async (req, res) => {
       prizePool: tournament.prizePool,
       maxPlayers: tournament.maxPlayers,
       poster: tournament.poster 
-        ? `https://battlepurse-98-8d98.onrender.com/uploads/${tournament.poster}` // ✅ return full image URL
+        ? `https://battlepurse-t4yn.onrender.com/uploads/${tournament.poster}` // ✅ return full image URL
         : null,
       roomId: joinedUser ? tournament.roomId : null,
       roomPassword: joinedUser ? tournament.roomPassword : null,
@@ -1976,7 +1976,7 @@ router.post(
       });
 
       // ✅ build URL only for response
-      const posterUrl = `https://battlepurse-98-8d98.onrender.com/uploads/poster/${posterFileName}`;
+      const posterUrl = `https://battlepurse-t4yn.onrender.com/uploads/poster/${posterFileName}`;
 
       res.json({
         success: true,
@@ -2042,7 +2042,7 @@ router.post(
       });
 
       const imageUrls = imageFiles.map(f =>
-        `https://battlepurse-98-8d98.onrender.com/uploads/promos/${f}`
+        `https://battlepurse-t4yn.onrender.com/uploads/promos/${f}`
       );
 
       res.json({
@@ -2076,7 +2076,7 @@ router.get("/promos", async (req, res) => {
       imageUrls: p.images.map(img =>
         img.startsWith("http")
           ? img // backward safety
-          : `https://battlepurse-98-8d98.onrender.com/uploads/promos/${img}`
+          : `https://battlepurse-t4yn.onrender.com/uploads/promos/${img}`
       )
     }));
 
@@ -2256,7 +2256,7 @@ router.get("/results/:tournamentId", authAdmin, async (req, res) => {
       results: (tournament.results || []).map(r => ({
         id: r._id,
         screenshot: r.screenshot
-          ? `https://battlepurse-98-8d98.onrender.com/uploads/${r.screenshot}` // ✅ Correct: serve actual file
+          ? `https://battlepurse-t4yn.onrender.com/uploads/${r.screenshot}` // ✅ Correct: serve actual file
           : null,
         uploadedAt: r.uploadedAt,
         user: r.userId
@@ -3149,7 +3149,7 @@ router.get("/leaderboard/:tournamentId", async (req, res) => {
       if (w && w.userId) {
         // use full URL if avatar exists
         const avatarUrl = w.userId.avatar
-          ? `https://battlepurse-98-8d98.onrender.com/uploads/avatars/${w.userId.avatar}`
+          ? `https://battlepurse-t4yn.onrender.com/uploads/avatars/${w.userId.avatar}`
           : "https://cdn-icons-png.flaticon.com/512/147/147144.png";
 
         return {
@@ -5928,7 +5928,7 @@ router.get("/leaderboard", auth, async (req, res) => {
     const userInfo = new Map(
       users.map(u => {
         const avatarUrl = u.avatar
-          ? `https://battlepurse-98-8d98.onrender.com/uploads/avatars/${u.avatar}`
+          ? `https://battlepurse-t4yn.onrender.com/uploads/avatars/${u.avatar}`
           : null;
         return [String(u._id), { name: u.name || "Player", avatarUrl }];
       })
@@ -7011,7 +7011,7 @@ router.get("/matches/winners", async (req, res) => {
       // helper to build avatar URL like profile
       const buildAvatar = user =>
         user?.avatar
-          ? `https://battlepurse-98-8d98.onrender.com/uploads/avatars/${user.avatar}`
+          ? `https://battlepurse-t4yn.onrender.com/uploads/avatars/${user.avatar}`
           : null;
 
       /* =======================
@@ -8220,7 +8220,7 @@ router.post(
       await config.save();
 
       const qrImageUrl = config.qrImage
-        ? `https://battlepurse-98-8d98.onrender.com/uploads/qr/${config.qrImage}`
+        ? `https://battlepurse-t4yn.onrender.com/uploads/qr/${config.qrImage}`
         : null;
 
       res.json({
@@ -8254,7 +8254,7 @@ router.get("/payment-config", async (req, res) => {
     }
 
     const qrImageUrl = config.qrImage
-      ? `https://battlepurse-98-8d98.onrender.com/uploads/qr/${config.qrImage}`
+      ? `https://battlepurse-t4yn.onrender.com/uploads/qr/${config.qrImage}`
       : null;
 
     res.json({

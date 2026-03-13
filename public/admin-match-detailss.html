@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Admin - Match Room Details</title>
+<link rel="stylesheet" href="global.css">
 <style>
   :root{--bg:#0b0b0b;--card:#0f1724;--muted:#9ca3af;--accent:#6366f1;--success:#10b981;}
   body{font-family:'Poppins',sans-serif;background:var(--bg);color:#e6eef8;margin:0;padding:20px;}
@@ -156,7 +157,7 @@
 
 <script>
 (function(){
-  const API_BASE = "https://battlepurse-98-8d98.onrender.com/api/wallet";
+  const API_BASE = "https://battlepurse-t4yn.onrender.com/api/wallet";
   const params = new URLSearchParams(window.location.search);
   const matchId = params.get('matchId');
 
@@ -410,6 +411,6 @@ document.addEventListener("touchend", e=>{
 });
 
 </script>
-
+<script src="nav.js"></script>
 </body>
 </html>

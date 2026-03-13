@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin | Tournament Players & Management</title>
+  <link rel="stylesheet" href="global.css">
   <style>
     body {
       background: #0a0a0a;
@@ -351,14 +352,14 @@ const token = localStorage.getItem("token") || "YOUR_ADMIN_TOKEN_HERE";
 const params = new URLSearchParams(window.location.search);
 const tournamentId = params.get("id");
 
-const API_URL = `https://battlepurse-98-8d98.onrender.com/api/wallet/tournaments`;
-const RESULT_URL = `https://battlepurse-98-8d98.onrender.com/api/wallet/results`;
-const GAME_URL = `https://battlepurse-98-8d98.onrender.com/api/wallet`;
-const PROMO_URL = `https://battlepurse-98-8d98.onrender.com/api/wallet/promos`;
-const UPLOADS_BASE = "https://battlepurse-98-8d98.onrender.com/uploads";
-const API_BASE = "https://battlepurse-98-8d98.onrender.com/api/wallet";
+const API_URL = `https://battlepurse-t4yn.onrender.com/api/wallet/tournaments`;
+const RESULT_URL = `https://battlepurse-t4yn.onrender.com/api/wallet/results`;
+const GAME_URL = `https://battlepurse-t4yn.onrender.com/api/wallet`;
+const PROMO_URL = `https://battlepurse-t4yn.onrender.com/api/wallet/promos`;
+const UPLOADS_BASE = "https://battlepurse-t4yn.onrender.com/uploads";
+const API_BASE = "https://battlepurse-t4yn.onrender.com/api/wallet";
 // 🔗 BACKEND SERVER URL
-const BACKEND_URL = "https://battlepurse-98-8d98.onrender.com";
+const BACKEND_URL = "https://battlepurse-t4yn.onrender.com";
 
 
 let assignedPositions = new Set();
@@ -661,7 +662,7 @@ const TOKEN =
 
 
 
-const SERVER_BASE = "https://battlepurse-98-8d98.onrender.com";
+const SERVER_BASE = "https://battlepurse-t4yn.onrender.com";
 
 
 const posterForm = document.getElementById("posterForm");
@@ -852,5 +853,6 @@ document.addEventListener("touchend", e => {
 
 
 </script>
+<script src="nav.js"></script>
 </body>
 </html> 

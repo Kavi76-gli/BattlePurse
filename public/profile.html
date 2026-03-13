@@ -4,191 +4,264 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Profile</title>
-
+<link rel="stylesheet" href="global.css">
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
-:root {
-  --primary: #00faff;
-  --bg: #121212;
-  --card: #1c1c1c;
+:root{
+  --primary:#00faff;
+  --bg:#0e1117;
+  --card:#161b22;
+  --text:#e6f1ff;
+  --muted:#9fb3c8;
+  --border:#00faff22;
 }
 
-* {
-  box-sizing: border-box;
-  font-family: 'Poppins', sans-serif;
-  -webkit-tap-highlight-color: transparent;
+/* ================= RESET ================= */
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  font-family:'Poppins',system-ui,sans-serif;
+  -webkit-tap-highlight-color:transparent;
 }
 
-body {
-  margin: 0;
-  background: var(--bg);
-  color: #fff;
-  padding-bottom: 70px;
+html, body{
+  width:100%;
 }
 
-/* 🔝 APP BAR */
-.app-bar {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  height: 56px;
-  background: #1a1a1a;
-  display: flex;
-  align-items: center;
-  padding: 0 14px;
-  box-shadow: 0 3px 8px #00000080;
+body{
+  background:var(--bg);
+  color:var(--text);
+  overflow-x:hidden;
+  overflow-y:auto;
 }
 
-.app-bar button {
-  background: none;
-  border: none;
-  color: var(--primary);
-  font-size: 22px;
-  margin-right: 12px;
-  cursor: pointer;
+/* ================= APP BAR ================= */
+/* header already fixed in global.css – keep visuals only */
+.app-bar{
+  height:68px;
+  background:#0b0f14;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:0 16px;
+  border-bottom:1px solid var(--border);
 }
 
-.app-title {
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--primary);
+.app-bar button{
+  background:none;
+  border:none;
+  color:var(--primary);
+  font-size:22px;
+  cursor:pointer;
 }
 
-/* 📦 CONTENT */
-.container {
-  max-width: 480px;
-  margin: 14px auto;
-  padding: 18px;
-  background: var(--card);
-  border-radius: 18px;
-  box-shadow: 0 0 14px #00faff33;
+.app-title{
+  font-size:18px;
+  font-weight:700;
+  color:var(--primary);
 }
 
-/* 👤 AVATAR */
-.avatar {
-  width: 110px;
-  height: 110px;
-  border-radius: 50%;
-  margin: 10px auto;
-  display: block;
-  border: 3px solid var(--primary);
-  object-fit: cover;
+/* ================= PAGE CONTENT ================= */
+/* 🔥 DO NOT use height / vh / calc here */
+.page{
+  width:100%;
+  padding:16px;
 }
 
-.upload-btn {
-  text-align: center;
-  margin-bottom: 14px;
+/* 🔥 THIS IS THE KEY FIX */
+.page::after{
+  content:"";
+  display:block;
+  height:96px; /* bottom-nav safe space */
 }
 
-.upload-btn input {
-  font-size: 12px;
+/* ================= CONTENT CARD ================= */
+.container{
+  width:100%;
+  max-width:560px;
+  margin:0 auto 24px;
+  background:var(--card);
+  padding:20px;
+  border-radius:20px;
+  border:1px solid var(--border);
+  box-shadow:0 0 20px #00faff22;
 }
 
-/* ℹ USER INFO */
-.user-info {
-  text-align: center;
-  margin-bottom: 14px;
+/* ================= AVATAR ================= */
+.avatar{
+  width:110px;
+  height:110px;
+  border-radius:50%;
+  margin:16px auto 10px;
+  display:block;
+  object-fit:cover;
+  border:3px solid var(--primary);
 }
 
-.user-info div {
-  font-size: 14px;
-  margin: 5px 0;
+.upload-btn{
+  text-align:center;
+  font-size:13px;
+  color:var(--muted);
+  margin-bottom:16px;
 }
 
-/* ✏ INPUTS */
-label {
-  display: block;
-  margin-top: 14px;
-  font-size: 13px;
-  font-weight: 600;
+/* ================= USER INFO ================= */
+.user-info{
+  text-align:center;
+  margin-bottom:18px;
 }
 
-input {
-  width: 100%;
-  padding: 12px;
-  margin-top: 6px;
-  border-radius: 12px;
-  border: none;
-  background: #111;
-  color: #fff;
-  box-shadow: inset 0 0 5px #00faff44;
+.user-info div{
+  font-size:14px;
+  margin:6px 0;
+  word-break:break-word;
 }
 
-/* 💰 WALLET */
-.wallet {
-  margin: 18px 0;
-  padding: 16px;
-  text-align: center;
-  font-size: 18px;
-  background: #191919;
-  border-radius: 14px;
-  box-shadow: 0 0 12px #00faff66;
+/* ================= FORM ================= */
+label{
+  display:block;
+  margin-top:14px;
+  font-size:13px;
+  color:var(--muted);
 }
 
-/* 🔘 BUTTONS */
-.button {
-  width: 100%;
-  padding: 14px;
-  border-radius: 30px;
-  border: none;
-  margin-bottom: 12px;
-  font-size: 16px;
-  font-weight: 700;
-  background: var(--primary);
-  color: #000;
-  cursor: pointer;
+input{
+  width:100%;
+  padding:14px;
+  margin-top:6px;
+  border-radius:14px;
+  border:1px solid #00faff33;
+  background:#0b0f14;
+  color:var(--text);
+  font-size:15px;
+  outline:none;
 }
 
-.button.secondary {
-  background: #333;
-  color: #fff;
+input:focus{
+  box-shadow:0 0 10px #00faff55;
 }
 
-/* 👮 ADMIN */
-#adminSection {
-  display: none;
-  margin-top: 18px;
-  text-align: center;
+input::placeholder{
+  color:#7fa7b5;
 }
 
-/* ⬇ BOTTOM NAV */
-footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  background: #1e1e1e;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  border-top: 1px solid #333;
+input:disabled{
+  opacity:.7;
+  cursor:not-allowed;
 }
 
-.nav-btn {
-  text-align: center;
-  font-size: 12px;
-  color: #aaa;
-  cursor: pointer;
+/* ================= WALLET ================= */
+.wallet{
+  margin:22px 0;
+  padding:22px;
+  text-align:center;
+  font-size:22px;
+  font-weight:800;
+  background:linear-gradient(180deg,#00faff33,#000);
+  border-radius:18px;
+  color:var(--primary);
 }
 
-.nav-btn.active {
-  color: var(--primary);
+/* ================= BUTTONS ================= */
+.button{
+  width:100%;
+  padding:15px;
+  border-radius:40px;
+  border:none;
+  margin-bottom:14px;
+  font-size:16px;
+  font-weight:700;
+  background:var(--primary);
+  color:#000;
+  cursor:pointer;
 }
 
-/* 🧭 Swipe Back Edge */
-.swipe-area {
-  position: fixed;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 24px;
-  z-index: 50;
+.button:active{
+  transform:scale(.98);
 }
-</style>
+
+.button.secondary{
+  background:#1a1a1a;
+  color:#fff;
+  border:1px solid #00faff33;
+}
+
+/* ================= ADMIN ================= */
+#adminSection{
+  display:none;
+  margin-top:18px;
+  padding:16px;
+  background:#0b0f14;
+  border-radius:16px;
+  border:1px dashed #00faff44;
+  text-align:center;
+}
+
+/* ================= MOBILE ================= */
+@media(max-width:480px){
+
+  .page{
+    padding:14px;
+  }
+
+  .page::after{
+    height:112px; /* extra space for mobile nav */
+  }
+
+  .container{
+    padding:16px;
+  }
+
+  .wallet{
+    font-size:20px;
+  }
+
+  .button{
+    font-size:15px;
+    padding:14px;
+  }
+}
+
+
+
+</style> 
+
 </head>
 
 <body>
+<!-- ================= HEADER ================= -->
+<div class="header">
+  <div class="logo">
+    <img src="battlepurse.jpeg" onerror="this.style.display='none'">
+  </div>
 
+  <div class="header-icons">
+    <i class="fa-solid fa-bell" onclick="goPage('notification.html')"></i>
+    <div class="balance" id="balance">₹0.00</div>
+    <i class="fa-solid fa-bars" onclick="toggleMenu()"></i>
+  </div>
+</div>
+
+<!-- ================= SIDE MENU ================= -->
+<div class="side-menu" id="sideMenu">
+  <div class="menu-header">
+    <h3>Menu</h3>
+    <button class="close-btn" onclick="toggleMenu()">×</button>
+  </div>
+  <ul class="menu-list">
+    <li onclick="goPage('profile.html')">Profile</li>
+    <li onclick="goPage('deposite.html')">Deposit</li>
+    <li onclick="goPage('withdral.html')">Withdraw</li>
+    <li onclick="goPage('transaction.html')">Transactions</li>
+    <li onclick="goPage('gamezone.html')">Game Zone</li>
+    <li onclick="goPage('kavi.html')">Free Fire/BGMI</li>
+    <li onclick="goPage('history.html')">History</li>
+    <li onclick="goPage('more.html')">Settings</li>
+    <li onclick="goPage('logout.html')">Logout</li>
+  </ul>
+</div>
 <!-- Swipe-back edge -->
 <div class="swipe-area"></div>
 
@@ -242,13 +315,29 @@ footer {
 
 </div>
 
-<footer>
-  <div class="nav-btn" onclick="location.href='gamezone.html'">🎮<br>Game</div>
-  <div class="nav-btn" onclick="location.href='history.html'">📜<br>History</div>
-  <div class="nav-btn" onclick="location.href='leaderboard.html'">🏆<br>Leaderboard</div>
-  <div class="nav-btn active">👤<br>Profile</div>
-  <div class="nav-btn" onclick="location.href='more.html'">⋯<br>More</div>
-</footer>
+<!-- ================= BOTTOM NAV ================= -->
+<div class="bottom-nav">
+  <div class="nav-item" data-page="leaderboard.html" onclick="goPage('leaderboard.html')">
+    <i class="fa-solid fa-trophy"></i><span>Leaderboard</span>
+  </div>
+
+  <div class="nav-item" data-page="history.html" onclick="goPage('history.html')">
+    <i class="fa-solid fa-clock"></i><span>History</span>
+  </div>
+
+  <div class="nav-item center" data-page="gamezone.html" onclick="goPage('gamezone.html')">
+    <i class="fa-solid fa-house"></i><span>Home</span>
+  </div>
+
+  <div class="nav-item" data-page="profile.html" onclick="goPage('profile.html')">
+    <i class="fa-solid fa-user"></i><span>Profile</span>
+  </div>
+
+  <div class="nav-item" data-page="more.html" onclick="goPage('more.html')">
+    <i class="fa-solid fa-gear"></i><span>Settings</span>
+  </div>
+</div>
+
 
 <script>
 /* ================= AUTH ================= */
@@ -289,7 +378,7 @@ const avatarInput = document.getElementById("avatarInput");
 async function loadProfile() {
   try {
     const res = await fetch(
-      "https://battlepurse-98-8d98.onrender.com/api/wallet/profile",
+      "https://battlepurse-t4yn.onrender.com/api/wallet/profile",
       {
         headers: { Authorization: "Bearer " + token }
       }
@@ -335,7 +424,7 @@ async function loadProfile() {
 
     // 💰 LOAD WALLET
     const wbRes = await fetch(
-      "https://battlepurse-98-8d98.onrender.com/api/wallet/balance",
+      "https://battlepurse-t4yn.onrender.com/api/wallet/balance",
       {
         headers: { Authorization: "Bearer " + token }
       }
@@ -371,7 +460,7 @@ async function uploadAvatar() {
 
   try {
     const res = await fetch(
-      "https://battlepurse-98-8d98.onrender.com/api/wallet/uploads-avatars",
+      "https://battlepurse-t4yn.onrender.com/api/wallet/uploads-avatars",
       {
         method: "POST",
         headers: {
@@ -399,10 +488,37 @@ async function uploadAvatar() {
   }
 }
 
+async function loadWalletBalance() {
+  const token = localStorage.getItem("token");
+  if (!token) return;
+
+  try {
+    const res = await fetch(
+      "https://battlepurse-t4yn.onrender.com/api/wallet/balance",
+      {
+        headers: {
+          Authorization: "Bearer " + token
+        }
+      }
+    );
+
+    const data = await res.json();
+
+    if (data.success) {
+      document.getElementById("balance").innerText =
+        "₹" + Number(data.balance || 0).toFixed(2);
+    }
+  } catch (err) {
+    console.error("❌ Wallet fetch error:", err);
+  }
+}
+
+// load on page start
+document.addEventListener("DOMContentLoaded", loadWalletBalance);
 
 
 window.onload = loadProfile;
 </script>
-
+<script src="nav.js"></script>
 </body>
 </html> 

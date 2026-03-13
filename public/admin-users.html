@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>Admin – Users</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
+<link rel="stylesheet" href="global.css">
 <style>
 * {
   box-sizing: border-box;
@@ -155,7 +155,7 @@ body {
 <div class="user-list" id="userList"></div>
 
 <script>
-const API_BASE = "https://battlepurse-98-8d98.onrender.com/api/wallet";
+const API_BASE = "https://battlepurse-t4yn.onrender.com/api/wallet";
 const token = localStorage.getItem("token");
 
 if (!token) {
@@ -316,7 +316,7 @@ function goBack() {
 /* ================= INIT ================= */
 window.onload = loadUsers;
 </script>
-
+<script src="nav.js"></script>
 </body>
 
 

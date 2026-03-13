@@ -1,0 +1,288 @@
+/* ==========================
+   1️⃣ RESET & BASE
+========================== */
+
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  font-family: Arial, system-ui, sans-serif;
+  background: #020617;
+  color: #9ff;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent mobile browser top overlay feeling */
+body {
+  padding-top: 76px;   /* HEADER HEIGHT */
+  padding-bottom: 80px; /* BOTTOM NAV HEIGHT */
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  outline: none;
+}
+
+/* ==========================
+   2️⃣ HEADER (TOP BAR)
+========================== */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 76px;
+  background: linear-gradient(180deg, #000000, #050505);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(212,175,55,0.45);
+  z-index: 2000;
+}
+
+.logo img {
+  height: 64px;
+  width: auto;
+  object-fit: contain;
+  filter: contrast(1.25) brightness(1.15);
+}
+
+.header-icons {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.header-icons i {
+  font-size: 20px;
+  color: #d4af37;
+  cursor: pointer;
+}
+
+.balance {
+  background: linear-gradient(135deg, #b8962e, #f3da8c);
+  color: #2b1a00;
+  padding: 6px 14px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* ==========================
+   3️⃣ SIDE MENU (DRAWER)
+========================== */
+.side-menu {
+  position: fixed;
+  top: 0;
+  left: -260px;
+  width: 240px;
+  height: 100%;
+  background: #0b0b0b;
+  z-index: 3000;
+  transition: left 0.3s ease;
+  box-shadow: 4px 0 20px rgba(0,0,0,0.6);
+}
+
+.menu-header {
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(212,175,55,0.35);
+}
+
+.menu-header h3 {
+  color: #d4af37;
+  font-size: 18px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 26px;
+  color: #d4af37;
+  cursor: pointer;
+}
+
+.menu-list {
+  list-style: none;
+}
+
+.menu-list li {
+  padding: 14px 16px;
+  color: #fff;
+  border-bottom: 1px solid #1a1a1a;
+  cursor: pointer;
+}
+
+.menu-list li:hover {
+  background: #151515;
+}
+
+/* ==========================
+   4️⃣ BOTTOM NAVIGATION
+========================== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 68px;
+  background: #0b0b0b;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.8);
+  z-index: 2500;
+}
+
+.nav-item {
+  flex: 1;
+  text-align: center;
+  font-size: 11px;
+  color: #777;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.nav-item i {
+  font-size: 20px;
+  margin-bottom: 2px;
+}
+
+.nav-item.active {
+  color: #d4af37;
+}
+
+/* CENTER HOME BUTTON */
+.nav-item.center {
+  transform: translateY(-18px);
+  background: linear-gradient(135deg, #d4af37, #f3da8c);
+  color: #2b1a00;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  box-shadow: 0 10px 22px rgba(212,175,55,0.45);
+}
+
+.nav-item.center i {
+  font-size: 22px;
+}
+
+/* ==========================
+   5️⃣ GAME CARD (UNCHANGED)
+========================== */
+.game-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #020b1a;
+  border: 1px solid rgba(0,255,255,0.2);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin: 10px;
+  color: #9ff;
+  box-shadow: 0 0 10px rgba(0,255,255,0.1);
+}
+
+.game-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.game-icon {
+  width: 50px;
+  height: 50px;
+  background: #00bfff;
+  color: #020617;
+  font-weight: bold;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.game-info h4 {
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.game-info p {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.game-info small {
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.game-right strong {
+  font-size: 18px;
+}
+
+.play-btn {
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: #00eaff;
+  color: #020617;
+  border-radius: 6px;
+}
+
+.play-btn.disabled {
+  background: #555;
+  cursor: not-allowed;
+}
+
+/* ==========================
+   6️⃣ MOBILE RESPONSIVE
+========================== */
+@media screen and (max-width: 480px) {
+
+  .game-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .game-right {
+    margin-top: 8px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .nav-item span {
+    font-size: 10px;
+  }
+
+  .nav-item i {
+    font-size: 16px;
+  }
+}
+/* ================= SIDE MENU FIX ================= */
+/* ================= SIDE MENU FIX ================= */
+/* ================= SIDE MENU FIX (RIGHT SIDE) ================= */
+/* ================= SIDE MENU (RIGHT SIDE) ================= */
+.side-menu.open { left: 0; /* slide in */ } .side-menu { position: fixed; top: 0; left: -260px; /* hidden */ width: 260px; height: 100%; background: #111; z-index: 9999; transition: left 0.3s ease; }

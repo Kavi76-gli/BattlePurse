@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Admin — Match Dashboard</title>
+<link rel="stylesheet" href="global.css">
 <style>
 body { font-family: 'Poppins', sans-serif; background:#0b0b0b; color:#fff; margin:0; padding:20px; }
 h1 { margin-bottom:20px; }
@@ -210,7 +211,7 @@ body{
 
 <script>
 /* --------- CONFIG ---------- */
-const API_BASE = 'https://battlepurse-98-8d98.onrender.com/api/wallet'; // adjust backend
+const API_BASE = 'https://battlepurse-t4yn.onrender.com/api/wallet'; // adjust backend
 const token = localStorage.getItem('token'); // admin token
 const headersWithAuth = () => ({ 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' });
 /* UI state */
@@ -613,5 +614,6 @@ document.addEventListener("touchend", e=>{
 
 
 </script>
+<script src="nav.js"></script>
 </body>
 </html>

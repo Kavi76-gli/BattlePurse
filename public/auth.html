@@ -3,31 +3,224 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Neon Auth</title>
+<title>BattlePurse • Auth</title>
+
+<link rel="stylesheet" href="global.css">
+
 <style>
-* { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-.app-header { position: fixed; top: 15px; left: 15px; z-index: 1000; }
-.app-header img { height: 45px; filter: drop-shadow(0 0 8px #ae00ff); }
-@media (max-width:480px){.app-header img{height:36px;}}
-body { margin:0; min-height:100vh; background:radial-gradient(circle at top, #1a002b, #000); display:flex; justify-content:center; align-items:center; padding:15px;}
-.container { width:100%; max-width:420px; background:rgba(0,0,0,0.75); padding:22px; border-radius:18px; box-shadow:0 0 30px #ae00ff99; }
-.toggle { display:flex; gap:10px; margin-bottom:20px; }
-.toggle button { flex:1; padding:12px; border-radius:10px; border:2px solid #ae00ff; background:transparent; color:#ae00ff; cursor:pointer; }
-.toggle button.active { background:#ae00ff; color:#000; }
-form { display:none; }
-form.active { display:block; }
-h2 { text-align:center; color:#ae00ff; }
-input { width:100%; padding:13px; margin:8px 0; border-radius:10px; border:none; background:#111; color:#ae00ff; }
-button.submit { width:100%; padding:13px; margin-top:12px; background:linear-gradient(135deg,#ae00ff,#ff00cc); border:none; border-radius:12px; font-weight:bold; cursor:pointer; }
-.link-btn { background:none; border:none; color:#ae00ff; margin-top:10px; cursor:pointer; }
-.timer { text-align:center; color:#aaa; }
+/* ================= ROOT ================= */
+:root{
+  --blue:#00faff;
+  --blue-glow:#00faff88;
+  --bg-dark:#020814;
+  --glass:rgba(6,18,32,.72);
+}
+
+/* ================= RESET ================= */
+*{
+  box-sizing:border-box;
+  font-family:'Poppins',sans-serif;
+}
+
+body{
+  margin:0;
+  min-height:100vh;
+  background:
+    radial-gradient(circle at top,#0a1f3a 0%, #020814 65%);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:18px;
+  color:#e6f1ff;
+}
+
+/* ================= APP HEADER ================= */
+.app-header{
+  position:fixed;
+  top:14px;
+  left:14px;
+  z-index:1000;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:10px 14px;
+  border-radius:18px;
+  background:rgba(0,15,30,.65);
+  backdrop-filter:blur(14px);
+  border:1px solid #00faff33;
+  box-shadow:0 0 16px #00faff44;
+}
+
+.logo-wrap img{
+  height:40px;
+  filter:
+    drop-shadow(0 0 6px var(--blue))
+    drop-shadow(0 0 14px var(--blue-glow));
+}
+
+.brand-text{
+  line-height:1.1;
+}
+
+.app-name{
+  font-size:18px;
+  font-weight:800;
+  letter-spacing:.8px;
+  color:var(--blue);
+  text-shadow:
+    0 0 8px var(--blue),
+    0 0 20px var(--blue-glow);
+}
+
+.app-tagline{
+  font-size:11px;
+  letter-spacing:.6px;
+  color:#9befff;
+  opacity:.85;
+}
+
+/* ================= AUTH CARD ================= */
+.container{
+  width:100%;
+  max-width:420px;
+  background:var(--glass);
+  backdrop-filter:blur(16px);
+  border-radius:24px;
+  padding:26px;
+  border:1px solid #00faff33;
+  box-shadow:
+    0 0 28px #00faff44,
+    inset 0 0 18px #00faff11;
+}
+
+/* ================= TOGGLE ================= */
+.toggle{
+  display:flex;
+  gap:12px;
+  margin-bottom:22px;
+}
+
+.toggle button{
+  flex:1;
+  padding:13px;
+  border-radius:16px;
+  background:transparent;
+  border:1px solid #00faff55;
+  color:var(--blue);
+  font-weight:600;
+  cursor:pointer;
+  transition:.3s;
+}
+
+.toggle button.active{
+  background:linear-gradient(135deg,#00faff,#007bff);
+  color:#001018;
+  box-shadow:0 0 18px var(--blue);
+}
+
+/* ================= FORMS ================= */
+form{display:none;}
+form.active{display:block;}
+
+h2{
+  text-align:center;
+  margin:8px 0 18px;
+  color:var(--blue);
+  letter-spacing:.6px;
+}
+
+/* ================= INPUT ================= */
+input{
+  width:100%;
+  padding:14px;
+  margin:9px 0;
+  border-radius:14px;
+  border:1px solid #00faff33;
+  background:#020914;
+  color:#e6f1ff;
+  outline:none;
+}
+
+input::placeholder{color:#7fa7b5;}
+
+input:focus{
+  border-color:var(--blue);
+  box-shadow:0 0 12px var(--blue-glow);
+}
+
+/* ================= BUTTONS ================= */
+.submit{
+  width:100%;
+  padding:14px;
+  margin-top:14px;
+  border-radius:18px;
+  border:none;
+  font-weight:700;
+  background:linear-gradient(135deg,#00faff,#006bff);
+  color:#001018;
+  cursor:pointer;
+  box-shadow:0 0 20px var(--blue-glow);
+}
+
+.submit:active{transform:scale(.97);}
+
+.link-btn{
+  background:none;
+  border:none;
+  color:var(--blue);
+  width:100%;
+  margin-top:12px;
+  cursor:pointer;
+  font-size:14px;
+}
+
+/* ================= TIMER ================= */
+.timer{
+  text-align:center;
+  margin-top:10px;
+  color:#9fb3c8;
+  font-size:13px;
+}
+
+/* ================= MOBILE ================= */
+@media(max-width:480px){
+  .app-header{
+    top:10px;
+    left:10px;
+    padding:8px 12px;
+  }
+
+  .logo-wrap img{height:34px;}
+
+  .app-name{font-size:15px;}
+  .app-tagline{font-size:10px;}
+
+  .container{
+    padding:22px;
+    border-radius:20px;
+  }
+}
 </style>
+
 </head>
 
 <body>
-<div class="app-header"><img src="file_00000000c938722f8d26b428d0c8069c.png"></div>
+
+<div class="app-header">
+  <div class="logo-wrap">
+    <img src="file_00000000c938722f8d26b428d0c8069c.png" alt="BattlePurse">
+  </div>
+
+  <div class="brand-text">
+    <div class="app-name">BattlePurse</div>
+    <div class="app-tagline">Play • Win • Withdraw</div>
+  </div>
+</div>
+
+
 <div class="container">
 
+<!-- TOGGLE -->
 <div class="toggle">
   <button id="loginBtn" class="active">Login</button>
   <button id="registerBtn">Register</button>
@@ -52,12 +245,14 @@ button.submit { width:100%; padding:13px; margin-top:12px; background:linear-gra
   <input id="regRePassword" type="password" placeholder="Confirm Password">
   <button type="button" class="submit" onclick="sendRegisterOTP()">Send Email OTP</button>
   <input id="regOtp" placeholder="Enter OTP" style="display:none">
-  <div id="regTimer" class="timer" style="display:none">Resend OTP in <span id="regCount">60</span>s</div>
+  <div id="regTimer" class="timer" style="display:none">
+    Resend OTP in <span id="regCount">60</span>s
+  </div>
   <button id="regResendBtn" class="link-btn" style="display:none" onclick="resendRegisterOTP()">Resend OTP</button>
   <button id="verifyBtn" class="submit" style="display:none" onclick="verifyRegisterOTP()">Verify & Register</button>
 </form>
 
-<!-- FORGOT PASSWORD -->
+<!-- FORGOT -->
 <form id="forgotForm">
   <h2>Reset Password</h2>
   <input id="fpMobile" placeholder="Mobile Number">
@@ -65,15 +260,20 @@ button.submit { width:100%; padding:13px; margin-top:12px; background:linear-gra
   <button type="button" class="submit" onclick="sendForgotOTP()">Send OTP</button>
   <input id="fpOtp" placeholder="OTP" style="display:none">
   <input id="fpNewPass" type="password" placeholder="New Password" style="display:none">
-  <div id="fpTimer" class="timer" style="display:none">Resend OTP in <span id="fpCount">60</span>s</div>
+  <div id="fpTimer" class="timer" style="display:none">
+    Resend OTP in <span id="fpCount">60</span>s
+  </div>
   <button id="fpResendBtn" class="link-btn" style="display:none" onclick="resendForgotOTP()">Resend OTP</button>
   <button id="fpVerifyBtn" class="submit" style="display:none" onclick="resetPassword()">Reset Password</button>
 </form>
 
 </div>
 
+
+
+
 <script>
-const API = "https://battlepurse-98-8d98.onrender.com/api/wallet";
+const API = "https://battlepurse-t4yn.onrender.com/api/wallet";
 
 const loginBtn = document.getElementById("loginBtn");
 const registerBtn = document.getElementById("registerBtn");
@@ -253,5 +453,6 @@ async function resetPassword(){
   }catch(e){alert("Reset failed: "+e.message);}
 }
 </script>
+<script src="nav.js"></script>
 </body>
 </html> 

@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Withdrawal Panel</title>
+  <link rel="stylesheet" href="global.css">
   <style>
     body {
       margin: 0;
@@ -161,7 +162,7 @@ body{
 
     async function fetchWithdrawals() {
       try {
-        const res = await fetch("https://battlepurse-98-8d98.onrender.com/api/wallet/admin/pending-withdrawals", {
+        const res = await fetch("https://battlepurse-t4yn.onrender.com/api/wallet/admin/pending-withdrawals", {
           headers: { Authorization: "Bearer " + token }
         });
         const data = await res.json();
@@ -176,7 +177,7 @@ body{
     async function updateStatus(id, status) {
       const route = status === 'approved' ? 'approve-withdrawal' : 'reject-withdrawal';
       try {
-        const res = await fetch(`https://battlepurse-98-8d98.onrender.com/api/wallet/admin/${route}`, {
+        const res = await fetch(`https://battlepurse-t4yn.onrender.com/api/wallet/admin/${route}`, {
           method: "POST",
           headers: {
             "Authorization": "Bearer " + token,
@@ -283,6 +284,6 @@ document.addEventListener("touchend", e=>{
 });
 
   </script>
-
+<script src="nav.js"></script>
 </body>
 </html>

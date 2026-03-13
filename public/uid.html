@@ -3,16 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <title>Join Tournament</title>
+  <link rel="stylesheet" href="global.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     body {
       background: #0a0a0a;
       color: #fff;
       font-family: 'Poppins', sans-serif;
       text-align: center;
-      padding: 30px;
+      padding: 20px;
+      margin: 0;
     }
-    h2 { color: #00faff; }
-    .inputBox { margin: 10px 0; }
+
+    h2 {
+      color: #00faff;
+      margin-bottom: 10px;
+      font-size: 1.8rem;
+    }
+
+    .inputBox {
+      margin: 10px 0;
+    }
+
     input {
       width: 80%;
       padding: 10px;
@@ -24,6 +36,7 @@
       background: #1c1c1c;
       color: #fff;
     }
+
     button {
       background: #00c853;
       border: none;
@@ -35,60 +48,246 @@
       margin-top: 15px;
       transition: 0.2s;
     }
-    button:hover { background: #009624; }
-    .info { margin: 10px 0; color: #bbb; }
 
+    button:hover {
+      background: #009624;
+    }
 
-    /* ================ SWIPE BACK ================= */
-/* SWIPE BACK EDGE */
-.swipe-area {
-  position: fixed;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 24px;
-  z-index: 50;
-}
+    .info {
+      margin: 10px 0;
+      color: #bbb;
+    }
 
-/* MOBILE TWEAKS */
-@media (max-width: 480px) {
-  h1 { font-size: 1.5rem; }
-  .app-header img { height: 34px; }
-}
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+    }
+
+    .header img {
+      height: 40px;
+    }
+
+    .header-icons {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .header-icons i {
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    .balance {
+      font-weight: bold;
+    }
+
+    /* Side Menu */
+    .side-menu {
+      position: fixed;
+      top: 0;
+      left: -250px;
+      width: 250px;
+      height: 100%;
+      background: #111;
+      color: #fff;
+      transition: 0.3s;
+      z-index: 100;
+      overflow-y: auto;
+      padding-top: 20px;
+    }
+
+    .side-menu.active {
+      left: 0;
+    }
+
+    .side-menu .menu-header {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 15px;
+      align-items: center;
+    }
+
+    .side-menu ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 20px;
+    }
+
+    .side-menu ul li {
+      padding: 12px 20px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .side-menu ul li:hover {
+      background: #222;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    /* App Bar */
+    .app-bar {
+      display: flex;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #333;
+      margin-bottom: 15px;
+    }
+
+    .app-bar button {
+      margin-right: 15px;
+    }
+
+    .app-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    /* Bottom nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: #111;
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0;
+      z-index: 50;
+      border-top: 1px solid #222;
+    }
+
+    .bottom-nav .nav-item {
+      color: #fff;
+      text-align: center;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+
+    .bottom-nav .nav-item i {
+      display: block;
+      font-size: 1.3rem;
+      margin-bottom: 2px;
+    }
+
+    /* Swipe area */
+    .swipe-area {
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 24px;
+      z-index: 50;
+    }
+
+    /* Mobile tweaks */
+    @media (max-width: 480px) {
+      h2 {
+        font-size: 1.4rem;
+      }
+
+      input {
+        width: 90%;
+      }
+
+      .bottom-nav .nav-item span {
+        font-size: 0.7rem;
+      }
+    }
   </style>
 </head>
 <body>
-  <!-- Swipe-back edge -->
-<div class="swipe-area"></div>
 
-<!-- APP BAR -->
-<div class="app-bar">
-  <button onclick="goBack()">←</button>
-  <div class="app-title">Tournament</div>
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">
+      <img src="battlepurse.jpeg" alt="Logo" onerror="this.style.display='none'">
+    </div>
+    <div class="header-icons">
+      <i class="fa-solid fa-bell" onclick="goPage('notification.html')"></i>
+      <div class="balance" id="balance">₹0.00</div>
+      <i class="fa-solid fa-bars" onclick="toggleMenu()"></i>
+    </div>
+  </div>
+
+  <!-- SIDE MENU -->
+  <!-- ================= SIDE MENU ================= -->
+<div class="side-menu" id="sideMenu">
+  <div class="menu-header">
+    <h3>Menu</h3>
+    <button class="close-btn" onclick="toggleMenu()">×</button>
+  </div>
+  <ul class="menu-list">
+    <li onclick="goPage('profile.html')">Profile</li>
+    <li onclick="goPage('deposite.html')">Deposit</li>
+    <li onclick="goPage('withdral.html')">Withdraw</li>
+    <li onclick="goPage('transaction.html')">Transactions</li>
+    <li onclick="goPage('gamezone.html')">Game Zone</li>
+    <li onclick="goPage('kavi.html')">Free Fire/BGMI</li>
+    <li onclick="goPage('history.html')">History</li>
+    <li onclick="goPage('more.html')">Settings</li>
+    <li onclick="goPage('logout.html')">Logout</li>
+  </ul>
 </div>
 
+  <!-- SWIPE BACK AREA -->
+  <div class="swipe-area"></div>
+
+  <!-- APP BAR -->
+  <div class="app-bar">
+    <button onclick="goBack()">←</button>
+    <div class="app-title">Tournament</div>
+  </div>
+
+  <!-- TOURNAMENT INFO -->
   <h2 id="tName">Loading tournament...</h2>
   <p id="tMode"></p>
   <div id="uidContainer"></div>
   <button onclick="submitJoin()">Join Tournament</button>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="nav-item" data-page="leaderboard.html" onclick="goPage('leaderboard.html')">
+      <i class="fa-solid fa-trophy"></i><span>Leaderboard</span>
+    </div>
+    <div class="nav-item" data-page="history.html" onclick="goPage('history.html')">
+      <i class="fa-solid fa-clock"></i><span>History</span>
+    </div>
+    <div class="nav-item center" data-page="gamezone.html" onclick="goPage('gamezone.html')">
+      <i class="fa-solid fa-house"></i><span>Home</span>
+    </div>
+    <div class="nav-item" data-page="profile.html" onclick="goPage('profile.html')">
+      <i class="fa-solid fa-user"></i><span>Profile</span>
+    </div>
+    <div class="nav-item" data-page="more.html" onclick="goPage('more.html')">
+      <i class="fa-solid fa-gear"></i><span>Settings</span>
+    </div>
+  </div>
 
   <script>
     const token = localStorage.getItem('token');
     const params = new URLSearchParams(window.location.search);
     const tournamentId = params.get('id');
 
-    const TOURNAMENT_URL = `https://battlepurse-98-8d98.onrender.com/api/wallet/tournaments/${tournamentId}`;
-    const JOIN_URL = `https://battlepurse-98-8d98.onrender.com/api/wallet/join/${tournamentId}`;
+    const TOURNAMENT_URL = `https://battlepurse-t4yn.onrender.com/api/wallet/tournaments/${tournamentId}`;
+    const JOIN_URL = `https://battlepurse-t4yn.onrender.com/api/wallet/join/${tournamentId}`;
 
     let mode = 'solo';
     let requiredUids = 1;
 
-    // Load tournament details
     async function loadTournament() {
       try {
-        const res = await fetch(TOURNAMENT_URL, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await fetch(TOURNAMENT_URL, { headers: { Authorization: `Bearer ${token}` } });
         const t = await res.json();
 
         if (!res.ok) {
@@ -100,14 +299,10 @@
         document.getElementById('tMode').innerText = `Mode: ${t.mode}`;
         mode = t.mode;
 
-        // Determine number of required UIDs
-        if (mode === 'duo') requiredUids = 2;
-        else if (mode === 'squad') requiredUids = 4;
-        else requiredUids = 1;
+        requiredUids = mode === 'duo' ? 2 : mode === 'squad' ? 4 : 1;
 
         const container = document.getElementById('uidContainer');
         container.innerHTML = '';
-
         for (let i = 1; i <= requiredUids; i++) {
           const div = document.createElement('div');
           div.className = 'inputBox';
@@ -121,7 +316,6 @@
       }
     }
 
-    // Submit join request
     async function submitJoin() {
       const uids = [];
       document.querySelectorAll('input[id^="uid"]').forEach(inp => {
@@ -157,53 +351,61 @@
       }
     }
 
-    loadTournament();
+    // Back navigation
+    function goBack() {
+      if (document.referrer && document.referrer !== location.href) {
+        history.back();
+      } else {
+        location.href = "gamezone.html";
+      }
+    }
 
-    /* ⬅ BACK LOGIC (ANDROID STYLE) */
-function goBack(){
-  if(document.referrer && document.referrer !== location.href){
-    history.back();
-  }else{
-    location.href="gamezone.html"; // fallback
-  }
-}
+    function toggleMenu() {
+      document.getElementById('sideMenu').classList.toggle('active');
+    }
 
-/* 👆 SWIPE BACK */
-let startX=0, startY=0;
-const arrow=document.querySelector('.swipe-arrow');
+    // Swipe-back (mobile)
+    let startX = 0, startY = 0;
+    document.addEventListener("touchstart", e => {
+      const t = e.touches[0];
+      if (t.clientX < 30) {
+        startX = t.clientX;
+        startY = t.clientY;
+      }
+    });
 
-document.addEventListener("touchstart", e=>{
-  const t=e.touches[0];
-  if(t.clientX < 30){
-    startX=t.clientX;
-    startY=t.clientY;
-    arrow.style.opacity="1";
-  }
-});
+    document.addEventListener("touchend", e => {
+      if (!startX) return;
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = Math.abs(e.changedTouches[0].clientY - startY);
+      if (startX < 30 && dx > 90 && dy < 70) goBack();
+      startX = 0;
+    });
 
-document.addEventListener("touchmove", e=>{
-  if(!startX) return;
-  const dx=e.touches[0].clientX - startX;
-  if(dx>0){
-    arrow.style.left=Math.min(dx-18,50)+"px";
-  }
-});
+    // Load wallet
+    async function loadWalletBalance() {
+      if (!token) return;
+      try {
+        const res = await fetch("https://battlepurse-t4yn.onrender.com/api/wallet/balance", {
+          headers: { Authorization: "Bearer " + token }
+        });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById("balance").innerText = "₹" + Number(data.balance || 0).toFixed(2);
+        }
+      } catch (err) { console.error(err); }
+    }
 
-document.addEventListener("touchend", e=>{
-  if(!startX) return;
+    document.addEventListener("DOMContentLoaded", () => {
+      loadTournament();
+      loadWalletBalance();
+    });
 
-  const dx=e.changedTouches[0].clientX - startX;
-  const dy=Math.abs(e.changedTouches[0].clientY - startY);
-
-  arrow.style.left="-44px";
-  arrow.style.opacity="0";
-
-  if(startX < 30 && dx > 90 && dy < 70){
-    goBack();
-  }
-  startX=0;
-});
-
+    function goPage(page) {
+      window.location.href = page;
+    }
   </script>
+
+  <script src="nav.js"></script>
 </body>
 </html>

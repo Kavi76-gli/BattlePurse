@@ -5,7 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Leaderboard</title>
 
-
+<link rel="stylesheet" href="global.css">
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
 :root {
   --primary: #00eaff;
@@ -192,6 +194,38 @@ th {
 </style>
 </head>
 <body>
+<!-- ================= HEADER ================= -->
+<div class="header">
+  <div class="logo">
+    <img src="battlepurse.jpeg" onerror="this.style.display='none'">
+  </div>
+
+  <div class="header-icons">
+    <i class="fa-solid fa-bell" onclick="goPage('notification.html')"></i>
+    <div class="balance" id="balance">₹0.00</div>
+    <i class="fa-solid fa-bars" onclick="toggleMenu()"></i>
+  </div>
+</div>
+
+<!-- ================= SIDE MENU ================= -->
+<!-- ================= SIDE MENU ================= -->
+<div class="side-menu" id="sideMenu">
+  <div class="menu-header">
+    <h3>Menu</h3>
+    <button class="close-btn" onclick="toggleMenu()">×</button>
+  </div>
+  <ul class="menu-list">
+    <li onclick="goPage('profile.html')">Profile</li>
+    <li onclick="goPage('deposite.html')">Deposit</li>
+    <li onclick="goPage('withdral.html')">Withdraw</li>
+    <li onclick="goPage('transaction.html')">Transactions</li>
+    <li onclick="goPage('gamezone.html')">Game Zone</li>
+    <li onclick="goPage('kavi.html')">Free Fire/BGMI</li>
+    <li onclick="goPage('history.html')">History</li>
+    <li onclick="goPage('more.html')">Settings</li>
+    <li onclick="goPage('logout.html')">Logout</li>
+  </ul>
+</div>
 
 <!-- Swipe-back edge -->
 <div class="swipe-area"></div>
@@ -240,13 +274,29 @@ th {
 </div>
 
 <!-- BOTTOM NAV -->
+<!-- ================= BOTTOM NAV ================= -->
 <div class="bottom-nav">
-  <div class="nav-btn" onclick="location.href='gamezone.html'"><i>🎮</i>Game</div>
-  <div class="nav-btn" onclick="location.href='history.html'"><i>📜</i>History</div>
-  <div class="nav-btn active"><i>🏆</i>Leaderboard</div>
-  <div class="nav-btn" onclick="location.href='profile.html'"><i>👤</i>Profile</div>
-  <div class="nav-btn" onclick="location.href='more.html'"><i>⋯</i>More</div>
+  <div class="nav-item" data-page="leaderboard.html" onclick="goPage('leaderboard.html')">
+    <i class="fa-solid fa-trophy"></i><span>Leaderboard</span>
+  </div>
+
+  <div class="nav-item" data-page="history.html" onclick="goPage('history.html')">
+    <i class="fa-solid fa-clock"></i><span>History</span>
+  </div>
+
+  <div class="nav-item center" data-page="gamezone.html" onclick="goPage('gamezone.html')">
+    <i class="fa-solid fa-house"></i><span>Home</span>
+  </div>
+
+  <div class="nav-item" data-page="profile.html" onclick="goPage('profile.html')">
+    <i class="fa-solid fa-user"></i><span>Profile</span>
+  </div>
+
+  <div class="nav-item" data-page="more.html" onclick="goPage('more.html')">
+    <i class="fa-solid fa-gear"></i><span>Settings</span>
+  </div>
 </div>
+
 
 <script>
 const token = localStorage.getItem("token");
@@ -288,7 +338,7 @@ async function loadLeaderboard() {
     if (dateFilter.value) params.append("date", dateFilter.value);
 
     const res = await fetch(
-      `https://battlepurse-98-8d98.onrender.com/api/wallet/leaderboard?${params}`,
+      `https://battlepurse-t4yn.onrender.com/api/wallet/leaderboard?${params}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
@@ -324,7 +374,35 @@ async function loadLeaderboard() {
     leaderboardBody.innerHTML = "<tr><td colspan='6'>Server error.</td></tr>";
   }
 }
-</script>
 
+async function loadWalletBalance() {
+  const token = localStorage.getItem("token");
+  if (!token) return;
+
+  try {
+    const res = await fetch(
+      "https://battlepurse-t4yn.onrender.com/api/wallet/balance",
+      {
+        headers: {
+          Authorization: "Bearer " + token
+        }
+      }
+    );
+
+    const data = await res.json();
+
+    if (data.success) {
+      document.getElementById("balance").innerText =
+        "₹" + Number(data.balance || 0).toFixed(2);
+    }
+  } catch (err) {
+    console.error("❌ Wallet fetch error:", err);
+  }
+}
+
+// load on page start
+document.addEventListener("DOMContentLoaded", loadWalletBalance);
+</script>
+<script src="nav.js"></script>
 </body>
 </html>

@@ -4,155 +4,220 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Payment</title>
+
+<link rel="stylesheet" href="global.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
 <style>
-:root {
-  --bg: #121212;
-  --card: #1c1c1c;
-  --accent: #00faff;
-  --accent-dark: #00c6ff;
+/* ================= ROOT THEME ================= */
+:root{
+  --accent:#00faff;
+  --accent-dark:#00c6ff;
+  --bg:#121212;
+  --card:#181818;
 }
 
-body {
-  margin: 0;
-  font-family: 'Poppins', sans-serif;
-  background: var(--bg);
-  color: #fff;
-  overflow-x: hidden;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
+/* ================= RESET ================= */
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
 }
 
-/* ================= SWIPE AREA ================= */
-.swipe-area {
-  position: fixed;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 24px;
-  z-index: 50;
+html, body{
+  width:100%;
+  height:100%;
 }
 
-/* ================= APP BAR ================= */
-.app-bar {
-  position: sticky;
-  top: 0;
-  display: flex;
-  align-items: center;
-  height: 56px;
-  background: var(--card);
-  padding: 0 16px;
-  box-shadow: 0 2px 6px #00000080;
-  z-index: 100;
-  transition: transform 0.3s ease;
-}
-.app-bar button {
-  background: none;
-  border: none;
-  color: var(--accent);
-  font-size: 22px;
-  margin-right: 12px;
-  cursor: pointer;
-}
-.app-bar .title {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--accent);
+/* ================= BODY ================= */
+body{
+  background:var(--bg);
+  color:#fff;
+  font-family:Poppins, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+
+  min-height:140vh;
+  overflow-y:auto;
+
+  /* Space for fixed bottom nav */
+  padding-bottom:140px;
+
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ================= MAIN CONTAINER ================= */
-.container {
-  flex: 1;
-  padding: 20px;
-  animation: slideIn 0.3s ease forwards;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
+.container{
+  padding:20px 16px;
+  text-align:center;
+  max-width:480px;
+  margin:0 auto;
 }
 
-h2 {
-  font-size: 24px;
-  color: var(--accent);
+
+/* ================= HEADINGS ================= */
+h2{
+  color:var(--accent);
+  margin-bottom:10px;
 }
 
-.amount-box {
-  margin: 20px 0;
-  font-size: 20px;
+/* ================= AMOUNT ================= */
+.amount-box{
+  font-size:20px;
+  margin:12px 0 18px;
+  font-weight:600;
 }
 
-.qr-section {
-  margin-top: 20px;
+/* ================= QR SECTION ================= */
+.qr-section{
+  margin-top:10px;
 }
 
-.qr-section img {
-  width: 220px;
-  border-radius: 12px;
-  box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+.qr-section img{
+  width:220px;
+  max-width:100%;
+  border-radius:16px;
+  cursor:pointer;
+  box-shadow:0 0 18px rgba(0,255,255,.35);
+  transition:transform .25s ease, box-shadow .25s ease;
 }
 
-.upi-id {
-  margin-top: 10px;
-  font-size: 14px;
-  color: #ccc;
+.qr-section img:active{
+  transform:scale(1.15);
+  box-shadow:0 0 28px rgba(0,255,255,.6);
 }
 
-input[type="text"] {
-  padding: 12px;
-  margin-top: 25px;
-  width: 80%;
-  max-width: 320px;
-  border-radius: 10px;
-  border: none;
-  background: #222;
-  color: #fff;
-  font-size: 16px;
+/* ================= UPI TEXT ================= */
+.upi-id{
+  margin-top:12px;
+  font-size:14px;
+  color:#ccc;
+  cursor:pointer;
 }
 
-.submit-btn {
-  margin-top: 25px;
-  padding: 14px 30px;
-  background: var(--accent);
-  background: linear-gradient(90deg, var(--accent), var(--accent-dark));
-  color: #000;
-  border: none;
-  font-size: 16px;
-  font-weight: bold;
-  border-radius: 30px;
-  cursor: pointer;
+.copy-hint{
+  display:block;
+  margin-top:4px;
+  font-size:12px;
+  color:var(--accent);
 }
 
-.note {
-  margin-top: 20px;
-  font-size: 14px;
-  color: #aaa;
+/* ================= INPUT ================= */
+input{
+  width:100%;
+  max-width:320px;
+  padding:14px 16px;
+  margin:22px auto 0;
+  display:block;
+
+  border-radius:14px;
+  border:none;
+  outline:none;
+
+  background:#222;
+  color:#fff;
+  font-size:15px;
 }
 
-/* ================= ANIMATIONS ================= */
-@keyframes slideIn {
-  0% { transform: translateX(100%); opacity: 0; }
-  100% { transform: translateX(0); opacity: 1; }
+/* ================= SUBMIT BUTTON ================= */
+.submit-btn{
+  margin:24px auto 0;
+  padding:14px 38px;
+  display:inline-block;
+
+  border-radius:30px;
+  border:none;
+  font-weight:700;
+  font-size:15px;
+
+  background:linear-gradient(90deg,var(--accent),var(--accent-dark));
+  color:#000;
+  cursor:pointer;
+
+  transition:transform .15s ease, box-shadow .15s ease;
 }
 
-@keyframes slideOut {
-  0% { transform: translateX(0); opacity: 1; }
-  100% { transform: translateX(100%); opacity: 0; }
+.submit-btn:active{
+  transform:scale(.96);
+  box-shadow:0 6px 18px rgba(0,255,255,.45);
 }
+
+/* ================= HOW IT WORKS ================= */
+.how-it-works{
+  margin:28px auto 0;
+  background:var(--card);
+  padding:16px;
+  border-radius:16px;
+  max-width:360px;
+  text-align:left;
+}
+
+.how-it-works h3{
+  color:var(--accent);
+  margin-bottom:10px;
+  font-size:16px;
+}
+
+.how-it-works ol{
+  padding-left:18px;
+  font-size:14px;
+  color:#ccc;
+}
+
+.how-it-works li{
+  margin-bottom:6px;
+}
+
+/* ================= SMALL SCREENS ================= */
+@media (max-width:360px){
+  .qr-section img{
+    width:200px;
+  }
+
+  h2{
+    font-size:18px;
+  }
+}
+
 </style>
 </head>
+
 <body>
 
-<!-- SWIPE BACK EDGE -->
-<div class="swipe-area"></div>
+<!-- ================= HEADER ================= -->
+<div class="header">
+  <div class="logo">
+    <img src="battlepurse.jpeg" onerror="this.style.display='none'">
+  </div>
 
-<!-- APP BAR -->
-<div class="app-bar">
-  <button onclick="goBack()">←</button>
-  <div class="title">Payment</div>
+  <div class="header-icons">
+    <i class="fa-solid fa-bell" onclick="goPage('notification.html')"></i>
+    <div class="balance" id="balance">₹0.00</div>
+    <i class="fa-solid fa-bars" onclick="toggleMenu()"></i>
+  </div>
 </div>
 
-<!-- MAIN CONTAINER -->
-<div class="container" id="paymentCard">
+<!-- ================= SIDE MENU ================= -->
+<!-- ================= SIDE MENU ================= -->
+<div class="side-menu" id="sideMenu">
+  <div class="menu-header">
+    <h3>Menu</h3>
+    <button class="close-btn" onclick="toggleMenu()">×</button>
+  </div>
+  <ul class="menu-list">
+    <li onclick="goPage('profile.html')">Profile</li>
+    <li onclick="goPage('deposite.html')">Deposit</li>
+    <li onclick="goPage('withdral.html')">Withdraw</li>
+    <li onclick="goPage('transaction.html')">Transactions</li>
+    <li onclick="goPage('gamezone.html')">Game Zone</li>
+    <li onclick="goPage('kavi.html')">Free Fire/BGMI</li>
+    <li onclick="goPage('history.html')">History</li>
+    <li onclick="goPage('more.html')">Settings</li>
+    <li onclick="goPage('logout.html')">Logout</li>
+  </ul>
+</div>
+
+<!-- ================= MAIN ================= -->
+<div class="container">
+
   <h2>🔐 Complete Your Deposit</h2>
 
   <div class="amount-box">
@@ -160,123 +225,136 @@ input[type="text"] {
   </div>
 
   <div class="qr-section">
-    <img id="qrImage" src="placeholder.png" alt="Scan UPI QR" />
-    <div class="upi-id">or pay to: <strong id="upiId">yourupi@upi</strong></div>
+    <img id="qrImage" src="./resources/placeholder.png" onclick="openUpiApp()">
+    <div class="upi-id" onclick="copyUpi()">
+      Pay to <strong id="upiId">yourupi@upi</strong>
+      <div class="copy-hint">(tap to copy)</div>
+    </div>
   </div>
 
-  <input type="text" id="utr" placeholder="Enter UTR / Transaction ID" />
+  <input id="utr" placeholder="Enter UTR / Transaction ID">
 
   <button class="submit-btn" onclick="submitPayment()">Submit Payment</button>
 
-  <div class="note">⚠️ Make sure you have paid via UPI before submitting UTR.</div>
+  <div class="how-it-works">
+    <h3>💡 How it works</h3>
+    <ol>
+      <li>Tap QR or copy UPI ID</li>
+      <li>Pay exact amount via any UPI app</li>
+      <li>Enter UTR / Transaction ID</li>
+      <li>Wait for admin approval</li>
+    </ol>
+  </div>
 </div>
 
+<!-- ================= BOTTOM NAV ================= -->
+<div class="bottom-nav">
+  <div class="nav-item" data-page="leaderboard.html" onclick="goPage('leaderboard.html')">
+    <i class="fa-solid fa-trophy"></i><span>Leaderboard</span>
+  </div>
+
+  <div class="nav-item" data-page="history.html" onclick="goPage('history.html')">
+    <i class="fa-solid fa-clock"></i><span>History</span>
+  </div>
+
+  <div class="nav-item center" data-page="gamezone.html" onclick="goPage('gamezone.html')">
+    <i class="fa-solid fa-house"></i><span>Home</span>
+  </div>
+
+  <div class="nav-item" data-page="profile.html" onclick="goPage('profile.html')">
+    <i class="fa-solid fa-user"></i><span>Profile</span>
+  </div>
+
+  <div class="nav-item" data-page="more.html" onclick="goPage('more.html')">
+    <i class="fa-solid fa-gear"></i><span>Settings</span>
+  </div>
+</div>
+
+
 <script>
+/* ========= BASIC NAV ========= */
+function goPage(p){ location.href=p; }
 
-/* ================= AMOUNT FROM URL ================= */
-const params = new URLSearchParams(window.location.search);
-const amount = Number(params.get("amount")) || 0;
-
-document.getElementById("amountDisplay").innerText =
-  amount > 0 ? `₹${amount}` : "₹0";
-
-/* ================= LOAD PAYMENT CONFIG ================= */
-const API_CONFIG =
-  "https://battlepurse-98-8d98.onrender.com/api/wallet/payment-config";
-
-async function loadPaymentConfig() {
-  try {
-    const res = await fetch(API_CONFIG);
-    const data = await res.json();
-
-    if (!data.success || !data.config) return;
-
-    const { upiId, qrImageUrl } = data.config;
-
-    // Show UPI
-    document.getElementById("upiId").innerText =
-      upiId || "yourupi@upi";
-
-    // Show QR
-    if (qrImageUrl) {
-      const qrImg = document.getElementById("qrImage");
-      qrImg.src = qrImageUrl;
-      qrImg.style.display = "block";
-    }
-
-  } catch (err) {
-    console.error("❌ Payment config fetch error:", err);
-  }
+function toggleMenu(){
+  const m=document.getElementById("sideMenu");
+  m.classList.toggle("open");
 }
 
-loadPaymentConfig();
+/* ========= AMOUNT ========= */
+const urlParams=new URLSearchParams(location.search);
+const amount=Number(urlParams.get("amount"))||0;
+document.getElementById("amountDisplay").innerText=amount;
 
-/* ================= SUBMIT PAYMENT ================= */
-async function submitPayment() {
-  const utr = document.getElementById("utr").value.trim();
+/* ========= LOAD PAYMENT CONFIG ========= */
+(async()=>{
+  try{
+    const res=await fetch("https://battlepurse-t4yn.onrender.com/api/wallet/payment-config");
+    const data=await res.json();
+    if(!data.success) return;
+
+    document.getElementById("upiId").innerText=data.config.upiId;
+    if(data.config.qrImageUrl){
+      document.getElementById("qrImage").src=data.config.qrImageUrl;
+    }
+  }catch(e){
+    console.log("Payment config skipped");
+  }
+})();
+
+async function loadWalletBalance() {
   const token = localStorage.getItem("token");
-
-  if (!utr) {
-    return alert("❗ Please enter the UTR / Transaction ID.");
-  }
-
-  if (!amount || amount < 300) {
-    return alert("❗ Minimum deposit amount is ₹300.");
-  }
-
-  if (!token) {
-    return alert("❗ Please login before submitting payment.");
-  }
+  if (!token) return;
 
   try {
     const res = await fetch(
-      "https://battlepurse-98-8d98.onrender.com/api/wallet/submit-utr",
+      "https://battlepurse-t4yn.onrender.com/api/wallet/balance",
       {
-        method: "POST",
         headers: {
-          "Content-Type": "application/json",
           Authorization: "Bearer " + token
-        },
-        body: JSON.stringify({ amount, utr })
+        }
       }
     );
 
     const data = await res.json();
 
-    if (!res.ok) {
-      return alert("❌ " + (data.msg || "Payment submission failed."));
+    if (data.success) {
+      document.getElementById("balance").innerText =
+        "₹" + Number(data.balance || 0).toFixed(2);
     }
-
-    alert("✅ Payment submitted successfully.\n⏳ Waiting for admin approval.");
-    window.location.href = "profile.html";
-
   } catch (err) {
-    console.error("❌ Payment submit error:", err);
-    alert("❌ Server error. Please try again later.");
+    console.error("❌ Wallet fetch error:", err);
   }
 }
 
+// load on page start
+document.addEventListener("DOMContentLoaded", loadWalletBalance);
 
-/* ================= BACK LOGIC ================= */
-function goBack() {
-  document.getElementById("paymentCard").style.animation = "slideOut 0.3s forwards";
-  setTimeout(() => {
-    if (document.referrer && document.referrer !== location.href) {
-      history.back();
-    } else {
-      location.href = "deposite.html";
-    }
-  }, 300);
+
+/* ========= COPY UPI ========= */
+function copyUpi(){
+  const upi=document.getElementById("upiId").innerText;
+  navigator.clipboard.writeText(upi);
+  alert("✅ UPI ID copied");
 }
 
-/* ================= SWIPE BACK ================= */
-let startX = 0;
-document.addEventListener("touchstart", e => { startX = e.touches[0].clientX; });
-document.addEventListener("touchend", e => {
-  const endX = e.changedTouches[0].clientX;
-  if (startX < 40 && endX - startX > 90) { goBack(); }
-});
+/* ========= OPEN UPI ========= */
+function openUpiApp(){
+  const upi=document.getElementById("upiId").innerText;
+  const url=`upi://pay?pa=${upi}&am=${amount}&cu=INR`;
+  const qr=document.getElementById("qrImage");
+  qr.style.transform="scale(1.2)";
+  setTimeout(()=>qr.style.transform="scale(1)",400);
+  location.href=url;
+}
+
+/* ========= SUBMIT ========= */
+async function submitPayment(){
+  const utr=document.getElementById("utr").value.trim();
+  if(!utr) return alert("Enter UTR");
+  alert("✅ Payment submitted\n⏳ Waiting for approval");
+}
 </script>
 
+<script src="nav.js"></script>
 </body>
 </html>
