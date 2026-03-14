@@ -3783,6 +3783,148 @@ async function getNextMatchNumber() {
 
   return lastMatch?.matchNumber ? lastMatch.matchNumber + 1 : 1;
 }
+
+
+router.post("/pair", authAdmin, async (req, res) => {
+  try {
+    const { selectedMembers, game, mode, type, entryFee } = req.body;
+
+    /* ===============================
+       BASIC VALIDATION
+    =============================== */
+    if (!Array.isArray(selectedMembers) || selectedMembers.length === 0) {
+      return res.status(400).json({
+        success: false,
+        msg: "No members selected"
+      });
+    }
+
+    /* ===============================
+       PREVENT MULTIPLE ACTIVE MATCHES
+    =============================== */
+    const validUserIds = selectedMembers
+      .map(p => p.userId)
+      .filter(id => mongoose.Types.ObjectId.isValid(id));
+
+    const activeMatch = await QuickMatch.findOne({
+      status: { $in: ["room_created", "ongoing"] },
+      "players.userId": { $in: validUserIds }
+    });
+
+    if (activeMatch) {
+      return res.status(400).json({
+        success: false,
+        msg: "One or more selected players already have an active match"
+      });
+    }
+
+    /* ===============================
+       TEAM SIZE CALCULATION
+    =============================== */
+    const n = parseInt(type?.split("v")[0], 10);
+
+    if (!n || isNaN(n)) {
+      return res.status(400).json({
+        success: false,
+        msg: "Invalid match type"
+      });
+    }
+
+    const teamSize = n * 2;
+
+    if (selectedMembers.length % teamSize !== 0) {
+      return res.status(400).json({
+        success: false,
+        msg: `You must select ${teamSize} players for ${type}`
+      });
+    }
+
+    /* ===============================
+       SPLIT INTO MATCH GROUPS
+    =============================== */
+    const groups = [];
+    for (let i = 0; i < selectedMembers.length; i += teamSize) {
+      groups.push(selectedMembers.slice(i, i + teamSize));
+    }
+
+    const createdMatches = [];
+    const isNonRoundGame = NON_ROUND_GAMES.includes(game);
+
+    /* ===============================
+       CREATE MATCHES
+    =============================== */
+    for (const group of groups) {
+
+      /* ---------- ROUNDS (NEGLECT DIFFERENCE) ---------- */
+      let rounds = null;
+
+      if (!isNonRoundGame) {
+        const roundsList = group
+          .map(p => Number(p.rounds))
+          .filter(r => !isNaN(r));
+
+        // Take minimum rounds so both players can play
+        rounds = roundsList.length ? Math.min(...roundsList) : null;
+      }
+
+      /* ---------- PRIZE SYSTEM ---------- */
+      const prizeSystem =
+        type === "1v1"
+          ? "kill_based"
+          : (group[0]?.prizeSystem || "kill_based");
+
+      /* ---------- PLAYERS ARRAY ---------- */
+      const half = group.length / 2;
+
+      const playersArr = group.map((p, idx) => ({
+        userId: mongoose.Types.ObjectId.isValid(p.userId)
+          ? new mongoose.Types.ObjectId(p.userId)
+          : null,
+        uid: p.uid || "-",
+        name: p.name || "Unknown",
+        phone: p.phone || "-",
+        whatsappNumber: p.whatsappNumber || "",
+        team: idx < half ? "LION" : "TIGER",
+        joinedAt: new Date(),
+        rounds: p.rounds || null, // keep player rounds individually
+        freeFireSettings: p.freeFireSettings || {}
+      }));
+
+      /* ---------- CREATE MATCH ---------- */
+      const newMatch = new QuickMatch({
+        matchNumber: await getNextMatchNumber(),
+        type,
+        game,
+        mode,
+        entryFee: Number(entryFee) || 0,
+        prizeSystem,
+        rounds, // final match rounds (minimum)
+        players: playersArr,
+        status: "paired",
+        createdAt: new Date()
+      });
+
+      await newMatch.save();
+      createdMatches.push(newMatch);
+    }
+
+    /* ===============================
+       RESPONSE
+    =============================== */
+    res.json({
+      success: true,
+      msg: "Players paired successfully (rounds neglected)",
+      data: createdMatches
+    });
+
+  } catch (err) {
+    console.error("🔥 PAIR ROUTE ERROR:", err);
+    res.status(500).json({
+      success: false,
+      msg: "Server error"
+    });
+  }
+});
 router.post("/pair", authAdmin, async (req, res) => {
   try {
     const { selectedMembers, game, mode, type, entryFee } = req.body;
@@ -5077,6 +5219,10 @@ router.get("/quickmatch/room/:matchId", async (req, res) => {
 
 
 // ✅ UNIVERSAL SINGLE ACTIVE MATCH ROUTE WITH PRIZE SYSTEM LOGIC
+// ✅ UNIVERSAL SINGLE ACTIVE MATCH ROUTE
+
+
+
 router.get("/active-matches", auth, async (req, res) => {
   try {
     const userId = req.user.id;

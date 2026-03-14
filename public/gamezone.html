@@ -8,8 +8,8 @@
 <link rel="stylesheet"
 href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
-/* =========================
-   ROOT + RESET
+ /* =========================
+   ROOT VARIABLES
 ========================= */
 :root {
   --neon: #00eaff;
@@ -19,6 +19,9 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
   --text: #eafcff;
 }
 
+/* =========================
+   RESET
+========================= */
 * {
   margin: 0;
   padding: 0;
@@ -32,19 +35,90 @@ html, body {
 }
 
 /* =========================
-   BODY (CRITICAL FIX)
+   BODY LAYOUT (FOR FIXED UI)
 ========================= */
 body {
   background: var(--bg);
   color: var(--text);
 
-  /* exact space for fixed UI */
-  padding-top: 190px;   /* promo + header + nav */
-  padding-bottom: 80px; /* bottom nav */
+  /* space for fixed top elements */
+  padding-top: 190px;   /* promo bar + header + navigation */
+
+  /* space for bottom navigation */
+  padding-bottom: 80px;
 
   overflow-x: hidden;
 }
 
+/* =========================
+   MAIN CONTENT WRAPPER
+========================= */
+.main-content {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* =========================
+   ACTIVE MATCH BOX
+========================= */
+
+  .active-match-box {
+  background: #121212;
+  border: 1px solid rgba(0, 207, 255, 0.25);
+  border-radius: 16px;
+  padding: 16px;
+  margin: 20px 0;
+  box-shadow: 0 0 18px rgba(0, 207, 255, 0.15);
+  color: #fff;
+}
+
+.active-title {
+  margin: 0 0 12px;
+  color: #00cfff;
+  font-size: 18px;
+}
+
+.active-match-content p {
+  margin: 6px 0;
+  font-size: 14px;
+}
+
+.active-status {
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+.active-players {
+  margin-top: 12px;
+  padding: 10px;
+  background: #0d0d0d;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.team-title {
+  margin-top: 8px;
+  color: #00eaff;
+  font-weight: 600;
+}
+
+.active-btn {
+  margin-top: 14px;
+  width: 100%;
+  padding: 10px;
+  background: #00cfff;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #000;
+}
+
+.active-btn:hover {
+  box-shadow: 0 0 12px #00cfff;
+} 
 /* =========================
    PROMO / CATEGORY BAR
 ========================= */
@@ -555,64 +629,13 @@ body {
 
 
 
+/* =========================
+   ACTIVE MATCH CARD
+========================= */
 
-  .active-match-box {
-  background: #121212;
-  border: 1px solid rgba(0, 207, 255, 0.25);
-  border-radius: 16px;
-  padding: 16px;
-  margin: 20px 0;
-  box-shadow: 0 0 18px rgba(0, 207, 255, 0.15);
-  color: #fff;
-}
-
-.active-title {
-  margin: 0 0 12px;
-  color: #00cfff;
-  font-size: 18px;
-}
-
-.active-match-content p {
-  margin: 6px 0;
-  font-size: 14px;
-}
-
-.active-status {
-  margin-top: 8px;
-  font-weight: 600;
-}
-
-.active-players {
-  margin-top: 12px;
-  padding: 10px;
-  background: #0d0d0d;
-  border-radius: 10px;
-  font-size: 13px;
-}
-
-.team-title {
-  margin-top: 8px;
-  color: #00eaff;
-  font-weight: 600;
-}
-
-.active-btn {
-  margin-top: 14px;
-  width: 100%;
-  padding: 10px;
-  background: #00cfff;
-  border: none;
-  border-radius: 10px;
-  font-weight: 700;
-  cursor: pointer;
-  color: #000;
-}
-
-.active-btn:hover {
-  box-shadow: 0 0 12px #00cfff;
-}
-
-
+/* =========================
+   ACTIVE MATCH CARD
+========================= */
 
 
 
@@ -1213,6 +1236,10 @@ button:disabled {
   -webkit-text-fill-color: transparent;
 }
 
+
+
+
+
 </style> 
 </head>
 
@@ -1280,7 +1307,7 @@ button:disabled {
       🎮 Start Playing
     </button>
     <button class="hero-btn ghost" onclick="viewTournaments()">
-      🏆 Tournaments
+      🏆 Matches
     </button>
   </div>
 </section>
@@ -1350,13 +1377,11 @@ button:disabled {
   <div id="tournamentList" class="tournament-grid"></div>
 </section>
 
-
-<!-- ================= ACTIVE MATCH BOX ================= -->
-<section id="activeMatchBox" class="active-match-box" style="display:none;">
+ <!-- ACTIVE MATCH -->
+ <section id="activeMatchBox" class="active-match-box" style="display:none;">
   <h3 class="active-title">🎮 Your Active Match</h3>
   <div id="activeMatchContent" class="active-match-content"></div>
 </section>
-
 
 <div class="wallet-box">
   <span class="wallet-label">Wallet Balance</span>
@@ -1417,6 +1442,12 @@ button:disabled {
 
 </section>
 
+
+<!-- ================= ACTIVE MATCH BOX ================= -->
+
+<!-- =========================
+     ACTIVE MATCH
+========================= -->
 
 
 <section class="poster-section">
@@ -1884,96 +1915,11 @@ async function loadLeaderboard() {
 /* =========================
    LOAD ACTIVE MATCH
 ========================= */
-async function loadActiveMatch() {
-  const token = localStorage.getItem("token");
-  if (!token) return;
+ /* =========================
+   LOAD ACTIVE MATCH
+========================= */
 
-  try {
-    const res = await fetch(`${API_BASE}/active-matches`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
 
-    const data = await res.json();
-    console.log("Active Match:", data);
-
-    const box = document.getElementById("activeMatchBox");
-    const content = document.getElementById("activeMatchContent");
-
-    if (!data.success || !data.data) {
-      box.style.display = "none";
-      return;
-    }
-
-    const match = data.data;
-
-    if (match.status === "completed") {
-      box.style.display = "none";
-      return;
-    }
-
-    box.style.display = "block";
-
-    const statusLabel =
-      match.status === "room_published"
-        ? `<span style="color:#3cff8f;font-weight:bold;">Room Published ✓</span>`
-        : `<span style="color:#ffd94c;">Waiting for Admin to Upload Room…</span>`;
-
-    let prizeHtml = "";
-    if (match.prizeSystem) {
-      let prizeType = "-";
-      if (match.prizeSystem === "kill_based") prizeType = "Kill Based";
-      if (match.prizeSystem === "team_equal") prizeType = "Team Equal";
-      prizeHtml = `<p><strong>Prize System:</strong> ${prizeType}</p>`;
-    }
-
-    let fullList = [...(match.players || [])];
-    fullList.sort((a, b) => (a.team || 0) - (b.team || 0));
-
-    let maxPlayers = fullList.length;
-    const type = match.type.toLowerCase();
-    if (type === "1v1") maxPlayers = 2;
-    else if (type === "2v2") maxPlayers = 4;
-    else if (type === "3v3") maxPlayers = 6;
-    else if (type === "4v4") maxPlayers = 8;
-
-    const finalPlayers = fullList.slice(0, maxPlayers);
-
-    const playersList = finalPlayers
-      .map(
-        (p, i) =>
-          `${i + 1}. ${p.name}${p.team != null ? ` • Team ${p.team}` : ""}`
-      )
-      .join("<br>");
-
-    content.innerHTML = `
-      <p><strong>Game:</strong> ${match.game}</p>
-      <p><strong>Mode:</strong> ${match.mode}</p>
-      <p><strong>Type:</strong> ${match.type}</p>
-      <p><strong>Entry Fee:</strong> ₹${match.entryFee}</p>
-
-      ${prizeHtml}
-
-      <p><strong>Status:</strong> ${statusLabel}</p>
-
-      <p style="opacity:0.7;margin-top:6px;">
-        <strong>Match ID:</strong> ${  match._id}
-      </p>
-
-      <div style="margin-top:10px;">
-        <strong>Players:</strong><br>
-        ${playersList}
-      </div>
-
-      <button onclick="gotoRoom('${match._id}')">View Room</button>
-    `;
-  } catch (err) {
-    console.error("Active match error:", err);
-  }
-}
-
-function gotoRoom(id) {
-  window.location.href = `user-room.html?matchId=${id}`;
-}
 
 /* =========================
    INIT
@@ -2307,6 +2253,111 @@ async function loadWalletBalance() {
   }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+async function loadActiveMatch() {
+  const token = localStorage.getItem("token");
+  if (!token) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/active-matches`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    const data = await res.json();
+    console.log("Active Match:", data);
+
+    const box = document.getElementById("activeMatchBox");
+    const content = document.getElementById("activeMatchContent");
+
+    if (!data.success || !data.data) {
+      box.style.display = "none";
+      return;
+    }
+
+    const match = data.data;
+
+    if (match.status === "completed") {
+      box.style.display = "none";
+      return;
+    }
+
+    box.style.display = "block";
+
+    const statusLabel =
+      match.status === "room_published"
+        ? `<span style="color:#3cff8f;font-weight:bold;">Room Published ✓</span>`
+        : `<span style="color:#ffd94c;">Waiting for Admin to Upload Room…</span>`;
+
+    let prizeHtml = "";
+    if (match.prizeSystem) {
+      let prizeType = "-";
+      if (match.prizeSystem === "kill_based") prizeType = "Kill Based";
+      if (match.prizeSystem === "team_equal") prizeType = "Team Equal";
+      prizeHtml = `<p><strong>Prize System:</strong> ${prizeType}</p>`;
+    }
+
+    let fullList = [...(match.players || [])];
+    fullList.sort((a, b) => (a.team || 0) - (b.team || 0));
+
+    let maxPlayers = fullList.length;
+    const type = match.type.toLowerCase();
+    if (type === "1v1") maxPlayers = 2;
+    else if (type === "2v2") maxPlayers = 4;
+    else if (type === "3v3") maxPlayers = 6;
+    else if (type === "4v4") maxPlayers = 8;
+
+    const finalPlayers = fullList.slice(0, maxPlayers);
+
+    const playersList = finalPlayers
+      .map(
+        (p, i) =>
+          `${i + 1}. ${p.name}${p.team != null ? ` • Team ${p.team}` : ""}`
+      )
+      .join("<br>");
+
+    content.innerHTML = `
+      <p><strong>Game:</strong> ${match.game}</p>
+      <p><strong>Mode:</strong> ${match.mode}</p>
+      <p><strong>Type:</strong> ${match.type}</p>
+      <p><strong>Entry Fee:</strong> ₹${match.entryFee}</p>
+
+      ${prizeHtml}
+
+      <p><strong>Status:</strong> ${statusLabel}</p>
+
+      <p style="opacity:0.7;margin-top:6px;">
+        <strong>Match ID:</strong> ${  match._id}
+      </p>
+
+      <div style="margin-top:10px;">
+        <strong>Players:</strong><br>
+        ${playersList}
+      </div>
+
+      <button onclick="gotoRoom('${match._id}')">View Room</button>
+    `;
+  } catch (err) {
+    console.error("Active match error:", err);
+  }
+}
+
+function gotoRoom(id) {
+  window.location.href = `user-room.html?matchId=${id}`;
+} 
+
+
+document.addEventListener("DOMContentLoaded", loadActiveMatch);
 // Load once DOM is ready
 document.addEventListener("DOMContentLoaded", loadWalletBalance);
 
@@ -2314,7 +2365,7 @@ document.addEventListener("DOMContentLoaded", loadWalletBalance);
 
 document.addEventListener("DOMContentLoaded", loadPosters);
 
-document.addEventListener("DOMContentLoaded", loadActiveMatch);
+
 
 document.addEventListener("DOMContentLoaded", loadTournaments);
 
@@ -2326,5 +2377,6 @@ document.addEventListener("DOMContentLoaded", loadPromos);
 
 </script>
 <script src="nav.js"></script>
+
 </body>
 </html>
