@@ -309,7 +309,7 @@ document.getElementById("amountDisplay").innerText=amount;
 /* ========= LOAD PAYMENT CONFIG ========= */
 (async()=>{
   try{
-    const res=await fetch("https://battlepurse-t4yn.onrender.com/api/wallet/payment-config");
+    const res=await fetch("https://battlepurse-2ch0.onrender.com/api/wallet/payment-config");
     const data=await res.json();
     if(!data.success) return;
 
@@ -328,7 +328,7 @@ async function loadWalletBalance() {
 
   try {
     const res = await fetch(
-      "https://battlepurse-t4yn.onrender.com/api/wallet/balance",
+      "https://battlepurse-2ch0.onrender.com/api/wallet/balance",
       {
         headers: {
           Authorization: "Bearer " + token
@@ -392,7 +392,7 @@ async function submitPayment(){
   try{
 
     const res = await fetch(
-      "https://battlepurse-t4yn.onrender.com/api/wallet/deposit",
+      "https://battlepurse-2ch0.onrender.com/api/wallet/deposit",
       {
         method:"POST",
         headers:{

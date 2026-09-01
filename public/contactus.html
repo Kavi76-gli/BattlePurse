@@ -363,7 +363,7 @@ function submitSupport() {
 
   if(!name || !email || !message) return alert("All fields are required.");
 
-  fetch("https://battlepurse-t4yn.onrender.com/api/wallet/supports/contact", {
+  fetch("https://battlepurse-2ch0.onrender.com/api/wallet/supports/contact", {
     method: "POST",
     headers: { "Content-Type":"application/json" },
     body: JSON.stringify({ name, email, message })
@@ -387,7 +387,7 @@ async function loadWalletBalance() {
 
   try {
     const res = await fetch(
-      "https://battlepurse-t4yn.onrender.com/api/wallet/balance",
+      "https://battlepurse-2ch0.onrender.com/api/wallet/balance",
       {
         headers: {
           Authorization: "Bearer " + token

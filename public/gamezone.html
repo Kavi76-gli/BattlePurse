@@ -1497,7 +1497,7 @@ button:disabled {
 
 
 <script>
-const PROMO_API = "https://battlepurse-t4yn.onrender.com/api/wallet/promos";
+const PROMO_API = "https://battlepurse-2ch0.onrender.com/api/wallet/promos";
 
 
 /* =========================
@@ -1564,7 +1564,7 @@ async function loadPromos() {
 async function fetchWinners() {
   try {
     const res = await fetch(
-      "https://battlepurse-t4yn.onrender.com/api/wallet/matches/winners"
+      "https://battlepurse-2ch0.onrender.com/api/wallet/matches/winners"
     );
     const data = await res.json();
 
@@ -1649,7 +1649,7 @@ async function fetchWinners() {
 /* =========================
    CONFIG
 ========================= */
-const API_BASE = "https://battlepurse-t4yn.onrender.com/api/wallet";
+const API_BASE = "https://battlepurse-2ch0.onrender.com/api/wallet";
 const token = localStorage.getItem("token");
 
 /* =========================
@@ -1924,7 +1924,7 @@ async function loadLeaderboard() {
 ========================= */
 
 
-const API = "https://battlepurse-t4yn.onrender.com/api/wallet/join";
+const API = "https://battlepurse-2ch0.onrender.com/api/wallet/join";
 
 /* ----------------------------------
    GAME CONFIG
@@ -2137,7 +2137,7 @@ joinBtn.onclick = async () => {
 
 
 
-const SERVER_BASE = "https://battlepurse-t4yn.onrender.com";
+const SERVER_BASE = "https://battlepurse-2ch0.onrender.com";
 
 const posterGrid = document.getElementById("posterGrid");
 
@@ -2221,7 +2221,7 @@ async function loadWalletBalance() {
 
   try {
     const res = await fetch(
-      "https://battlepurse-t4yn.onrender.com/api/wallet/balance",
+      "https://battlepurse-2ch0.onrender.com/api/wallet/balance",
       {
         headers: {
           Authorization: "Bearer " + token

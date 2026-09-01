@@ -673,7 +673,7 @@ input, select {
 // =========================
 let selectedType = '';
 let selectedPrizeSystem = null;
-const API_BASE = 'https://battlepurse-t4yn.onrender.com'; // change to your backend URL
+const API_BASE = 'https://battlepurse-2ch0.onrender.com'; // change to your backend URL
 const TOKEN = localStorage.getItem('token') || '';
 
 
@@ -906,7 +906,7 @@ async function loadWalletBalance() {
 
   try {
     const res = await fetch(
-      "https://battlepurse-t4yn.onrender.com/api/wallet/balance",
+      "https://battlepurse-2ch0.onrender.com/api/wallet/balance",
       {
         headers: {
           Authorization: "Bearer " + token

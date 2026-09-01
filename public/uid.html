@@ -279,8 +279,8 @@
     const params = new URLSearchParams(window.location.search);
     const tournamentId = params.get('id');
 
-    const TOURNAMENT_URL = `https://battlepurse-t4yn.onrender.com/api/wallet/tournaments/${tournamentId}`;
-    const JOIN_URL = `https://battlepurse-t4yn.onrender.com/api/wallet/join/${tournamentId}`;
+    const TOURNAMENT_URL = `https://battlepurse-2ch0.onrender.com/api/wallet/tournaments/${tournamentId}`;
+    const JOIN_URL = `https://battlepurse-2ch0.onrender.com/api/wallet/join/${tournamentId}`;
 
     let mode = 'solo';
     let requiredUids = 1;
@@ -386,7 +386,7 @@
     async function loadWalletBalance() {
       if (!token) return;
       try {
-        const res = await fetch("https://battlepurse-t4yn.onrender.com/api/wallet/balance", {
+        const res = await fetch("https://battlepurse-2ch0.onrender.com/api/wallet/balance", {
           headers: { Authorization: "Bearer " + token }
         });
         const data = await res.json();

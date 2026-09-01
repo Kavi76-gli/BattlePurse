@@ -311,9 +311,9 @@ const token = localStorage.getItem('token');
 const params = new URLSearchParams(window.location.search);
 const tournamentId = params.get('id');
 
-const TOURNAMENT_URL = `https://battlepurse-t4yn.onrender.com/api/wallet/tournament/${tournamentId}`;
-const RESULT_URL = `https://battlepurse-t4yn.onrender.com/api/wallet/uploadResult/${tournamentId}`;
-const ROOM_URL = `https://battlepurse-t4yn.onrender.com/api/wallet/tournaments/${tournamentId}/room`;
+const TOURNAMENT_URL = `https://battlepurse-2ch0.onrender.com/api/wallet/tournament/${tournamentId}`;
+const RESULT_URL = `https://battlepurse-2ch0.onrender.com/api/wallet/uploadResult/${tournamentId}`;
+const ROOM_URL = `https://battlepurse-2ch0.onrender.com/api/wallet/tournaments/${tournamentId}/room`;
 
 // Correct local time parsing
 function formatDateTime(tournament) {
@@ -458,7 +458,7 @@ async function loadWalletBalance() {
 
   try {
     const res = await fetch(
-      "https://battlepurse-t4yn.onrender.com/api/wallet/balance",
+      "https://battlepurse-2ch0.onrender.com/api/wallet/balance",
       {
         headers: {
           Authorization: "Bearer " + token

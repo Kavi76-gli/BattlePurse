@@ -169,7 +169,7 @@ h2{
 
 <script>
 let selectedAmount = 0;
-const API = "https://battlepurse-t4yn.onrender.com/api/wallet";
+const API = "https://battlepurse-2ch0.onrender.com/api/wallet";
 const token = localStorage.getItem("token");
 
 /* ================= SELECT AMOUNT ================= */
@@ -218,7 +218,7 @@ async function loadWalletBalance() {
 
   try {
     const res = await fetch(
-      "https://battlepurse-t4yn.onrender.com/api/wallet/balance",
+      "https://battlepurse-2ch0.onrender.com/api/wallet/balance",
       {
         headers: {
           Authorization: "Bearer " + token

@@ -338,7 +338,7 @@ async function loadLeaderboard() {
     if (dateFilter.value) params.append("date", dateFilter.value);
 
     const res = await fetch(
-      `https://battlepurse-t4yn.onrender.com/api/wallet/leaderboard?${params}`,
+      `https://battlepurse-2ch0.onrender.com/api/wallet/leaderboard?${params}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
@@ -381,7 +381,7 @@ async function loadWalletBalance() {
 
   try {
     const res = await fetch(
-      "https://battlepurse-t4yn.onrender.com/api/wallet/balance",
+      "https://battlepurse-2ch0.onrender.com/api/wallet/balance",
       {
         headers: {
           Authorization: "Bearer " + token
