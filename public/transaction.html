@@ -92,6 +92,26 @@ body {
 @keyframes slideIn { 0%{ transform:translateX(100%); opacity:0; } 100%{ transform:translateX(0); opacity:1; } }
 @keyframes slideOut { 0%{ transform:translateX(0); opacity:1; } 100%{ transform:translateX(100%); opacity:0; } }
 
+
+
+.header-balance{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 12px;
+  background:#111;
+  border-radius:20px;
+  font-size:14px;
+  font-weight:500;
+  color:#ccc;
+  border:1px solid #2a2a2a;
+}
+
+.wallet-balance{
+  color:#00ff99;
+  font-weight:700;
+  font-size:15px;
+}
 </style>
 </head>
 <body>
@@ -129,16 +149,11 @@ body {
 </div>
 <div class="swipe-area"></div>
 
-<div class="app-bar">
-  <button onclick="goBack()">←</button>
-  <div class="title">Transaction History</div>
-</div>
 
-<div id="transactionCard">
-  <div class="balance-box">
-    <div>Wallet Balance</div>
-    <div class="balance-value" id="balance">₹0</div>
-  </div>
+<!-- second place example -->
+<div class="header-balance">
+  Wallet Balance: <span class="wallet-balance">₹0</span>
+</div>
 
   <div class="transactions-container" id="transactions"></div>
   <div class="no-records" id="emptyMsg" style="display:none;">No transactions found</div>
@@ -184,7 +199,11 @@ async function loadTransactions() {
     const container = document.getElementById("transactions");
     container.innerHTML = "";
 
-    document.getElementById("balance").innerText = "₹" + (data.balance || 0);
+    const balances = document.querySelectorAll(".wallet-balance");
+
+balances.forEach(el => {
+  el.innerText = "₹" + Number(data.balance || 0).toFixed(2);
+});
 
     if (!data.success || !data.transactions.length) {
       document.getElementById("emptyMsg").style.display = "block";

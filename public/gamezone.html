@@ -1561,7 +1561,6 @@ async function loadPromos() {
   }
 }
 
-
 async function fetchWinners() {
   try {
     const res = await fetch(
@@ -1645,8 +1644,7 @@ async function fetchWinners() {
     document.getElementById("matches").innerHTML =
       '<p style="text-align:center;color:red;">Failed to load winners</p>';
   }
-}
-
+} 
 
 /* =========================
    CONFIG

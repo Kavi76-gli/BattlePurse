@@ -177,6 +177,20 @@ input{
   }
 }
 
+.download-btn{
+  margin-top:10px;
+  padding:10px 18px;
+  border:none;
+  border-radius:8px;
+  background:#28a745;
+  color:white;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.download-btn:hover{
+  background:#1e7e34;
+}
 </style>
 </head>
 
@@ -225,12 +239,19 @@ input{
   </div>
 
   <div class="qr-section">
-    <img id="qrImage" src="./resources/placeholder.png" onclick="openUpiApp()">
-    <div class="upi-id" onclick="copyUpi()">
-      Pay to <strong id="upiId">yourupi@upi</strong>
-      <div class="copy-hint">(tap to copy)</div>
-    </div>
+
+  <img id="qrImage" src="./resources/placeholder.png" onclick="openUpiApp()">
+
+  <div class="upi-id" onclick="copyUpi()">
+    Pay to <strong id="upiId">yourupi@upi</strong>
+    <div class="copy-hint">(tap to copy)</div>
   </div>
+
+  <div class="qr-buttons">
+    <button class="download-btn" onclick="downloadQR()">⬇ Download QR</button>
+  </div>
+
+</div>
 
   <input id="utr" placeholder="Enter UTR / Transaction ID">
 
@@ -339,20 +360,96 @@ function copyUpi(){
 
 /* ========= OPEN UPI ========= */
 function openUpiApp(){
-  const upi=document.getElementById("upiId").innerText;
-  const url=`upi://pay?pa=${upi}&am=${amount}&cu=INR`;
-  const qr=document.getElementById("qrImage");
-  qr.style.transform="scale(1.2)";
-  setTimeout(()=>qr.style.transform="scale(1)",400);
-  location.href=url;
+
+  const upi = document.getElementById("upiId").innerText.trim();
+
+  if(!amount || amount <= 0){
+    alert("Invalid amount");
+    return;
+  }
+
+  const payeeName = encodeURIComponent("BattlePurse");
+  const note = encodeURIComponent("BattlePurse Deposit");
+
+  const upiUrl = `upi://pay?pa=${upi}&pn=${payeeName}&am=${amount}&cu=INR&tn=${note}`;
+
+  window.location.href = upiUrl;
+
 }
 
 /* ========= SUBMIT ========= */
 async function submitPayment(){
-  const utr=document.getElementById("utr").value.trim();
-  if(!utr) return alert("Enter UTR");
-  alert("✅ Payment submitted\n⏳ Waiting for approval");
+
+  const utr = document.getElementById("utr").value.trim();
+
+  if(!utr){
+    alert("⚠ Enter UTR / Transaction ID");
+    return;
+  }
+
+  const token = localStorage.getItem("token");
+
+  try{
+
+    const res = await fetch(
+      "https://battlepurse-t4yn.onrender.com/api/wallet/deposit",
+      {
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          "Authorization":"Bearer "+token
+        },
+        body:JSON.stringify({
+          amount:amount,
+          utr:utr
+        })
+      }
+    );
+
+    const data = await res.json();
+
+    if(data.success){
+
+      alert("✅ Payment submitted\n⏳ Waiting for admin approval");
+
+      location.href="history.html";
+
+    }else{
+
+      alert(data.message || "Submission failed");
+
+    }
+
+  }catch(err){
+
+    alert("Server error");
+
+  }
+
 }
+
+
+
+
+
+
+function downloadQR(){
+
+  const qr = document.getElementById("qrImage");
+
+  const link = document.createElement("a");
+
+  link.href = qr.src;
+  link.download = "BattlePurse-UPI-QR.png";
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  alert("✅ QR downloaded. Check your Downloads or Gallery.");
+
+}
+
 </script>
 
 <script src="nav.js"></script>

@@ -202,7 +202,7 @@ setTimeout(async () => {
 
     // Otherwise validate token normally
     const res = await fetch(
-      "https://battlepurse-t4yn.onrender.com/api/wallet/me",
+      "https://localhost:5000/api/wallet/me",
       { headers: { Authorization: "Bearer " + token } }
     );
 
